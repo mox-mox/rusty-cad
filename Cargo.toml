@@ -1,0 +1,17 @@
+[package]
+name = "rusty_scad"
+version = "0.1.0"
+authors = ["mox <de_mox@zoho.com>"]
+edition = "2018"
+
+description = "A crate for generating OpenSCAD models using rust"
+repository = "https://github.com/mox-mox/rusty-cad"
+documentation = ""
+license = "LGPL-2.0-or-later"
+readme = ""
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[dependencies]
+ndarray = "0.12.1"

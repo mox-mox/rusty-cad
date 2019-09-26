@@ -1,0 +1,100 @@
+OpenScad (subset)
+=================
+
+Special Variables:
+	$fa: angle of fragments
+	$fs: size of fragments
+	$fn: numer of fragments
+
+Operations:
+	Merge/Union  +	| |
+	Difference   -	| -
+	Intersection &	| &
+	Hull          	| +
+	Minkowski     	| *
+
+Modifiers:
+	Debug:       #  | *
+	Background   %  | .background()
+	Root         !  | !
+	Disable      *  | -     .disable()
+	(There are only two unary overloadable operators in Rust)
+
+Shapes
+	Cube([x,y,z],center=true)
+	Sphere(r,$fa,$fa,$fs,center=true)
+	Cylinder(h,r1,r2,center=true), Cylinder(h,r,center=true)
+	Polyhedron(...)
+
+Transformations:
+	translate(v=[x,y,z]){...}
+	rotate(a=degrees, v=[x,y,z]){...}, rotate(a=[x_degrees,y_degrees,z_degrees]){...}
+	scale(v=[x,y,z]){...}
+	mirror([x,y,z]){...}
+
+	multmatrix([ 4 x 4 matrix]){...}
+	color([r,g,b,a]{...} color("color"){...}
+
+2D:
+	circle
+	polygon(points=[[x,y],...], paths=[[p1,p2,p3,...], ...])
+	linear_extrude(height=h, center=true, convexity, twist){...}
+	import(file="....dxf")
+	text(string, font="...", spacing=s, size=s)
+	projection
+
+==================================================
+
+Rusty-CAD:
+Implementation:
+	1) Final coordinates of components are calculated last (during serialisation)!
+
+	Traits:
+		Serialisable (3D-Objects and Special Variables)
+		Shape:
+			Cube
+			Sphere
+			Cylinder
+			Polyhedron
+			Composite ( Object x Object )
+			text
+			Measure
+		Transformations: (list)
+			multmatrix (scale, rotation, translation, mirroredness)
+			colour
+		Modifiers:
+			Debug
+			Background
+			Root
+			Disable
+			Operator[] Attach to other object's anchor copying the relative coordinate set (scale, rotation, mirroredness)
+			Operator() Attach to other object's anchor copying nothing
+		Operations
+			Union
+			Difference
+			Intersection
+			Hull
+			Minkowski
+			Vector addition
+			Vector-Matrix multiplication
+			Matrix-Matrix multiplication
+
+
+	Objects:
+		Point2D      (x,y)
+		Point3D      (x,y,z)
+		MultMatrix3D (Point2D+Scale+Rotation+Mirroredness)
+		MultMatrix4D (Point3D+Scale+Rotation+Mirroredness)
+		Anchor       (Parent-Object+MultMatrix, operator[], operator())
+		Object       (Shape, Multmatrix, Colour, Modifiers, Anchors, operator[], operator())
+
+
+
+
+
+
+
+
+
+
+
