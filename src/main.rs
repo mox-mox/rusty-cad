@@ -141,9 +141,9 @@ fn main()
 	//println!("Hello World");
 
 	let mut cube = cube(5.0, 1.0, 1.0);
-	cube.rotate_x(45.0);
+	//cube.rotate_x(45.0);
 
 
-	//println!("cube = {:?}\n\n\n\n", cube);
+	eprintln!("cube = {:?}\n\n\n\n", cube);
 	println!("{}", cube.serialise());
 }
