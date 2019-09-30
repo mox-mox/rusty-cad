@@ -5,7 +5,7 @@
 
 
 extern crate ndarray;
-//type Colour     = ndarray::Array1<f64>;
+type Colour     = ndarray::Array1<f64>;
 //type Point      = ndarray::Array1<f64>;
 type RefSys     = ndarray::Array2<f64>;
 
@@ -41,6 +41,14 @@ pub trait HasRefSys
 {
 	fn ref_sys_mut(&mut self) -> &mut RefSys;
 	fn ref_sys(&self) -> &RefSys;
+}
+//}}}
+
+//{{{
+pub trait HasColour
+{
+	fn colour_mut(&mut self) -> &mut Colour;
+	fn colour(&self) -> &Colour;
 }
 //}}}
 
@@ -91,6 +99,7 @@ pub struct Cube
 {
 	pub ref_sys  : RefSys,
 	pub measures : Measures,
+	pub colour   : Colour,
 }
 //}}}
 
@@ -105,6 +114,21 @@ impl HasRefSys for Cube
     fn ref_sys(&self) -> &RefSys
 	{
 		&self.ref_sys
+    }
+}
+//}}}
+
+//{{{
+impl HasColour for Cube
+{
+
+    fn colour_mut(&mut self) -> &mut Colour
+	{
+		&mut self.colour
+    }
+    fn colour(&self) -> &Colour
+	{
+		&self.colour
     }
 }
 //}}}
