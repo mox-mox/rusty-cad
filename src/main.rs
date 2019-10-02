@@ -5,9 +5,42 @@
 
 
 extern crate ndarray;
-type Colour     = ndarray::Array1<f64>;
-//type Point      = ndarray::Array1<f64>;
+type ColourVec  = ndarray::Array1<f64>;
+//type Measures   = ndarray::Array1<f64>;
 type RefSys     = ndarray::Array2<f64>;
+
+
+//{{{pub struct Colour
+
+#[derive(Debug)]
+pub enum Colour
+{
+	Unset,
+	Numeric(ColourVec),
+	Named(String),
+}
+
+//{{{ Colour constructors
+
+pub fn colour_none(name: String) -> Colour
+{
+	Colour::Unset
+}
+pub fn colour_named(name: &str) -> Colour
+{
+	Colour::Named(name.to_string())
+}
+pub fn colour_rgba(r : f64, g : f64, b : f64, a : f64) -> Colour
+{
+	Colour::Numeric(ColourVec::from_vec(vec![r,g,b,a]))
+}
+pub fn colour_rgb(r : f64, g : f64, b : f64) -> Colour
+{
+	colour_rgba(r,g,b,1.0)
+}
+//}}}
+
+//}}}
 
 //{{{pub struct Measures
 
@@ -49,6 +82,7 @@ pub trait HasColour
 {
 	fn colour_mut(&mut self) -> &mut Colour;
 	fn colour(&self) -> &Colour;
+	fn set_colour(&mut self, colour : Colour);
 }
 //}}}
 
@@ -67,6 +101,21 @@ impl IsSerialisableScope for RefSys
 	fn serialise(&self, child : String) -> String
 	{
 		String::from("multmatrix(m = ") + &self.to_string() + ")\n{\n" + &child + "\n};\n"
+	}
+}
+//}}}
+
+//{{{
+impl IsSerialisableScope for Colour
+{
+	fn serialise(&self, child : String) -> String
+	{
+		match &self
+		{
+			Self::Unset        => String::from("")                                      + &child,
+			Self::Numeric(vec) => String::from("color( ") + &vec.to_string() + ")\n{\n" + &child + "\n};\n",
+			Self::Named(name)  => String::from("color( \"") + &name            + "\")\n{\n" + &child + "\n};\n",
+		}
 	}
 }
 //}}}
@@ -130,6 +179,11 @@ impl HasColour for Cube
 	{
 		&self.colour
     }
+	fn set_colour(&mut self, colour : Colour)
+	{
+		self.colour = colour;
+		eprintln!("set_colourXXXXXXXXXXXXXXXXXXXXXXX");
+	}
 }
 //}}}
 
@@ -138,8 +192,10 @@ impl IsSerialisableObject for Cube
 {
 	fn serialise(&self) -> String
 	{
+		self.colour().serialise(
 		self.ref_sys().serialise(
 			String::from("cube([") + &self.measures.x.to_string() + ", " + &self.measures.y.to_string() + ", " + &self.measures.z.to_string() + "]);"
+			)
 		)
 	}
 }
@@ -148,7 +204,8 @@ impl IsSerialisableObject for Cube
 //{{{
 pub fn cube(x: f64, y: f64, z: f64) -> Cube
 {
-	let retval = Cube{ ref_sys : RefSys::eye(4), measures : Measures{x, y, z}};
+	//let retval = Cube{ ref_sys : RefSys::eye(4), measures : Measures{x, y, z}, colour : Colour::from_vec(vec![1.0, 0.0, 0.0])};
+	let retval = Cube{ ref_sys : RefSys::eye(4), measures : Measures{x, y, z}, colour : Colour::Unset};
 	return retval;
 }
 //}}}
@@ -164,10 +221,14 @@ fn main()
 {
 	//println!("Hello World");
 
+
 	let mut cube = cube(5.0, 1.0, 1.0);
-	//cube.rotate_x(45.0);
+	cube.rotate_x(45.0);
+	//cube.set_colour(colour_rgba(1.0, 0.0, 1.0, 0.5));
+	cube.set_colour(colour_named("green"));
 
 
 	eprintln!("cube = {:?}\n\n\n\n", cube);
 	println!("{}", cube.serialise());
+
 }
