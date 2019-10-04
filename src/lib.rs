@@ -4,7 +4,7 @@
 
 extern crate ndarray;
 //use std::fmt;
-pub use crate::shapes::primitive;
+//pub use crate::shapes::primitive;
 
 //{{{ helper_traits
 
@@ -176,9 +176,9 @@ pub mod refsys
 }
 //}}}
 
-//{{{
-pub mod shapes
-{
+////{{{
+//pub mod shapes
+//{
 	//// TODO: Cube
 	//// TODO: Sphere
 	//// TODO: Cylinder
@@ -201,9 +201,11 @@ pub mod shapes
 		#[derive(Debug)]
 		pub enum Shape
 		{
-			Cube     { x: f64, y: f64, z: f64},
-			Sphere   { r: f64, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64> },
-			Cylinder { h: f64, r1 : f64, r2 : f64, face_angle  : Option<f64>, face_size   : Option<f64>, face_number : Option<i32> },
+			Cube      { x: f64, y: f64, z: f64},
+			Sphere    { r: f64, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64> },
+			Cylinder  { h: f64, r1 : f64, r2 : f64, face_angle  : Option<f64>, face_size   : Option<f64>, face_number : Option<i32> },
+
+			///Composite { c1: Object, c2: Object },
 		}
 
 		//{{{
@@ -248,17 +250,17 @@ pub mod shapes
 
 		//}}}
 
-		//{{{pub struct Primitive
+		//{{{pub struct Object
 
 		#[derive(Debug)]
-		pub struct Primitive
+		pub struct Object
 		{
 			pub shape    : Shape,
 			pub ref_sys  : crate::refsys::RefSys,
 			pub colour   : crate::colour::Colour,
 		}
 
-		impl Primitive
+		impl Object
 		{
 			//{{{
 			pub fn set_fn(&mut self, num : i32)
@@ -307,7 +309,7 @@ pub mod shapes
 
 
 		//{{{
-		impl crate::refsys::HasRefSys for Primitive
+		impl crate::refsys::HasRefSys for Object
 		{
 
 			fn ref_sys_mut(&mut self) -> &mut crate::refsys::RefSys
@@ -322,7 +324,7 @@ pub mod shapes
 		//}}}
 
 		//{{{
-		impl crate::colour::HasColour for Primitive
+		impl crate::colour::HasColour for Object
 		{
 
 			fn colour_mut(&mut self) -> &mut crate::colour::Colour
@@ -341,7 +343,7 @@ pub mod shapes
 		//}}}
 
 		//{{{
-		impl crate::IsSerialisableObject for Primitive
+		impl crate::IsSerialisableObject for Object
 		{
 			fn serialise(&self) -> String
 			{
@@ -360,9 +362,9 @@ pub mod shapes
 		//{{{ Use Primitives
 
 		//{{{
-		pub fn cube(x: f64, y: f64, z: f64) -> Primitive
+		pub fn cube(x: f64, y: f64, z: f64) -> Object
 		{
-			Primitive{
+			Object{
 				shape: Shape::Cube{ x: x,y: y,z: z },
 				ref_sys: crate::refsys::RefSys::eye(4),
 				colour : crate::colour::Colour::Unset
@@ -370,9 +372,9 @@ pub mod shapes
 		}
 		//}}}
 		//{{{
-		pub fn sphere(r: f64) -> Primitive
+		pub fn sphere(r: f64) -> Object
 		{
-			Primitive{
+			Object{
 				shape: Shape::Sphere{ r: r, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> },
 				ref_sys: crate::refsys::RefSys::eye(4),
 				colour : crate::colour::Colour::Unset
@@ -380,9 +382,9 @@ pub mod shapes
 		}
 		//}}}
 		//{{{
-		pub fn cylinder(h: f64, r1: f64, r2: f64) -> Primitive
+		pub fn cylinder(h: f64, r1: f64, r2: f64) -> Object
 		{
-			Primitive{
+			Object{
 				shape: Shape::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> },
 				ref_sys: crate::refsys::RefSys::eye(4),
 				colour : crate::colour::Colour::Unset
@@ -392,6 +394,7 @@ pub mod shapes
 		//}}}
 	}
 	//}}}
-}
-//}}}
+	
+//}
+////}}}
 
