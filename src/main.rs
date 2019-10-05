@@ -3,9 +3,10 @@
 #![allow(unused_mut)]
 
 extern crate rusty_scad;
-use rusty_scad::primitive::cube;
+use rusty_scad::object::*;
+//use rusty_scad::primitive::cube;
+//use rusty_scad::primitive::sphere;
 use rusty_scad::colour::colour_named;
-use rusty_scad::primitive::sphere;
 use crate::rusty_scad::Is3DObject;
 use crate::rusty_scad::colour::HasColour;
 use crate::rusty_scad::IsSerialisableObject;
@@ -22,7 +23,15 @@ fn main()
 	sphere.set_colour(colour_named("red"));
 	sphere.set_fn(100);
 
-	eprintln!("cube = {:?}\n\n\n\n", cube);
-	println!("{}\n{}", cube.serialise(), sphere.serialise());
+	//eprintln!("cube = {:?}\n\n\n\n", cube);
+	eprintln!("{}\n{}", cube.serialise(), sphere.serialise());
+
+
+	let merged = hull(cube, sphere);
+
+
+	println!("{}", merged.serialise());
+
+
 
 }
