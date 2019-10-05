@@ -4,11 +4,16 @@
 
 extern crate ndarray;
 use std::fmt;
+use crate::refsys::RefSys;
+pub use colour::colour_none;
+pub use colour::colour_named;
+pub use colour::colour_rgb;
+pub use colour::colour_rgba;
 
 //{{{ helper_traits
 
 //{{{
-pub trait IsSerialisableScope
+trait IsSerialisableScope
 {
 	fn serialise(&self, child : String) -> String;
 }
@@ -17,11 +22,27 @@ pub trait IsSerialisableScope
 //}}}
 
 //{{{
-pub mod colour
+mod refsys
 {
 
-	//{{{ Define Colour Object
+	pub type RefSys     = ndarray::Array2<f64>;
 
+	//{{{
+	impl crate::IsSerialisableScope for RefSys
+	{
+		fn serialise(&self, child : String) -> String
+		{
+			String::from("multmatrix(m = ") + &self.to_string() + ")\n{\n" + &child + "\n};\n"
+		}
+	}
+	//}}}
+}
+//}}}
+
+//{{{
+mod colour
+{
+	use std::fmt;
 	// Numeric representation of a colour
 	type ColourVec  = ndarray::Array1<f64>;
 
@@ -71,8 +92,21 @@ pub mod colour
 		}
 	}
 	//}}}
-	//}}}
 
+	//{{{
+	impl fmt::Display for Colour
+	{
+		fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+		{
+			match &self
+			{
+				Self::Unset        => write!(f, "Unset"),
+				Self::Numeric(vec) => write!(f, "{}", vec),
+				Self::Named(name)  => write!(f, "{}", name),
+			}
+		}
+	}
+	//}}}
 }
 //}}}
 
@@ -90,37 +124,11 @@ pub mod anchors
 }
 //}}}
 
-//{{{
-pub mod refsys
-{
-	//{{{ Define RefSys
-
-	pub type RefSys     = ndarray::Array2<f64>;
-
-	//{{{
-	impl crate::IsSerialisableScope for RefSys
-	{
-		fn serialise(&self, child : String) -> String
-		{
-			String::from("multmatrix(m = ") + &self.to_string() + ")\n{\n" + &child + "\n};\n"
-		}
-	}
-	//}}}
-	//}}}
-}
-//}}}
-
-//// TODO: Cube
-//// TODO: Sphere
-//// TODO: Cylinder
 // TODO: Polyhedron
-// TODO: Composite ( Object x Object )
 // TODO: text
 // TODO: Measure::Length
 // TODO: Measure::Angle
 
-use crate::refsys::RefSys;
-//use std::fmt;
 //{{{ Define Object
 
 //{{{ pub enum BooleanOp
@@ -227,10 +235,10 @@ impl Object
 
 		match self.shape
 		{
-			Shape::Cube{x,y,z}                                                => unreachable!(),
+			Shape::Cube{x,y,z}                                                => {},
 			Shape::Sphere{r,ref mut face_number,face_angle,face_size}         => *face_number = Some(num),
 			Shape::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size} => *face_number = Some(num),
-			Shape::Composite{ref op,ref c1,ref c2}                                        => unreachable!(), // TODO
+			Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fn(num); c2.set_fn(num); },
 		}
 	}
 	//}}}
@@ -239,10 +247,10 @@ impl Object
 	{
 		match self.shape
 		{
-			Shape::Cube{x,y,z}                                                => unreachable!(),
+			Shape::Cube{x,y,z}                                                => {},
 			Shape::Sphere{r,face_number,ref mut face_angle,face_size}         => *face_angle = Some(num),
 			Shape::Cylinder{h,r1,r2,face_number,ref mut face_angle,face_size} => *face_angle = Some(num),
-			Shape::Composite{ref op,ref c1,ref c2}                                        => unreachable!(), // TODO
+			Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fa(num); c2.set_fa(num); },
 		}
 	}
 	//}}}
@@ -251,10 +259,10 @@ impl Object
 	{
 		match self.shape
 		{
-			Shape::Cube{x,y,z}                                                => unreachable!(),
+			Shape::Cube{x,y,z}                                                => {},
 			Shape::Sphere{r,face_number,face_angle,ref mut face_size}         => *face_size = Some(num),
 			Shape::Cylinder{h,r1,r2,face_number,face_angle,ref mut face_size} => *face_size = Some(num),
-			Shape::Composite{ref op,ref c1,ref c2}                                        => unreachable!(), // TODO
+			Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fs(num); c2.set_fs(num); },
 		}
 	}
 	//}}}
@@ -315,6 +323,56 @@ impl Object
 		self.ref_sys = rotation.dot(&self.ref_sys);
 	}
 	//}}}
+	//{{{
+	pub fn rotate(&mut self, x: f64, y: f64, z: f64)
+	{
+		self.rotate_x(x);
+		self.rotate_y(y);
+		self.rotate_z(z);
+	}
+	//}}}
+
+	//{{{
+	pub fn translate_x(&mut self, x: f64)
+	{
+		let mut translation=RefSys::eye(4);
+		translation[[0,3]] =  x;
+
+		self.ref_sys = translation.dot(&self.ref_sys);
+	}
+	//}}}
+	//{{{
+	pub fn translate_y(&mut self, y: f64)
+	{
+		let mut translation=RefSys::eye(4);
+		translation[[1,3]] =  y;
+
+		self.ref_sys = translation.dot(&self.ref_sys);
+	}
+	//}}}
+	//{{{
+	pub fn translate_z(&mut self, z: f64)
+	{
+		let mut translation=RefSys::eye(4);
+		translation[[2,3]] =  z;
+
+		self.ref_sys = translation.dot(&self.ref_sys);
+	}
+	//}}}
+	//{{{
+	pub fn translate(&mut self, x: f64, y:f64, z: f64)
+	{
+		let mut translation=RefSys::eye(4);
+		translation[[0,3]] =  x;
+		translation[[1,3]] =  y;
+		translation[[2,3]] =  z;
+
+		self.ref_sys = translation.dot(&self.ref_sys);
+	}
+	//}}}
+
+
+
 	//}}}
 }
 
@@ -325,7 +383,6 @@ impl fmt::Display for Object
 {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 	{
-		//use crate::IsSerialisableScope;
 		write!(f, "{}",
 			self.colour.serialise(
 				self.ref_sys.serialise(
@@ -429,4 +486,6 @@ pub fn minkowski(c1: Object, c2: Object) -> Object
 	}
 }
 //}}}
+
+
 //}}}
