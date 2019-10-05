@@ -192,9 +192,23 @@ pub mod refsys
 
 
 	//{{{
-	pub mod primitive
+	pub mod object
 	{
-		//{{{ Define Primitive
+		//{{{ Define Object
+
+		//{{{ pub enum BooleanOp
+
+		#[derive(Debug)]
+		#[allow(non_camel_case_types)] // We use the debug output to create the OpenSCad code. And that code requires the names to be lower-case.
+		pub enum BooleanOp
+		{
+			union,
+			difference,
+			intersection,
+			hull,
+			minkowski,
+		}
+		//}}}
 
 		//{{{ pub enum Shape
 
@@ -205,7 +219,7 @@ pub mod refsys
 			Sphere    { r: f64, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64> },
 			Cylinder  { h: f64, r1 : f64, r2 : f64, face_angle  : Option<f64>, face_size   : Option<f64>, face_number : Option<i32> },
 
-			///Composite { c1: Object, c2: Object },
+			Composite { op: BooleanOp, c1: Box<Object>, c2: Box<Object> },
 		}
 
 		//{{{
