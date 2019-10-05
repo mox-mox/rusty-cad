@@ -62,6 +62,7 @@ pub mod colour
 	//{{{ pub enum Colour
 
 	#[derive(Debug)]
+	#[derive(Clone)] // we add the Clone trait to Morpheus struct
 	pub enum Colour
 	{
 		Unset,
@@ -175,10 +176,6 @@ pub mod refsys
 	//}}}
 }
 //}}}
-
-
-
-
 
 //{{{
 pub mod object
@@ -488,50 +485,55 @@ pub mod object
 	//{{{
 	pub fn union(c1: Object, c2: Object) -> Object
 	{
+		let colour = c1.colour.clone();
 		Object{
 			shape: Shape::Composite{ op: BooleanOp::union, c1: Box::new(c1), c2: Box::new(c2) },
 			ref_sys: crate::refsys::RefSys::eye(4),
-			colour : crate::colour::Colour::Unset
+			colour : colour,
 		}
 	}
 	//}}}
 	//{{{
 	pub fn difference(c1: Object, c2: Object) -> Object
 	{
+		let colour = c1.colour.clone();
 		Object{
 			shape: Shape::Composite{ op: BooleanOp::difference, c1: Box::new(c1), c2: Box::new(c2) },
 			ref_sys: crate::refsys::RefSys::eye(4),
-			colour : crate::colour::Colour::Unset
+			colour : colour,
 		}
 	}
 	//}}}
 	//{{{
 	pub fn intersection(c1: Object, c2: Object) -> Object
 	{
+		let colour = c1.colour.clone();
 		Object{
 			shape: Shape::Composite{ op: BooleanOp::intersection, c1: Box::new(c1), c2: Box::new(c2) },
 			ref_sys: crate::refsys::RefSys::eye(4),
-			colour : crate::colour::Colour::Unset
+			colour : colour,
 		}
 	}
 	//}}}
 	//{{{
 	pub fn hull(c1: Object, c2: Object) -> Object
 	{
+		let colour = c1.colour.clone();
 		Object{
 			shape: Shape::Composite{ op: BooleanOp::hull, c1: Box::new(c1), c2: Box::new(c2) },
 			ref_sys: crate::refsys::RefSys::eye(4),
-			colour : crate::colour::Colour::Unset
+			colour : colour,
 		}
 	}
 	//}}}
 	//{{{
 	pub fn minkowski(c1: Object, c2: Object) -> Object
 	{
+		let colour = c1.colour.clone();
 		Object{
 			shape: Shape::Composite{ op: BooleanOp::minkowski, c1: Box::new(c1), c2: Box::new(c2) },
 			ref_sys: crate::refsys::RefSys::eye(4),
-			colour : crate::colour::Colour::Unset
+			colour : colour,
 		}
 	}
 	//}}}

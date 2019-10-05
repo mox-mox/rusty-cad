@@ -16,7 +16,7 @@ fn main()
 	let mut cube = cube(5.0, 1.0, 1.0);
 	cube.rotate_x(45.0);
 	//cube.set_colour(colour_rgba(1.0, 0.0, 1.0, 0.5));
-	cube.set_colour(colour_named("yellow"));
+	cube.set_colour(colour_named("blue"));
 
 	let mut sphere = sphere(2.0);
 	sphere.rotate_x(45.0);
@@ -27,7 +27,8 @@ fn main()
 	eprintln!("{}\n{}", cube.serialise(), sphere.serialise());
 
 
-	let merged = hull(cube, sphere);
+	let mut merged = hull(cube, sphere);
+	//merged.set_colour(colour_named("green"));
 
 
 	println!("{}", merged.serialise());
