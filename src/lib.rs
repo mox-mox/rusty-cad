@@ -128,6 +128,7 @@ pub mod anchors
 // TODO: text
 // TODO: Measure::Length
 // TODO: Measure::Angle
+// TODO: Measure::Triangle
 
 //{{{ Define Object
 
@@ -188,7 +189,7 @@ impl Shape
 				let faa = if let Some(x) = face_angle  { String::from(", $fa=") + &x.to_string() } else { String::from("") };
 				let fas = if let Some(x) = face_size   { String::from(", $fs=") + &x.to_string() } else { String::from("") };
 
-				String::from("sphere( h=") + &h.to_string() + ", r1=" + &r1.to_string() + ", r2=" + &r2.to_string() + &fan + &faa + &fas + ");"
+				String::from("cylinder( h=") + &h.to_string() + ", r1=" + &r1.to_string() + ", r2=" + &r2.to_string() + &fan + &faa + &fas + ");"
 			}
 			//}}}
 			//{{{
@@ -217,6 +218,7 @@ pub struct Object
 	pub colour   : crate::colour::Colour,
 }
 
+//{{{
 impl Object
 {
 	//{{{ Rendering
@@ -333,6 +335,55 @@ impl Object
 	//}}}
 
 	//{{{
+	pub fn rel_rotate_x(&mut self, x: f64)
+	{
+		let x = x.to_radians();
+		let mut rotation=RefSys::eye(4);
+		rotation[[1,1]] =  x.cos();
+		rotation[[1,2]] = -x.sin();
+		rotation[[2,1]] =  x.sin();
+		rotation[[2,2]] =  x.cos();
+
+		self.ref_sys = self.ref_sys.dot(&rotation);
+	}
+	//}}}
+	//{{{
+	pub fn rel_rotate_y(&mut self, y: f64)
+	{
+		let y = y.to_radians();
+		let mut rotation=RefSys::eye(4);
+		rotation[[0,0]] =  y.cos();
+		rotation[[0,2]] =  y.sin();
+		rotation[[2,0]] = -y.sin();
+		rotation[[2,2]] =  y.cos();
+
+		self.ref_sys = self.ref_sys.dot(&rotation);
+	}
+	//}}}
+	//{{{
+	pub fn rel_rotate_z(&mut self, z: f64)
+	{
+		let z = z.to_radians();
+		let mut rotation=RefSys::eye(4);
+		rotation[[0,0]] =  z.cos();
+		rotation[[0,1]] = -z.sin();
+		rotation[[1,0]] =  z.sin();
+		rotation[[1,1]] =  z.cos();
+
+		self.ref_sys = self.ref_sys.dot(&rotation);
+	}
+	//}}}
+	//{{{
+	pub fn rel_rotate(&mut self, x: f64, y: f64, z: f64)
+	{
+		self.rel_rotate_x(x);
+		self.rel_rotate_y(y);
+		self.rel_rotate_z(z);
+	}
+	//}}}
+
+
+	//{{{
 	pub fn translate_x(&mut self, x: f64)
 	{
 		let mut translation=RefSys::eye(4);
@@ -371,12 +422,93 @@ impl Object
 	}
 	//}}}
 
+	//{{{
+	pub fn rel_translate_x(&mut self, x: f64)
+	{
+		let mut translation=RefSys::eye(4);
+		translation[[0,3]] =  x;
+
+		//self.ref_sys = translation.dot(&self.ref_sys);
+		self.ref_sys = self.ref_sys.dot(&translation);
+	}
+	//}}}
+	//{{{
+	pub fn rel_translate_y(&mut self, y: f64)
+	{
+		let mut translation=RefSys::eye(4);
+		translation[[1,3]] =  y;
+
+		//self.ref_sys = translation.dot(&self.ref_sys);
+		self.ref_sys = self.ref_sys.dot(&translation);
+	}
+	//}}}
+	//{{{
+	pub fn rel_translate_z(&mut self, z: f64)
+	{
+		let mut translation=RefSys::eye(4);
+		translation[[2,3]] =  z;
+
+		//self.ref_sys = translation.dot(&self.ref_sys);
+		self.ref_sys = self.ref_sys.dot(&translation);
+	}
+	//}}}
+	//{{{
+	pub fn rel_translate(&mut self, x: f64, y:f64, z: f64)
+	{
+		let mut translation=RefSys::eye(4);
+		translation[[0,3]] =  x;
+		translation[[1,3]] =  y;
+		translation[[2,3]] =  z;
+
+		//self.ref_sys = translation.dot(&self.ref_sys);
+		self.ref_sys = self.ref_sys.dot(&translation);
+	}
+	//}}}
+
+
+	//{{{
+	pub fn scale_x(&mut self, x: f64)
+	{
+		let mut scale=RefSys::eye(4);
+		scale[[0,0]] =  x;
+
+		self.ref_sys = scale.dot(&self.ref_sys);
+	}
+	//}}}
+	//{{{
+	pub fn scale_y(&mut self, y: f64)
+	{
+		let mut scale=RefSys::eye(4);
+		scale[[1,1]] =  y;
+
+		self.ref_sys = scale.dot(&self.ref_sys);
+	}
+	//}}}
+	//{{{
+	pub fn scale_z(&mut self, z: f64)
+	{
+		let mut scale=RefSys::eye(4);
+		scale[[3,3]] =  z;
+
+		self.ref_sys = scale.dot(&self.ref_sys);
+	}
+	//}}}
+	//{{{
+	pub fn scale(&mut self, x: f64, y:f64, z: f64)
+	{
+		let mut scale=RefSys::eye(4);
+		scale[[0,0]] =  x;
+		scale[[1,1]] =  y;
+		scale[[2,2]] =  z;
+
+		self.ref_sys = scale.dot(&self.ref_sys);
+	}
+	//}}}
 
 
 	//}}}
 }
-
-
+//}}}
 
 //{{{
 impl fmt::Display for Object
@@ -393,13 +525,10 @@ impl fmt::Display for Object
 	}
 }
 //}}}
-
-
-
 //}}}
 //}}}
 
-//{{{ Use Primitives
+//{{{ Create Objects
 
 //{{{
 pub fn cube(x: f64, y: f64, z: f64) -> Object
@@ -434,58 +563,102 @@ pub fn cylinder(h: f64, r1: f64, r2: f64) -> Object
 //{{{
 pub fn union(c1: Object, c2: Object) -> Object
 {
-	let colour = c1.colour.clone();
+	//let colour = c1.colour.clone();
 	Object{
 		shape: Shape::Composite{ op: BooleanOp::union, c1: Box::new(c1), c2: Box::new(c2) },
 		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : colour,
+		colour : crate::colour::Colour::Unset,
+		//colour : colour,
 	}
 }
 //}}}
 //{{{
 pub fn difference(c1: Object, c2: Object) -> Object
 {
-	let colour = c1.colour.clone();
+	//let colour = c1.colour.clone();
 	Object{
 		shape: Shape::Composite{ op: BooleanOp::difference, c1: Box::new(c1), c2: Box::new(c2) },
 		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : colour,
+		colour : crate::colour::Colour::Unset,
+		//colour : colour,
 	}
 }
 //}}}
 //{{{
 pub fn intersection(c1: Object, c2: Object) -> Object
 {
-	let colour = c1.colour.clone();
+	//let colour = c1.colour.clone();
 	Object{
 		shape: Shape::Composite{ op: BooleanOp::intersection, c1: Box::new(c1), c2: Box::new(c2) },
 		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : colour,
+		colour : crate::colour::Colour::Unset,
+		//colour : colour,
 	}
 }
 //}}}
 //{{{
 pub fn hull(c1: Object, c2: Object) -> Object
 {
-	let colour = c1.colour.clone();
+	//let colour = c1.colour.clone();
 	Object{
 		shape: Shape::Composite{ op: BooleanOp::hull, c1: Box::new(c1), c2: Box::new(c2) },
 		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : colour,
+		colour : crate::colour::Colour::Unset,
+		//colour : colour,
 	}
 }
 //}}}
 //{{{
 pub fn minkowski(c1: Object, c2: Object) -> Object
 {
-	let colour = c1.colour.clone();
+	//let colour = c1.colour.clone();
 	Object{
 		shape: Shape::Composite{ op: BooleanOp::minkowski, c1: Box::new(c1), c2: Box::new(c2) },
 		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : colour,
+		colour : crate::colour::Colour::Unset,
+		//colour : colour,
 	}
 }
 //}}}
 
+//{{{
+pub fn coordinate_system() -> Object
+{
+	//{{{
+	let mut x1 = cylinder(1.0, 0.05, 0.05);
+	let mut x2 = cylinder(0.1, 0.1,  0.0);
+	x2.translate_z(1.0);
+	let mut x = union(x1, x2);
+	x.rotate_y(90.0);
+	x.set_colour(colour_named("red"));
+	//}}}
+	
+	//{{{
+	let mut y1 = cylinder(1.0, 0.05, 0.05);
+	let mut y2 = cylinder(0.1, 0.1,  0.0);
+	y2.translate_z(1.0);
+	let mut y = union(y1, y2);
+	y.rotate_x(-90.0);
+	y.set_colour(colour_named("green"));
+	//}}}
 
+	//{{{
+	let mut z1 = cylinder(1.0, 0.05, 0.05);
+	let mut z2 = cylinder(0.1, 0.1,  0.0);
+	z2.translate_z(1.0);
+	let mut z = union(z1, z2);
+	z.set_colour(colour_named("blue"));
+	//}}}
+
+	let mut xy = union(x, y);
+	let mut xyz = union(xy, z);
+
+	let mut base = sphere(0.05);
+	let mut coord_sys = union(xyz, base);
+
+	coord_sys.set_fn(10);
+
+	coord_sys
+}
+//}}}
 //}}}
