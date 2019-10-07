@@ -32,8 +32,9 @@ fn main()
 
 
 	let mut c = coordinate_system();
-	c.rotate_z(45.0);
-	c.rotate_y(45.0);
+
+	//c.rotate_z(45.0);
+	//c.rotate_y(45.0);
 	//c.rel_translate_x(2.0);
 
 

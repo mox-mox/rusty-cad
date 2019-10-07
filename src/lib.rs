@@ -2,7 +2,11 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 
-extern crate ndarray;
+//extern crate ndarray;
+
+//extern crate nalgebra as na;
+//use na::{Vector3, Rotation3, Rotation};
+
 use std::fmt;
 use crate::refsys::RefSys;
 pub use colour::colour_none;
@@ -12,13 +16,20 @@ pub use colour::colour_rgba;
 
 //{{{ helper_traits
 
+use ndarray::ArrayView1;
 //{{{
 trait IsSerialisableScope
 {
 	fn serialise(&self, child : String) -> String;
 }
 //}}}
-
+//{{{
+fn l2_norm(x: ArrayView1<f64>) -> f64
+{
+	// Taken from:  https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/linear_algebra.html
+    x.dot(&x).sqrt()
+}
+//}}}
 //}}}
 
 //{{{
@@ -328,9 +339,34 @@ impl Object
 	//{{{
 	pub fn rotate(&mut self, x: f64, y: f64, z: f64)
 	{
-		self.rotate_x(x);
-		self.rotate_y(y);
-		self.rotate_z(z);
+
+		let mut rotation=RefSys::eye(4);
+		//{{{ rot x
+
+		let x = x.to_radians();
+		rotation[[1,1]] =  x.cos();
+		rotation[[1,2]] = -x.sin();
+		rotation[[2,1]] =  x.sin();
+		rotation[[2,2]] =  x.cos();
+		//}}}
+		//{{{ rot y
+
+		let y = y.to_radians();
+		rotation[[0,0]] =  y.cos();
+		rotation[[0,2]] =  y.sin();
+		rotation[[2,0]] = -y.sin();
+		rotation[[2,2]] =  y.cos();
+		//}}}
+		//{{{ rot z
+
+		let z = z.to_radians();
+		rotation[[0,0]] =  z.cos();
+		rotation[[0,1]] = -z.sin();
+		rotation[[1,0]] =  z.sin();
+		rotation[[1,1]] =  z.cos();
+		//}}}
+
+		self.ref_sys = rotation.dot(&self.ref_sys);
 	}
 	//}}}
 
@@ -411,7 +447,7 @@ impl Object
 	}
 	//}}}
 	//{{{
-	pub fn translate(&mut self, x: f64, y:f64, z: f64)
+	pub fn translate(&mut self, x: f64, y: f64, z: f64)
 	{
 		let mut translation=RefSys::eye(4);
 		translation[[0,3]] =  x;
@@ -453,7 +489,7 @@ impl Object
 	}
 	//}}}
 	//{{{
-	pub fn rel_translate(&mut self, x: f64, y:f64, z: f64)
+	pub fn rel_translate(&mut self, x: f64, y: f64, z: f64)
 	{
 		let mut translation=RefSys::eye(4);
 		translation[[0,3]] =  x;
@@ -504,6 +540,100 @@ impl Object
 		self.ref_sys = scale.dot(&self.ref_sys);
 	}
 	//}}}
+
+	//}}}
+
+	//{{{ Get 3D Coordinates, Rotation, Scale, Shear
+	
+	// See: https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
+	//{{{ Positions in a MultMatrix
+	//
+	// [ (0,0) (0,1) (0,2) (0,3) ]
+	// [ (1,0) (1,1) (1,2) (1,3) ]
+	// [ (2,0) (2,1) (2,2) (2,3) ]
+	// [ (3,0) (3,1) (3,2) (3,3) ]
+	//}}}
+
+
+	//{{{
+	pub fn get_rotate_x(&mut self) -> f64
+	{
+		0.0
+	}
+	//}}}
+	//{{{
+	pub fn get_rotate_y(&mut self) -> f64
+	{
+		0.0
+	}
+	//}}}
+	//{{{
+	pub fn get_rotate_z(&mut self) -> f64
+	{
+		0.0
+	}
+	//}}}
+	//{{{
+	pub fn get_rotate(&mut self) -> ( f64, f64, f64)
+	{
+		(0.0, 0.0, 0.0)
+	}
+	//}}}
+
+	//{{{
+	pub fn get_translate_x(&mut self) -> f64
+	{
+		self.ref_sys[[0,3]]
+	}
+	//}}}
+	//{{{
+	pub fn get_translate_y(&mut self) -> f64
+	{
+		self.ref_sys[[1,3]]
+	}
+	//}}}
+	//{{{
+	pub fn get_translate_z(&mut self) -> f64
+	{
+		self.ref_sys[[2,3]]
+	}
+	//}}}
+	//{{{
+	pub fn get_translate(&mut self) -> (f64, f64, f64)
+	{
+		(self.get_translate_x(), self.get_translate_y(), self.get_translate_z())
+	}
+	//}}}
+
+	//{{{
+	pub fn get_scale_x(&mut self) -> f64
+	{
+		use ndarray::s;
+		l2_norm(self.ref_sys.slice(s![0, ..]))
+	}
+	//}}}
+	//{{{
+	pub fn get_scale_y(&mut self) -> f64
+	{
+		use ndarray::s;
+		l2_norm(self.ref_sys.slice(s![1, ..]))
+	}
+	//}}}
+	//{{{
+	pub fn get_scale_z(&mut self) -> f64
+	{
+		use ndarray::s;
+		l2_norm(self.ref_sys.slice(s![2, ..]))
+	}
+	//}}}
+	//{{{
+	pub fn get_scale(&mut self) -> (f64, f64, f64)
+	{
+		(self.get_scale_x(), self.get_scale_y(), self.get_scale_z())
+	}
+	//}}}
+
+
 
 
 	//}}}
