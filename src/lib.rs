@@ -76,7 +76,7 @@ mod colour
 	//{{{ pub enum Colour
 
 	#[derive(Debug)]
-	#[derive(Clone)] // we add the Clone trait to Morpheus struct
+	#[derive(Clone)]
 	pub enum Colour
 	{
 		Unset,
@@ -138,11 +138,53 @@ mod colour
 }
 //}}}
 
-//{{{ TODO:
-pub mod modifiers
+//{{{
+mod modifiers
 {
+	use std::fmt;
 	// openscad modifiers: #: debug, %: background, !: root, *:disable
+	//{{{ pub enum ScadModifier
+
+	#[derive(Debug)]
+	#[derive(Clone)]
+	pub enum ScadModifier
+	{
+		Unset,
+		Debug,
+		Background,
+		Root,
+		Disable,
+	}
+	//}}}
+	//{{{
+	impl fmt::Display for ScadModifier
+	{
+		fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+		{
+			match &self
+			{
+				Self::Unset      => write!(f, ""),
+				Self::Debug      => write!(f, "#"),
+				Self::Background => write!(f, "%"),
+				Self::Root       => write!(f, "!"),
+				Self::Disable    => write!(f, "*"),
+			}
+		}
+	}
+	//}}}
+
 	// custom modifiers: show anchors, show origin
+	//{{{ pub enum CustomModifier
+
+	#[derive(Debug)]
+	#[derive(Clone)]
+	pub enum CustomModifier
+	{
+		Unset,
+		ShowOrigin,
+		ShowAnchors,
+	}
+	//}}}
 }
 //}}}
 
@@ -243,9 +285,11 @@ impl Shape
 #[derive(Debug)]
 pub struct Object
 {
-	pub shape    : Shape,
-	pub ref_sys  : crate::refsys::RefSys,
-	pub colour   : crate::colour::Colour,
+	pub shape       : Shape,
+	pub ref_sys     : crate::refsys::RefSys,
+	pub colour      : crate::colour::Colour,
+	scad_modifier   : crate::modifiers::ScadModifier,
+	custom_modifier : crate::modifiers::CustomModifier,
 }
 
 //{{{
@@ -261,65 +305,23 @@ fn l2_norm(x: ndarray::ArrayView1<f64>) -> f64
 //{{{
 impl Object
 {
-
-	//{{{ Rendering
 	//{{{
-	pub fn set_fn(&mut self, num : i32)
+	fn new(shape : Shape) -> Self
 	{
-		//{{{ Commeted
-		//
-		//if let Shape::Sphere{r,ref mut face_number,face_angle,face_size} = self.shape {
-		//	*face_number = Some(num);
-		//}
-		//if let Shape::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size} = self.shape {
-		//	*face_number = Some(num);
-		//}
-		//}}}
-
-		match self.shape
-		{
-			Shape::Cube{x,y,z}                                                => {},
-			Shape::Sphere{r,ref mut face_number,face_angle,face_size}         => *face_number = Some(num),
-			Shape::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size} => *face_number = Some(num),
-			Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fn(num); c2.set_fn(num); },
+		Self{
+			shape           : shape,
+			ref_sys         : crate::refsys::RefSys::eye(4),
+			colour          : crate::colour::Colour::Unset, 
+			scad_modifier   : crate::modifiers::ScadModifier::Unset, 
+			custom_modifier : crate::modifiers::CustomModifier::Unset, 
 		}
 	}
-	//}}}
-	//{{{
-	pub fn set_fa(&mut self, num : f64)
-	{
-		match self.shape
-		{
-			Shape::Cube{x,y,z}                                                => {},
-			Shape::Sphere{r,face_number,ref mut face_angle,face_size}         => *face_angle = Some(num),
-			Shape::Cylinder{h,r1,r2,face_number,ref mut face_angle,face_size} => *face_angle = Some(num),
-			Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fa(num); c2.set_fa(num); },
-		}
-	}
-	//}}}
-	//{{{
-	pub fn set_fs(&mut self, num : f64)
-	{
-		match self.shape
-		{
-			Shape::Cube{x,y,z}                                                => {},
-			Shape::Sphere{r,face_number,face_angle,ref mut face_size}         => *face_size = Some(num),
-			Shape::Cylinder{h,r1,r2,face_number,face_angle,ref mut face_size} => *face_size = Some(num),
-			Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fs(num); c2.set_fs(num); },
-		}
-	}
-	//}}}
-	//{{{
-	pub fn set_colour(&mut self, colour : crate::colour::Colour)
-	{
-		self.colour = colour;
-	}
-	//}}}
 	//}}}
 
 
 	//{{{ Helpers
 	
+	// TODO: Iterator over compound object tree
 
 	////{{{
 	//pub fn invert(&self) -> Self
@@ -518,10 +520,103 @@ impl Object
 	//}
 //}}}
 
-
-
 	//}}}
 
+	//{{{ Rendering
+	//{{{
+	pub fn set_fn(&mut self, num : i32)
+	{
+		//{{{ Commeted
+		//
+		//if let Shape::Sphere{r,ref mut face_number,face_angle,face_size} = self.shape {
+		//	*face_number = Some(num);
+		//}
+		//if let Shape::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size} = self.shape {
+		//	*face_number = Some(num);
+		//}
+		//}}}
+
+		match self.shape
+		{
+			Shape::Cube{x,y,z}                                                => {},
+			Shape::Sphere{r,ref mut face_number,face_angle,face_size}         => *face_number = Some(num),
+			Shape::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size} => *face_number = Some(num),
+			Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fn(num); c2.set_fn(num); },
+		}
+	}
+	//}}}
+	//{{{
+	pub fn set_fa(&mut self, num : f64)
+	{
+		match self.shape
+		{
+			Shape::Cube{x,y,z}                                                => {},
+			Shape::Sphere{r,face_number,ref mut face_angle,face_size}         => *face_angle = Some(num),
+			Shape::Cylinder{h,r1,r2,face_number,ref mut face_angle,face_size} => *face_angle = Some(num),
+			Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fa(num); c2.set_fa(num); },
+		}
+	}
+	//}}}
+	//{{{
+	pub fn set_fs(&mut self, num : f64)
+	{
+		match self.shape
+		{
+			Shape::Cube{x,y,z}                                                => {},
+			Shape::Sphere{r,face_number,face_angle,ref mut face_size}         => *face_size = Some(num),
+			Shape::Cylinder{h,r1,r2,face_number,face_angle,ref mut face_size} => *face_size = Some(num),
+			Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fs(num); c2.set_fs(num); },
+		}
+	}
+	//}}}
+	//{{{
+	pub fn set_colour(&mut self, colour : crate::colour::Colour)
+	{
+		self.colour = colour;
+	}
+	//}}}
+	
+
+	//{{{
+	pub fn set_debug(&mut self)
+	{
+		self.scad_modifier = crate::modifiers::ScadModifier::Debug;
+		// TODO: Iterate over compound object tree and delete colour
+	}
+	//}}}
+	//{{{
+	pub fn set_background(&mut self)
+	{
+		self.scad_modifier = crate::modifiers::ScadModifier::Background;
+		// TODO: Iterate over compound object tree and delete colour
+	}
+	//}}}
+	//{{{
+	pub fn set_root(&mut self)
+	{
+		self.scad_modifier = crate::modifiers::ScadModifier::Root;
+	}
+	//}}}
+	//{{{
+	pub fn set_disable(&mut self)
+	{
+		self.scad_modifier = crate::modifiers::ScadModifier::Disable;
+	}
+	//}}}
+
+	//{{{
+	pub fn set_show_origin(&mut self)
+	{
+		self.custom_modifier = crate::modifiers::CustomModifier::ShowOrigin;
+	}
+	//}}}
+	//{{{
+	pub fn set_show_anchors(&mut self)
+	{
+		self.custom_modifier = crate::modifiers::CustomModifier::ShowAnchors;
+	}
+	//}}}
+	//}}}
 
 	//{{{ 3D-Manipulation
 
@@ -857,10 +952,14 @@ impl fmt::Display for Object
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 	{
 		let indentation = if let Some(width) = f.width() { width } else { 0 as usize };
-		write!(f, "{}",
+
+		// TODO: Add Anchors here
+		let additional_stuff = if let crate::modifiers::CustomModifier::ShowOrigin = self.custom_modifier {object_origin().to_string()} else {String::from("")};
+
+		write!(f, "{}{}",&self.scad_modifier,
 			&self.colour.serialise(indentation,
 				&self.ref_sys.serialise(indentation+1,
-					&self.shape.serialise(indentation+2)
+					&(	self.shape.serialise(indentation+2) + &additional_stuff)
 				)
 			) 
 		)
@@ -875,91 +974,49 @@ impl fmt::Display for Object
 //{{{
 pub fn cube(x: f64, y: f64, z: f64) -> Object
 {
-	Object{
-		shape: Shape::Cube{ x: x,y: y,z: z },
-		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : crate::colour::Colour::Unset
-	}
+	Object::new(Shape::Cube{ x: x,y: y,z: z })
 }
 //}}}
 //{{{
 pub fn sphere(r: f64) -> Object
 {
-	Object{
-		shape: Shape::Sphere{ r: r, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> },
-		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : crate::colour::Colour::Unset
-	}
+	Object::new(Shape::Sphere{ r: r, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
 //}}}
 //{{{
 pub fn cylinder(h: f64, r1: f64, r2: f64) -> Object
 {
-	Object{
-		shape: Shape::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> },
-		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : crate::colour::Colour::Unset
-	}
+	Object::new(Shape::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
 //}}}
 //{{{
 pub fn union(c1: Object, c2: Object) -> Object
 {
-	//let colour = c1.colour.clone();
-	Object{
-		shape: Shape::Composite{ op: BooleanOp::union, c1: Box::new(c1), c2: Box::new(c2) },
-		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : crate::colour::Colour::Unset,
-		//colour : colour,
-	}
+	Object::new(Shape::Composite{ op: BooleanOp::union, c1: Box::new(c1), c2: Box::new(c2) })
 }
 //}}}
 //{{{
 pub fn difference(c1: Object, c2: Object) -> Object
 {
-	//let colour = c1.colour.clone();
-	Object{
-		shape: Shape::Composite{ op: BooleanOp::difference, c1: Box::new(c1), c2: Box::new(c2) },
-		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : crate::colour::Colour::Unset,
-		//colour : colour,
-	}
+	Object::new(Shape::Composite{ op: BooleanOp::difference, c1: Box::new(c1), c2: Box::new(c2) })
 }
 //}}}
 //{{{
 pub fn intersection(c1: Object, c2: Object) -> Object
 {
-	//let colour = c1.colour.clone();
-	Object{
-		shape: Shape::Composite{ op: BooleanOp::intersection, c1: Box::new(c1), c2: Box::new(c2) },
-		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : crate::colour::Colour::Unset,
-		//colour : colour,
-	}
+	Object::new(Shape::Composite{ op: BooleanOp::intersection, c1: Box::new(c1), c2: Box::new(c2) })
 }
 //}}}
 //{{{
 pub fn hull(c1: Object, c2: Object) -> Object
 {
-	//let colour = c1.colour.clone();
-	Object{
-		shape: Shape::Composite{ op: BooleanOp::hull, c1: Box::new(c1), c2: Box::new(c2) },
-		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : crate::colour::Colour::Unset,
-		//colour : colour,
-	}
+	Object::new(Shape::Composite{ op: BooleanOp::hull, c1: Box::new(c1), c2: Box::new(c2) })
 }
 //}}}
 //{{{
 pub fn minkowski(c1: Object, c2: Object) -> Object
 {
-	//let colour = c1.colour.clone();
-	Object{
-		shape: Shape::Composite{ op: BooleanOp::minkowski, c1: Box::new(c1), c2: Box::new(c2) },
-		ref_sys: crate::refsys::RefSys::eye(4),
-		colour : crate::colour::Colour::Unset,
-		//colour : colour,
-	}
+	Object::new(Shape::Composite{ op: BooleanOp::minkowski, c1: Box::new(c1), c2: Box::new(c2) })
 }
 //}}}
 
@@ -1041,6 +1098,8 @@ pub fn object_origin() -> Object
 	let mut coord_sys = union(xyz, base);
 
 	coord_sys.set_fn(10);
+	coord_sys.scale(0.6, 0.6, 0.6);
+
 
 	coord_sys
 }
@@ -1082,6 +1141,7 @@ pub fn object_anchor() -> Object
 	let mut coord_sys = union(xyz, base);
 
 	coord_sys.set_fn(10);
+	coord_sys.scale(0.3, 0.3, 0.3);
 
 	coord_sys
 }

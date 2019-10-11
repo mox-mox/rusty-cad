@@ -32,8 +32,10 @@ fn main()
 	//println!("{}", z);
 
 
-	let mut c = object_origin();
-	//let mut c = cube(1.0, 1.0, 1.0);
+	//let mut c = object_origin();
+	let mut c = cube(1.0, 1.0, 1.0);
+	c.set_debug();
+	c.set_show_origin();
 	//c.set_colour(colour_named("blue"));
 	//c.set_colour(colour_rgba(1.0, 0.0, 1.0, 0.5));
 	c.translate_x(4.0);
