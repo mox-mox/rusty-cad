@@ -5,6 +5,7 @@
 extern crate rusty_scad;
 use rusty_scad::*;
 
+
 //{{{
 pub fn zeppelin(l: f64, r: f64) -> Object
 {
@@ -31,7 +32,11 @@ fn main()
 	//println!("{}", z);
 
 
-	let mut c = coordinate_system();
+	let mut c = object_origin();
+	//let mut c = cube(1.0, 1.0, 1.0);
+	//c.set_colour(colour_named("blue"));
+	//c.set_colour(colour_rgba(1.0, 0.0, 1.0, 0.5));
+	c.translate_x(4.0);
 
 	//c.rotate_z(45.0);
 	//c.rotate_y(45.0);

@@ -14,5 +14,4 @@ readme = ""
 
 
 [dependencies]
-ndarray = "0.12.1"
-nalgebra = "0.10.*"
+ndarray = "0.13.0"
