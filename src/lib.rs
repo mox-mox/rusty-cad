@@ -191,7 +191,22 @@ mod modifiers
 //{{{ TODO:
 pub mod anchors
 {
+	pub struct AnchorConstraint
+	{
+		pub x        : bool,
+		pub y        : bool,
+		pub z        : bool,
+		pub relative : bool,
+	}
 
+	pub struct Anchor
+	{
+		pub ref_sys               : crate::refsys::RefSys,
+		pub constrain_translation : AnchorConstraint,
+		pub constrain_scale       : AnchorConstraint,
+		pub constrain_shear       : AnchorConstraint,
+		pub constrain_rotation    : AnchorConstraint,
+	}
 }
 //}}}
 
@@ -226,7 +241,8 @@ pub enum Shape
 	Sphere    { r: f64, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64> },
 	Cylinder  { h: f64, r1 : f64, r2 : f64, face_angle  : Option<f64>, face_size   : Option<f64>, face_number : Option<i32> },
 
-	Composite { op: BooleanOp, c1: Box<Object>, c2: Box<Object> },
+	//Composite { op: BooleanOp, c1: Box<Object>, c2: Box<Object> },
+	Composite { op: BooleanOp, children: Vec<Object> },
 }
 
 //{{{
@@ -265,11 +281,24 @@ impl Shape
 				tabs + "cylinder( h=" + &h.to_string() + ", r1=" + &r1.to_string() + ", r2=" + &r2.to_string() + &fan + &faa + &fas + ");"
 			}
 			//}}}
+			////{{{
+			//Shape::Composite{op, c1, c2} =>
+			//{
+			//	//tabs + &format!("{:?}", &op) + "() {\n" + &(*c1.to_string()) + "\n" + &(*c2.to_string()) + "\n};"
+			//	format!("{0}{1:?}()\n{0}{{\n{2:>indent$}\n{3:>indent$}\n{0} }};", tabs, &op, c1, c2, indent=indent)
+			//}
+			////}}}
 			//{{{
-			Shape::Composite{op, c1, c2} =>
+			Shape::Composite{op, children} =>
 			{
-				//tabs + &format!("{:?}", &op) + "() {\n" + &(*c1.to_string()) + "\n" + &(*c2.to_string()) + "\n};"
-				format!("{0}{1:?}()\n{0}{{\n{2:>indent$}\n{3:>indent$}\n{0} }};", tabs, &op, c1, c2, indent=indent)
+				//retval = format!("{0}{1:?}()\n{0}{{\n{2:>indent$}\n{3:>indent$}\n{0} }};", tabs, &op, c1, c2, indent=indent);
+				let mut retval = format!("{0}{1:?}()\n{0}{{\n", tabs, &op);
+					for child in children
+					{
+						retval += &format!("{:>indent$}\n", child, indent=indent);
+					}
+				retval += &format!("{} }};", tabs);
+				retval
 			}
 			//}}}
 		}
@@ -541,7 +570,8 @@ impl Object
 			Shape::Cube{x,y,z}                                                => {},
 			Shape::Sphere{r,ref mut face_number,face_angle,face_size}         => *face_number = Some(num),
 			Shape::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size} => *face_number = Some(num),
-			Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fn(num); c2.set_fn(num); },
+			//Shape::Composite{ref op,ref mut c1,ref mut c2}                  => { c1.set_fn(num); c2.set_fn(num); },
+			Shape::Composite{ref op,ref mut children}                         => { for child in children { child.set_fn(num) } },
 		}
 	}
 	//}}}
@@ -553,7 +583,8 @@ impl Object
 			Shape::Cube{x,y,z}                                                => {},
 			Shape::Sphere{r,face_number,ref mut face_angle,face_size}         => *face_angle = Some(num),
 			Shape::Cylinder{h,r1,r2,face_number,ref mut face_angle,face_size} => *face_angle = Some(num),
-			Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fa(num); c2.set_fa(num); },
+			//Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fa(num); c2.set_fa(num); },
+			Shape::Composite{ref op,ref mut children}                         => { for child in children { child.set_fa(num) } },
 		}
 	}
 	//}}}
@@ -565,14 +596,17 @@ impl Object
 			Shape::Cube{x,y,z}                                                => {},
 			Shape::Sphere{r,face_number,face_angle,ref mut face_size}         => *face_size = Some(num),
 			Shape::Cylinder{h,r1,r2,face_number,face_angle,ref mut face_size} => *face_size = Some(num),
-			Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fs(num); c2.set_fs(num); },
+			//Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fs(num); c2.set_fs(num); },
+			Shape::Composite{ref op,ref mut children}                         => { for child in children { child.set_fs(num) } },
 		}
 	}
 	//}}}
 	//{{{
 	pub fn set_colour(&mut self, colour : crate::colour::Colour)
 	{
-		self.colour = colour;
+		self.colour = colour.clone();
+
+		if let Shape::Composite{ref op,ref mut children} = self.shape { for child in children { child.set_colour(colour.clone()) } };
 	}
 	//}}}
 	
@@ -953,13 +987,14 @@ impl fmt::Display for Object
 	{
 		let indentation = if let Some(width) = f.width() { width } else { 0 as usize };
 
+		let scad_mod = self.scad_modifier.to_string();
 		// TODO: Add Anchors here
 		let additional_stuff = if let crate::modifiers::CustomModifier::ShowOrigin = self.custom_modifier {object_origin().to_string()} else {String::from("")};
 
-		write!(f, "{}{}",&self.scad_modifier,
+		write!(f, "{}",
 			&self.colour.serialise(indentation,
 				&self.ref_sys.serialise(indentation+1,
-					&(	self.shape.serialise(indentation+2) + &additional_stuff)
+					&(	scad_mod + &self.shape.serialise(indentation+2) + &additional_stuff)
 				)
 			) 
 		)
@@ -989,34 +1024,40 @@ pub fn cylinder(h: f64, r1: f64, r2: f64) -> Object
 	Object::new(Shape::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
 //}}}
+
 //{{{
 pub fn union(c1: Object, c2: Object) -> Object
 {
-	Object::new(Shape::Composite{ op: BooleanOp::union, c1: Box::new(c1), c2: Box::new(c2) })
+	//Object::new(Shape::Composite{ op: BooleanOp::union, c1: Box::new(c1), c2: Box::new(c2) })
+	Object::new(Shape::Composite{ op: BooleanOp::union, children: vec![c1, c2] })
 }
 //}}}
 //{{{
 pub fn difference(c1: Object, c2: Object) -> Object
 {
-	Object::new(Shape::Composite{ op: BooleanOp::difference, c1: Box::new(c1), c2: Box::new(c2) })
+	//Object::new(Shape::Composite{ op: BooleanOp::difference, c1: Box::new(c1), c2: Box::new(c2) })
+	Object::new(Shape::Composite{ op: BooleanOp::difference, children: vec![c1, c2] })
 }
 //}}}
 //{{{
 pub fn intersection(c1: Object, c2: Object) -> Object
 {
-	Object::new(Shape::Composite{ op: BooleanOp::intersection, c1: Box::new(c1), c2: Box::new(c2) })
+	//Object::new(Shape::Composite{ op: BooleanOp::intersection, c1: Box::new(c1), c2: Box::new(c2) })
+	Object::new(Shape::Composite{ op: BooleanOp::intersection, children: vec![c1, c2] })
 }
 //}}}
 //{{{
 pub fn hull(c1: Object, c2: Object) -> Object
 {
-	Object::new(Shape::Composite{ op: BooleanOp::hull, c1: Box::new(c1), c2: Box::new(c2) })
+	//Object::new(Shape::Composite{ op: BooleanOp::hull, c1: Box::new(c1), c2: Box::new(c2) })
+	Object::new(Shape::Composite{ op: BooleanOp::hull, children: vec![c1, c2] })
 }
 //}}}
 //{{{
 pub fn minkowski(c1: Object, c2: Object) -> Object
 {
-	Object::new(Shape::Composite{ op: BooleanOp::minkowski, c1: Box::new(c1), c2: Box::new(c2) })
+	//Object::new(Shape::Composite{ op: BooleanOp::minkowski, c1: Box::new(c1), c2: Box::new(c2) })
+	Object::new(Shape::Composite{ op: BooleanOp::minkowski, children: vec![c1, c2] })
 }
 //}}}
 
