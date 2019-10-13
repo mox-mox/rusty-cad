@@ -1,10 +1,24 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 #![allow(unused_mut)]
+#![allow(unused_imports)]
+
+extern crate vecmath;
+pub mod math; // Use 'pub mod' if you want it to be visible outside library.
+
+//pub use math::RefSysExt;
+pub use math::*;
+
+
+
+
+
+
+
 
 extern crate ndarray;
 use std::fmt;
-use crate::refsys::RefSys;
+//use crate::refsys::RefSys;
 pub use colour::colour_none;
 pub use colour::colour_named;
 pub use colour::colour_rgb;
@@ -22,47 +36,23 @@ trait IsSerialisableScope
 //}}}
 
 //{{{
-mod refsys
+impl IsSerialisableScope for math::Matrix3D
 {
-
-	pub type RefSys     = ndarray::Array2<f64>;
-
-	//{{{
-	impl crate::IsSerialisableScope for RefSys
+	fn serialise(&self, indentation: usize, child : &str) -> String
 	{
-		fn serialise(&self, indentation: usize, child : &str) -> String
-		{
-			let indent   = "\t".repeat(indentation as usize);
-			//                              "multmatrix(m = [";
-			let shift_in = indent.clone() + "                ";
+		let indent   = "\t".repeat(indentation as usize);
+		//                              "multmatrix(m = [";
+		let shift_in = indent.clone() + "                ";
 
-			let mut retval = indent.clone();
-			retval += "multmatrix(m = [";
-
-			//for i in 0..(self.nrows())
-			for i in 0..(self.len_of(ndarray::Axis(1)))
-			{
-				retval += "\n";
-				//retval += &("\t".repeat((indentation+1) as usize));
-				retval += &shift_in.clone();
-				retval += "[";
-
-				//for j in 0..(self.ncols()-1)
-				for j in 0..(self.len_of(ndarray::Axis(0))-1)
-				{
-					retval += &format!("{:16.10}, ", self[(i,j)]);
-				}
-				retval += &format!("{:16.10}],", self[(i,self.len_of(ndarray::Axis(0))-1)]);
-			}
-			retval += "])\n";
-			retval += &("\t".repeat(indentation as usize) + "{\n");
-			retval += &child;
-			retval += "\n";
-			retval += &("\t".repeat(indentation as usize) + "};\n");
-			retval
-		}
+		let mut retval = indent.clone();
+		retval += "multmatrix(m = \n";
+		retval += &(self.display(indentation+1) + ")\n");
+		retval += &("\t".repeat(indentation as usize) + "{\n");
+		retval += &child;
+		retval += "\n";
+		retval += &("\t".repeat(indentation as usize) + "};\n");
+		retval
 	}
-	//}}}
 }
 //}}}
 
@@ -71,7 +61,7 @@ mod colour
 {
 	use std::fmt;
 	// Numeric representation of a colour
-	type ColourVec  = ndarray::Array1<f64>;
+	type ColourVec = vecmath::Vector4<f64>;
 
 	//{{{ pub enum Colour
 
@@ -97,7 +87,7 @@ mod colour
 	}
 	pub fn colour_rgba(r : f64, g : f64, b : f64, a : f64) -> Colour
 	{
-		Colour::Numeric(ColourVec::from(vec![r,g,b,a]))
+		Colour::Numeric(ColourVec::from([r,g,b,a]))
 	}
 	pub fn colour_rgb(r : f64, g : f64, b : f64) -> Colour
 	{
@@ -113,9 +103,9 @@ mod colour
 			let tabs = "\t".repeat(indentation);
 			match &self
 			{
-				Self::Unset        => String::from("")                                      + &child,
-				Self::Numeric(vec) => tabs.clone() + "color( "   + &vec.to_string() +   ")\n" + &tabs + "{\n" + &child + "\n" + &tabs + "};\n",
-				Self::Named(name)  => tabs.clone() + "color( \"" + &name            + "\")\n" + &tabs + "{\n" + &child + "\n" + &tabs + "};\n",
+				Self::Unset        => format!("{}", child),
+				Self::Numeric(vec) => format!("{0}color( {1:?} )\n{0}{{\n{2}\n{0} }};\n", tabs,  vec, child),
+				Self::Named(name)  => format!("{0}color(\"{1}\")\n{0}{{\n{2}\n{0} }};\n", tabs, name, child),
 			}
 		}
 	}
@@ -129,7 +119,7 @@ mod colour
 			match &self
 			{
 				Self::Unset        => write!(f, "Unset"),
-				Self::Numeric(vec) => write!(f, "{}", vec),
+				Self::Numeric(vec) => write!(f, "{:?}", vec),
 				Self::Named(name)  => write!(f, "{}", name),
 			}
 		}
@@ -191,6 +181,7 @@ mod modifiers
 //{{{ TODO:
 pub mod anchors
 {
+	//{{{
 	pub struct AnchorConstraint
 	{
 		pub x        : bool,
@@ -198,23 +189,32 @@ pub mod anchors
 		pub z        : bool,
 		pub relative : bool,
 	}
+	//}}}
 
+	//{{{
 	pub struct Anchor
 	{
-		pub ref_sys               : crate::refsys::RefSys,
+		pub ref_sys               : crate::Matrix3D,
+		pub constrain_rotation    : AnchorConstraint,
 		pub constrain_translation : AnchorConstraint,
 		pub constrain_scale       : AnchorConstraint,
 		pub constrain_shear       : AnchorConstraint,
-		pub constrain_rotation    : AnchorConstraint,
 	}
+	//}}}
+
+	//{{{
+	impl Anchor
+	{
+	}
+	//}}}
 }
 //}}}
 
-// TODO: Polyhedron
-// TODO: text
-// TODO: Measure::Length
-// TODO: Measure::Angle
-// TODO: Measure::Triangle
+//// TODO: Polyhedron
+//// TODO: text
+//// TODO: Measure::Length
+//// TODO: Measure::Angle
+//// TODO: Measure::Triangle
 
 //{{{ Define Object
 
@@ -318,31 +318,30 @@ impl Shape
 pub struct Object
 {
 	pub shape       : Shape,
-	pub ref_sys     : crate::refsys::RefSys,
+	pub ref_sys     : crate::Matrix3D,
 	pub colour      : crate::colour::Colour,
 	scad_modifier   : crate::modifiers::ScadModifier,
 	custom_modifier : crate::modifiers::CustomModifier,
 }
 
-//{{{
-//fn l2_norm(x: ndarray::ArrayBase<ndarray::ViewRepr<&f64>, _>) -> f64
-fn l2_norm(x: ndarray::ArrayView1<f64>) -> f64
-{
-	// Taken from:  https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/linear_algebra.html
-	//x.dot(&x).sqrt()
-	0.0
-}
-//}}}
 
 //{{{
 impl Object
 {
+	//{{{ Positions in a MultMatrix
+	//
+	// [ (0,0) (0,1) (0,2) (0,3) ]
+	// [ (1,0) (1,1) (1,2) (1,3) ]
+	// [ (2,0) (2,1) (2,2) (2,3) ]
+	// [ (3,0) (3,1) (3,2) (3,3) ]
+	//}}}
+
 	//{{{
 	fn new(shape : Shape) -> Self
 	{
 		Self{
 			shape           : shape,
-			ref_sys         : crate::refsys::RefSys::eye(4),
+			ref_sys         : crate::identity3D(),
 			colour          : crate::colour::Colour::Unset, 
 			scad_modifier   : crate::modifiers::ScadModifier::Unset, 
 			custom_modifier : crate::modifiers::CustomModifier::Unset, 
@@ -350,207 +349,10 @@ impl Object
 	}
 	//}}}
 
-
 	//{{{ Helpers
 	
 	// TODO: Iterator over compound object tree
 
-	////{{{
-	//pub fn invert(&self) -> Self
-	//{
-	//	// TODO
-	//}
-	////}}}
-
-
-	#[inline]
-	//{{{ TODO
-	fn try_invert(&self) -> Option<crate::refsys::RefSys>
-	{
-		//use ndarray::arr2;
-		//use num_traits::identities::Zero;
-		let orig=&self.ref_sys;
-		//{{{ Early termination
-		if orig.ndim() != 2 || orig.dim().0 != orig.dim().1
-		{
-			eprintln!("Cannot invert a not two-dimensional or not quadratic matxi: {}", orig);
-			return None::<crate::refsys::RefSys>
-		}
-		//}}}
-
-
-		//{{{
-		match orig.dim().0 // Equals orig.dim().1
-		{
-			0 => Some(self.ref_sys.clone()),
-			//1 => Some(crate::refsys::RefSys::from(vec![1.0/orig[(0,0)]])),
-			2 =>
-			{
-				let m11 = orig[(0, 0)];
-				let m12 = orig[(0, 1)];
-				let m21 = orig[(1, 0)];
-				let m22 = orig[(1, 1)];
-
-				let determinant = m11 * m22 - m21 * m12;
-
-				//if determinant.is_zero()
-				if determinant == 0.0
-				{
-					None::<crate::refsys::RefSys>
-				}
-				else
-				{
-					let m11 = m11 / determinant;
-					let m12 = -m12 / determinant;
-					let m21 = -m21 / determinant;
-					let m22 = m22 / determinant;
-
-					Some(ndarray::arr2(&[[ m11, m12], [m21, m22 ]]))
-				}
-			}
-			//3 => {
-			//	let m11 = *self.get_unchecked((0, 0));
-			//	let m12 = *self.get_unchecked((0, 1));
-			//	let m13 = *self.get_unchecked((0, 2));
-
-			//	let m21 = *self.get_unchecked((1, 0));
-			//	let m22 = *self.get_unchecked((1, 1));
-			//	let m23 = *self.get_unchecked((1, 2));
-
-			//	let m31 = *self.get_unchecked((2, 0));
-			//	let m32 = *self.get_unchecked((2, 1));
-			//	let m33 = *self.get_unchecked((2, 2));
-
-			//	let minor_m12_m23 = m22 * m33 - m32 * m23;
-			//	let minor_m11_m23 = m21 * m33 - m31 * m23;
-			//	let minor_m11_m22 = m21 * m32 - m31 * m22;
-
-			//	let determinant =
-			//		m11 * minor_m12_m23 - m12 * minor_m11_m23 + m13 * minor_m11_m22;
-
-			//	if determinant.is_zero() {
-			//		false
-			//	} else {
-			//		*self.get_unchecked_mut((0, 0)) = minor_m12_m23 / determinant;
-			//		*self.get_unchecked_mut((0, 1)) = (m13 * m32 - m33 * m12) / determinant;
-			//		*self.get_unchecked_mut((0, 2)) = (m12 * m23 - m22 * m13) / determinant;
-
-			//		*self.get_unchecked_mut((1, 0)) = -minor_m11_m23 / determinant;
-			//		*self.get_unchecked_mut((1, 1)) = (m11 * m33 - m31 * m13) / determinant;
-			//		*self.get_unchecked_mut((1, 2)) = (m13 * m21 - m23 * m11) / determinant;
-
-			//		*self.get_unchecked_mut((2, 0)) = minor_m11_m22 / determinant;
-			//		*self.get_unchecked_mut((2, 1)) = (m12 * m31 - m32 * m11) / determinant;
-			//		*self.get_unchecked_mut((2, 2)) = (m11 * m22 - m21 * m12) / determinant;
-
-			//		true
-			//	}
-			//}
-			//4 => {
-			//	let oself = self.clone_owned();
-			//	do_inverse4(&oself, self)
-			//}
-			_ => {
-				Some(self.ref_sys.clone())
-				//let oself = self.clone_owned();
-				//lu::try_invert_to(oself, self)
-			}
-		}
-		//}}}
-	}
-	//}}}
-
-	//{{{ Commented
-	//
-	///// Attempts to invert this matrix in-place. Returns `false` and leaves `self` untouched if
-	///// inversion fails.
-	//pub fn try_inverse_mut(&mut self) -> bool
-	//	where DefaultAllocator: Allocator<N, D, D> {
-	//assert!(self.is_square(), "Unable to invert a non-square matrix.");
-
-	//let dim = self.shape().0;
-
-	//unsafe {
-	//	match dim {
-	//		0 => true,
-	//		1 => {
-	//			let determinant = self.get_unchecked((0, 0)).clone();
-	//			if determinant.is_zero() {
-	//				false
-	//			} else {
-	//				*self.get_unchecked_mut((0, 0)) = N::one() / determinant;
-	//				true
-	//			}
-	//		}
-	//		2 => {
-	//			let m11 = *self.get_unchecked((0, 0));
-	//			let m12 = *self.get_unchecked((0, 1));
-	//			let m21 = *self.get_unchecked((1, 0));
-	//			let m22 = *self.get_unchecked((1, 1));
-
-	//			let determinant = m11 * m22 - m21 * m12;
-
-	//			if determinant.is_zero() {
-	//				false
-	//			} else {
-	//				*self.get_unchecked_mut((0, 0)) = m22 / determinant;
-	//				*self.get_unchecked_mut((0, 1)) = -m12 / determinant;
-
-	//				*self.get_unchecked_mut((1, 0)) = -m21 / determinant;
-	//				*self.get_unchecked_mut((1, 1)) = m11 / determinant;
-
-	//				true
-	//			}
-	//		}
-	//		3 => {
-	//			let m11 = *self.get_unchecked((0, 0));
-	//			let m12 = *self.get_unchecked((0, 1));
-	//			let m13 = *self.get_unchecked((0, 2));
-
-	//			let m21 = *self.get_unchecked((1, 0));
-	//			let m22 = *self.get_unchecked((1, 1));
-	//			let m23 = *self.get_unchecked((1, 2));
-
-	//			let m31 = *self.get_unchecked((2, 0));
-	//			let m32 = *self.get_unchecked((2, 1));
-	//			let m33 = *self.get_unchecked((2, 2));
-
-	//			let minor_m12_m23 = m22 * m33 - m32 * m23;
-	//			let minor_m11_m23 = m21 * m33 - m31 * m23;
-	//			let minor_m11_m22 = m21 * m32 - m31 * m22;
-
-	//			let determinant =
-	//				m11 * minor_m12_m23 - m12 * minor_m11_m23 + m13 * minor_m11_m22;
-
-	//			if determinant.is_zero() {
-	//				false
-	//			} else {
-	//				*self.get_unchecked_mut((0, 0)) = minor_m12_m23 / determinant;
-	//				*self.get_unchecked_mut((0, 1)) = (m13 * m32 - m33 * m12) / determinant;
-	//				*self.get_unchecked_mut((0, 2)) = (m12 * m23 - m22 * m13) / determinant;
-
-	//				*self.get_unchecked_mut((1, 0)) = -minor_m11_m23 / determinant;
-	//				*self.get_unchecked_mut((1, 1)) = (m11 * m33 - m31 * m13) / determinant;
-	//				*self.get_unchecked_mut((1, 2)) = (m13 * m21 - m23 * m11) / determinant;
-
-	//				*self.get_unchecked_mut((2, 0)) = minor_m11_m22 / determinant;
-	//				*self.get_unchecked_mut((2, 1)) = (m12 * m31 - m32 * m11) / determinant;
-	//				*self.get_unchecked_mut((2, 2)) = (m11 * m22 - m21 * m12) / determinant;
-
-	//				true
-	//			}
-	//		}
-	//		4 => {
-	//			let oself = self.clone_owned();
-	//			do_inverse4(&oself, self)
-	//		}
-	//		_ => {
-	//			let oself = self.clone_owned();
-	//			lu::try_invert_to(oself, self)
-	//		}
-	//	}
-	//}
-//}}}
 
 	//}}}
 
@@ -668,96 +470,50 @@ impl Object
 	//{{{
 	pub fn rotate_x(&mut self, x: f64)
 	{
-		let x = x.to_radians();
-		let mut rotation=RefSys::eye(4);
-		rotation[[1,1]] =  x.cos();
-		rotation[[1,2]] = -x.sin();
-		rotation[[2,1]] =  x.sin();
-		rotation[[2,2]] =  x.cos();
-
-		self.ref_sys = rotation.dot(&self.ref_sys);
+		self.ref_sys.rotate_x(x);
 	}
 	//}}}
 	//{{{
 	pub fn rotate_y(&mut self, y: f64)
 	{
-		let y = y.to_radians();
-		let mut rotation=RefSys::eye(4);
-		rotation[[0,0]] =  y.cos();
-		rotation[[0,2]] =  y.sin();
-		rotation[[2,0]] = -y.sin();
-		rotation[[2,2]] =  y.cos();
-
-		self.ref_sys = rotation.dot(&self.ref_sys);
+		self.ref_sys.rotate_y(y);
 	}
 	//}}}
 	//{{{
 	pub fn rotate_z(&mut self, z: f64)
 	{
-		let z = z.to_radians();
-		let mut rotation=RefSys::eye(4);
-		rotation[[0,0]] =  z.cos();
-		rotation[[0,1]] = -z.sin();
-		rotation[[1,0]] =  z.sin();
-		rotation[[1,1]] =  z.cos();
-
-		self.ref_sys = rotation.dot(&self.ref_sys);
+		self.ref_sys.rotate_z(z);
 	}
 	//}}}
 	//{{{
 	pub fn rotate(&mut self, x: f64, y: f64, z: f64)
 	{
-		self.rotate_x(x);
-		self.rotate_y(y);
-		self.rotate_z(z);
+		self.ref_sys.rotate(x, y, z);
 	}
 	//}}}
 
 	//{{{
 	pub fn rel_rotate_x(&mut self, x: f64)
 	{
-		let x = x.to_radians();
-		let mut rotation=RefSys::eye(4);
-		rotation[[1,1]] =  x.cos();
-		rotation[[1,2]] = -x.sin();
-		rotation[[2,1]] =  x.sin();
-		rotation[[2,2]] =  x.cos();
-
-		self.ref_sys = self.ref_sys.dot(&rotation);
+		self.ref_sys.rel_rotate_x(x);
 	}
 	//}}}
 	//{{{
 	pub fn rel_rotate_y(&mut self, y: f64)
 	{
-		let y = y.to_radians();
-		let mut rotation=RefSys::eye(4);
-		rotation[[0,0]] =  y.cos();
-		rotation[[0,2]] =  y.sin();
-		rotation[[2,0]] = -y.sin();
-		rotation[[2,2]] =  y.cos();
-
-		self.ref_sys = self.ref_sys.dot(&rotation);
+		self.ref_sys.rel_rotate_y(y);
 	}
 	//}}}
 	//{{{
 	pub fn rel_rotate_z(&mut self, z: f64)
 	{
-		let z = z.to_radians();
-		let mut rotation=RefSys::eye(4);
-		rotation[[0,0]] =  z.cos();
-		rotation[[0,1]] = -z.sin();
-		rotation[[1,0]] =  z.sin();
-		rotation[[1,1]] =  z.cos();
-
-		self.ref_sys = self.ref_sys.dot(&rotation);
+		self.ref_sys.rel_rotate_z(z);
 	}
 	//}}}
 	//{{{
 	pub fn rel_rotate(&mut self, x: f64, y: f64, z: f64)
 	{
-		self.rel_rotate_x(x);
-		self.rel_rotate_y(y);
-		self.rel_rotate_z(z);
+		self.ref_sys.rel_rotate(x, y, z);
 	}
 	//}}}
 
@@ -765,82 +521,50 @@ impl Object
 	//{{{
 	pub fn translate_x(&mut self, x: f64)
 	{
-		let mut translation=RefSys::eye(4);
-		translation[[0,3]] =  x;
-
-		self.ref_sys = translation.dot(&self.ref_sys);
+		self.ref_sys.translate_x(x);
 	}
 	//}}}
 	//{{{
 	pub fn translate_y(&mut self, y: f64)
 	{
-		let mut translation=RefSys::eye(4);
-		translation[[1,3]] =  y;
-
-		self.ref_sys = translation.dot(&self.ref_sys);
+		self.ref_sys.translate_y(y);
 	}
 	//}}}
 	//{{{
 	pub fn translate_z(&mut self, z: f64)
 	{
-		let mut translation=RefSys::eye(4);
-		translation[[2,3]] =  z;
-
-		self.ref_sys = translation.dot(&self.ref_sys);
+		self.ref_sys.translate_z(z);
 	}
 	//}}}
 	//{{{
 	pub fn translate(&mut self, x: f64, y:f64, z: f64)
 	{
-		let mut translation=RefSys::eye(4);
-		translation[[0,3]] =  x;
-		translation[[1,3]] =  y;
-		translation[[2,3]] =  z;
-
-		self.ref_sys = translation.dot(&self.ref_sys);
+		self.ref_sys.translate(x, y, z);
 	}
 	//}}}
 
 	//{{{
 	pub fn rel_translate_x(&mut self, x: f64)
 	{
-		let mut translation=RefSys::eye(4);
-		translation[[0,3]] =  x;
-
-		//self.ref_sys = translation.dot(&self.ref_sys);
-		self.ref_sys = self.ref_sys.dot(&translation);
+		self.ref_sys.rel_translate_x(x);
 	}
 	//}}}
 	//{{{
 	pub fn rel_translate_y(&mut self, y: f64)
 	{
-		let mut translation=RefSys::eye(4);
-		translation[[1,3]] =  y;
-
-		//self.ref_sys = translation.dot(&self.ref_sys);
-		self.ref_sys = self.ref_sys.dot(&translation);
+		self.ref_sys.rel_translate_y(y);
 	}
 	//}}}
 	//{{{
 	pub fn rel_translate_z(&mut self, z: f64)
 	{
-		let mut translation=RefSys::eye(4);
-		translation[[2,3]] =  z;
-
-		//self.ref_sys = translation.dot(&self.ref_sys);
-		self.ref_sys = self.ref_sys.dot(&translation);
+		self.ref_sys.rel_translate_z(z);
 	}
 	//}}}
 	//{{{
 	pub fn rel_translate(&mut self, x: f64, y:f64, z: f64)
 	{
-		let mut translation=RefSys::eye(4);
-		translation[[0,3]] =  x;
-		translation[[1,3]] =  y;
-		translation[[2,3]] =  z;
-
-		//self.ref_sys = translation.dot(&self.ref_sys);
-		self.ref_sys = self.ref_sys.dot(&translation);
+		self.ref_sys.rel_translate(x, y, z);
 	}
 	//}}}
 
@@ -848,39 +572,49 @@ impl Object
 	//{{{
 	pub fn scale_x(&mut self, x: f64)
 	{
-		let mut scale=RefSys::eye(4);
-		scale[[0,0]] =  x;
-
-		self.ref_sys = scale.dot(&self.ref_sys);
+		self.ref_sys.scale_x(x);
 	}
 	//}}}
 	//{{{
 	pub fn scale_y(&mut self, y: f64)
 	{
-		let mut scale=RefSys::eye(4);
-		scale[[1,1]] =  y;
-
-		self.ref_sys = scale.dot(&self.ref_sys);
+		self.ref_sys.scale_y(y);
 	}
 	//}}}
 	//{{{
 	pub fn scale_z(&mut self, z: f64)
 	{
-		let mut scale=RefSys::eye(4);
-		scale[[3,3]] =  z;
-
-		self.ref_sys = scale.dot(&self.ref_sys);
+		self.ref_sys.scale_z(z);
 	}
 	//}}}
 	//{{{
 	pub fn scale(&mut self, x: f64, y:f64, z: f64)
 	{
-		let mut scale=RefSys::eye(4);
-		scale[[0,0]] =  x;
-		scale[[1,1]] =  y;
-		scale[[2,2]] =  z;
-
-		self.ref_sys = scale.dot(&self.ref_sys);
+		self.ref_sys.scale(x, y, z);
+	}
+	//}}}
+	//{{{
+	pub fn rel_scale_x(&mut self, x: f64)
+	{
+		self.ref_sys.rel_scale_x(x);
+	}
+	//}}}
+	//{{{
+	pub fn rel_scale_y(&mut self, y: f64)
+	{
+		self.ref_sys.rel_scale_y(y);
+	}
+	//}}}
+	//{{{
+	pub fn rel_scale_z(&mut self, z: f64)
+	{
+		self.ref_sys.rel_scale_z(z);
+	}
+	//}}}
+	//{{{
+	pub fn rel_scale(&mut self, x: f64, y:f64, z: f64)
+	{
+		self.ref_sys.rel_scale(x, y, z);
 	}
 	//}}}
 
@@ -983,6 +717,14 @@ impl Object
 }
 //}}}
 
+//{{{ TODO
+fn l2_norm(x: ndarray::ArrayView1<f64>) -> f64
+{
+	// Taken from:  https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/linear_algebra.html
+	//x.dot(&x).sqrt()
+	0.0
+}
+//}}}
 //{{{
 impl fmt::Display for Object
 {
@@ -993,6 +735,7 @@ impl fmt::Display for Object
 		let scad_mod = self.scad_modifier.to_string();
 		// TODO: Add Anchors here
 		let additional_stuff = if let crate::modifiers::CustomModifier::ShowOrigin = self.custom_modifier {object_origin().to_string()} else {String::from("")};
+		//let additional_stuff = String::from("");
 
 		write!(f, "{}",
 			&self.colour.serialise(indentation,
@@ -1058,6 +801,7 @@ pub fn minkowski<T: AsRef<[Object]>>(children: T) -> Object
 	Object::new(Shape::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() })
 }
 //}}}
+
 
 //{{{
 pub fn coordinate_system() -> Object
@@ -1184,4 +928,11 @@ pub fn object_anchor() -> Object
 	coord_sys
 }
 //}}}
+
+
+
 //}}}
+
+
+
+

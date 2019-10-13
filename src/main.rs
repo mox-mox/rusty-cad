@@ -1,9 +1,12 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 #![allow(unused_mut)]
+#![allow(unused_imports)]
 
 extern crate rusty_scad;
 use rusty_scad::*;
+//use rusty_scad::IsSerialisableScope;
+use vecmath::mat4_inv;
 
 
 //{{{
@@ -22,6 +25,19 @@ pub fn zeppelin(l: f64, r: f64) -> Object
 
 fn main()
 {
+	//let mut m  = identity3D::<f64>();
+	//println!("\n\nm={}\n\n", m.display(5));
+	//m.translate_x(1.0);
+	//println!("\n\nm={}\n\n", m.display(5));
+	//m = mat4_inv(m);
+	//println!("\n\nm={}\n\n", m.display(5));
+
+
+
+
+
+
+
 	//let mut z = zeppelin(5.0, 1.0);
 	//z.set_fn(100);
 	//z.set_colour(colour_rgba(1.0, 0.0, 1.0, 0.5));
@@ -33,19 +49,23 @@ fn main()
 
 
 	//let mut c = object_origin();
-	let mut c = cube(1.0, 1.0, 1.0);
-	//c.set_debug();
-	//c.set_show_origin();
+	//let mut c = cube(1.0, 1.0, 1.0);
+	let mut c = zeppelin(5.0, 1.0);
+	c.set_fn(100);
+
+	c.set_debug();
+	c.set_show_origin();
 	//c.set_colour(colour_named("blue"));
 	//c.set_colour(colour_rgba(1.0, 0.0, 1.0, 0.5));
-	c.translate_x(4.0);
+	//c.translate_x(4.0);
 
-	//c.rotate_z(45.0);
+	c.rotate_z(45.0);
 	//c.rotate_y(45.0);
-	//c.rel_translate_x(2.0);
+	c.rel_translate_x(2.0);
 
 
 	println!("{}", c);
+
 
 
 
