@@ -221,6 +221,7 @@ pub mod anchors
 //{{{ pub enum BooleanOp
 
 #[derive(Debug)]
+#[derive(Clone)]
 #[allow(non_camel_case_types)] // We use the debug output to create the OpenSCad code. And that code requires the names to be lower-case.
 pub enum BooleanOp
 {
@@ -235,6 +236,7 @@ pub enum BooleanOp
 //{{{ pub enum Shape
 
 #[derive(Debug)]
+#[derive(Clone)]
 pub enum Shape
 {
 	Cube      { x: f64, y: f64, z: f64},
@@ -312,6 +314,7 @@ impl Shape
 //{{{pub struct Object
 
 #[derive(Debug)]
+#[derive(Clone)]
 pub struct Object
 {
 	pub shape       : Shape,
@@ -1026,38 +1029,33 @@ pub fn cylinder(h: f64, r1: f64, r2: f64) -> Object
 //}}}
 
 //{{{
-pub fn union(c1: Object, c2: Object) -> Object
+pub fn union<T: AsRef<[Object]>>(children: T) -> Object
 {
-	//Object::new(Shape::Composite{ op: BooleanOp::union, c1: Box::new(c1), c2: Box::new(c2) })
-	Object::new(Shape::Composite{ op: BooleanOp::union, children: vec![c1, c2] })
+	Object::new(Shape::Composite{ op: BooleanOp::union, children: children.as_ref().to_vec() })
 }
 //}}}
 //{{{
-pub fn difference(c1: Object, c2: Object) -> Object
+pub fn difference<T: AsRef<[Object]>>(children: T) -> Object
 {
-	//Object::new(Shape::Composite{ op: BooleanOp::difference, c1: Box::new(c1), c2: Box::new(c2) })
-	Object::new(Shape::Composite{ op: BooleanOp::difference, children: vec![c1, c2] })
+	Object::new(Shape::Composite{ op: BooleanOp::difference, children: children.as_ref().to_vec() })
 }
 //}}}
 //{{{
-pub fn intersection(c1: Object, c2: Object) -> Object
+pub fn intersection<T: AsRef<[Object]>>(children: T) -> Object
 {
-	//Object::new(Shape::Composite{ op: BooleanOp::intersection, c1: Box::new(c1), c2: Box::new(c2) })
-	Object::new(Shape::Composite{ op: BooleanOp::intersection, children: vec![c1, c2] })
+	Object::new(Shape::Composite{ op: BooleanOp::intersection, children: children.as_ref().to_vec() })
 }
 //}}}
 //{{{
-pub fn hull(c1: Object, c2: Object) -> Object
+pub fn hull<T: AsRef<[Object]>>(children: T) -> Object
 {
-	//Object::new(Shape::Composite{ op: BooleanOp::hull, c1: Box::new(c1), c2: Box::new(c2) })
-	Object::new(Shape::Composite{ op: BooleanOp::hull, children: vec![c1, c2] })
+	Object::new(Shape::Composite{ op: BooleanOp::hull, children: children.as_ref().to_vec() })
 }
 //}}}
 //{{{
-pub fn minkowski(c1: Object, c2: Object) -> Object
+pub fn minkowski<T: AsRef<[Object]>>(children: T) -> Object
 {
-	//Object::new(Shape::Composite{ op: BooleanOp::minkowski, c1: Box::new(c1), c2: Box::new(c2) })
-	Object::new(Shape::Composite{ op: BooleanOp::minkowski, children: vec![c1, c2] })
+	Object::new(Shape::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() })
 }
 //}}}
 
@@ -1068,7 +1066,7 @@ pub fn coordinate_system() -> Object
 	let mut x1 = cylinder(1.0, 0.05, 0.05);
 	let mut x2 = cylinder(0.1, 0.1,  0.0);
 	x2.translate_z(1.0);
-	let mut x = union(x1, x2);
+	let mut x = union([x1, x2]);
 	x.rotate_y(90.0);
 	x.set_colour(colour_named("red"));
 	//}}}
@@ -1077,7 +1075,7 @@ pub fn coordinate_system() -> Object
 	let mut y1 = cylinder(1.0, 0.05, 0.05);
 	let mut y2 = cylinder(0.1, 0.1,  0.0);
 	y2.translate_z(1.0);
-	let mut y = union(y1, y2);
+	let mut y = union([y1, y2]);
 	y.rotate_x(-90.0);
 	y.set_colour(colour_named("green"));
 	//}}}
@@ -1086,15 +1084,14 @@ pub fn coordinate_system() -> Object
 	let mut z1 = cylinder(1.0, 0.05, 0.05);
 	let mut z2 = cylinder(0.1, 0.1,  0.0);
 	z2.translate_z(1.0);
-	let mut z = union(z1, z2);
+	let mut z = union([z1, z2]);
 	z.set_colour(colour_named("blue"));
 	//}}}
 
-	let mut xy = union(x, y);
-	let mut xyz = union(xy, z);
+	//let mut xyz = union([x, y, z]);
 
 	let mut base = sphere(0.05);
-	let mut coord_sys = union(xyz, base);
+	let mut coord_sys = union([x, y, z, base]);
 
 	coord_sys.set_fn(10);
 
@@ -1108,7 +1105,7 @@ pub fn object_origin() -> Object
 	let mut x1 = cylinder(1.0, 0.05, 0.05);
 	let mut x2 = cylinder(0.1, 0.1,  0.0);
 	x2.translate_z(1.0);
-	let mut x = union(x1, x2);
+	let mut x = union([x1, x2]);
 	x.rotate_y(90.0);
 	x.set_colour(colour_named("red"));
 	//}}}
@@ -1117,7 +1114,7 @@ pub fn object_origin() -> Object
 	let mut y1 = cylinder(1.0, 0.05, 0.05);
 	let mut y2 = cylinder(0.1, 0.1,  0.0);
 	y2.translate_z(1.0);
-	let mut y = union(y1, y2);
+	let mut y = union([y1, y2]);
 	y.rotate_x(-90.0);
 	y.set_colour(colour_named("green"));
 	//}}}
@@ -1126,17 +1123,17 @@ pub fn object_origin() -> Object
 	let mut z1 = cylinder(1.0, 0.05, 0.05);
 	let mut z2 = cylinder(0.1, 0.1,  0.0);
 	z2.translate_z(1.0);
-	let mut z = union(z1, z2);
+	let mut z = union([z1, z2]);
 	z.set_colour(colour_named("blue"));
 	//}}}
 
-	let mut xy = union(x, y);
-	let mut xyz = union(xy, z);
+	//let mut xy = union(x, y);
+	//let mut xyz = union(xy, z);
 
 	let mut base = cube(0.5, 0.5, 0.5);
 	base.translate(-0.25, -0.25, -0.25);
 	base.set_colour(colour_named("red"));
-	let mut coord_sys = union(xyz, base);
+	let mut coord_sys = union([x, y, z, base]);
 
 	coord_sys.set_fn(10);
 	coord_sys.scale(0.6, 0.6, 0.6);
@@ -1152,7 +1149,7 @@ pub fn object_anchor() -> Object
 	let mut x1 = cylinder(1.0, 0.05, 0.05);
 	let mut x2 = cylinder(0.1, 0.1,  0.0);
 	x2.translate_z(1.0);
-	let mut x = union(x1, x2);
+	let mut x = union([x1, x2]);
 	x.rotate_y(90.0);
 	x.set_colour(colour_named("red"));
 	//}}}
@@ -1161,7 +1158,7 @@ pub fn object_anchor() -> Object
 	let mut y1 = cylinder(1.0, 0.05, 0.05);
 	let mut y2 = cylinder(0.1, 0.1,  0.0);
 	y2.translate_z(1.0);
-	let mut y = union(y1, y2);
+	let mut y = union([y1, y2]);
 	y.rotate_x(-90.0);
 	y.set_colour(colour_named("green"));
 	//}}}
@@ -1170,16 +1167,16 @@ pub fn object_anchor() -> Object
 	let mut z1 = cylinder(1.0, 0.05, 0.05);
 	let mut z2 = cylinder(0.1, 0.1,  0.0);
 	z2.translate_z(1.0);
-	let mut z = union(z1, z2);
+	let mut z = union([z1, z2]);
 	z.set_colour(colour_named("blue"));
 	//}}}
 
-	let mut xy = union(x, y);
-	let mut xyz = union(xy, z);
+	//let mut xy = union(x, y);
+	//let mut xyz = union(xy, z);
 
 	let mut base = sphere(0.5);
 	base.set_colour(colour_named("blue"));
-	let mut coord_sys = union(xyz, base);
+	let mut coord_sys = union([x, y, z, base]);
 
 	coord_sys.set_fn(10);
 	coord_sys.scale(0.3, 0.3, 0.3);
