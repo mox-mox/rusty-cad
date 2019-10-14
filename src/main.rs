@@ -12,12 +12,12 @@ use vecmath::mat4_inv;
 //{{{
 pub fn zeppelin(l: f64, r: f64) -> Object
 {
-	let mut s1 = sphere(r);
-	let mut s2 = sphere(r);
+	let mut s1 = sphere("zeppelin::front", r);
+	let mut s2 = sphere("zeppelin::rear", r);
 	s1.translate_x(-l/2.0);
 	s2.translate_x( l/2.0);
 
-	hull([s1, s2])
+	hull("zeppelin", [s1, s2])
 }
 //}}}
 
@@ -54,7 +54,8 @@ fn main()
 	c.set_fn(100);
 
 	c.set_debug();
-	c.set_show_origin();
+	//c.set_show_origin();
+	c.set_show_anchors();
 	//c.set_colour(colour_named("blue"));
 	//c.set_colour(colour_rgba(1.0, 0.0, 1.0, 0.5));
 	//c.translate_x(4.0);
@@ -62,6 +63,10 @@ fn main()
 	c.rotate_z(45.0);
 	//c.rotate_y(45.0);
 	c.rel_translate_x(2.0);
+
+	let mut a = rusty_scad::anchors::Anchor::new("front");
+	a.translate_y(1.0);
+	c.add_anchor(a);
 
 
 	println!("{}", c);

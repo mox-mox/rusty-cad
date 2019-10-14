@@ -1,6 +1,3 @@
-//pub use vecmath::row_mat2x3_mul as multiply;
-
-
 pub use vecmath::mat4_id as identity3D;
 pub use vecmath::row_mat4_mul as multiply;
 

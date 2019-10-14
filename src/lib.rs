@@ -8,6 +8,7 @@ pub mod math; // Use 'pub mod' if you want it to be visible outside library.
 
 //pub use math::RefSysExt;
 pub use math::*;
+use std::collections::HashMap;
 
 
 
@@ -181,7 +182,12 @@ mod modifiers
 //{{{ TODO:
 pub mod anchors
 {
-	//{{{
+	use std::fmt;
+	pub use crate::math::RefSysExt;
+	//{{{ pub struct AnchorConstraint
+
+	#[derive(Debug)]
+	#[derive(Clone)]
 	pub struct AnchorConstraint
 	{
 		pub x        : bool,
@@ -191,9 +197,13 @@ pub mod anchors
 	}
 	//}}}
 
-	//{{{
+	//{{{ pub struct Anchor
+
+	#[derive(Debug)]
+	#[derive(Clone)]
 	pub struct Anchor
 	{
+		pub name                  : String,
 		pub ref_sys               : crate::Matrix3D,
 		pub constrain_rotation    : AnchorConstraint,
 		pub constrain_translation : AnchorConstraint,
@@ -205,6 +215,211 @@ pub mod anchors
 	//{{{
 	impl Anchor
 	{
+		//{{{
+		pub fn new(name: &str) -> Self
+		{
+			Self
+			{
+				name                  : String::from(name),
+				ref_sys               : crate::identity3D(),
+				constrain_rotation    : AnchorConstraint{x: false, y: false, z: false, relative: false},
+				constrain_translation : AnchorConstraint{x: false, y: false, z: false, relative: false},
+				constrain_scale       : AnchorConstraint{x: false, y: false, z: false, relative: false},
+				constrain_shear       : AnchorConstraint{x: false, y: false, z: false, relative: false},
+			}
+		}
+		//}}}
+		//{{{
+		fn get_object_anchor(&self) -> crate::Object
+		{
+			let mut object_anchor = crate::object_anchor(&self.name);
+			object_anchor.set_ref_sys(self.ref_sys);
+			object_anchor
+		}
+		//}}}
+		//{{{ 3D-Manipulation
+
+		//{{{ Positions in a MultMatrix
+		//
+		// [ (0,0) (0,1) (0,2) (0,3) ]
+		// [ (1,0) (1,1) (1,2) (1,3) ]
+		// [ (2,0) (2,1) (2,2) (2,3) ]
+		// [ (3,0) (3,1) (3,2) (3,3) ]
+		//}}}
+
+		//{{{
+		pub fn set_ref_sys(&mut self, ref_sys: crate::Matrix3D)
+		{
+			self.ref_sys = ref_sys;
+		}
+		//}}}
+
+		//{{{
+		pub fn rotate_x(&mut self, x: f64)
+		{
+			self.ref_sys.rotate_x(x);
+		}
+		//}}}
+		//{{{
+		pub fn rotate_y(&mut self, y: f64)
+		{
+			self.ref_sys.rotate_y(y);
+		}
+		//}}}
+		//{{{
+		pub fn rotate_z(&mut self, z: f64)
+		{
+			self.ref_sys.rotate_z(z);
+		}
+		//}}}
+		//{{{
+		pub fn rotate(&mut self, x: f64, y: f64, z: f64)
+		{
+			self.ref_sys.rotate(x, y, z);
+		}
+		//}}}
+
+		//{{{
+		pub fn rel_rotate_x(&mut self, x: f64)
+		{
+			self.ref_sys.rel_rotate_x(x);
+		}
+		//}}}
+		//{{{
+		pub fn rel_rotate_y(&mut self, y: f64)
+		{
+			self.ref_sys.rel_rotate_y(y);
+		}
+		//}}}
+		//{{{
+		pub fn rel_rotate_z(&mut self, z: f64)
+		{
+			self.ref_sys.rel_rotate_z(z);
+		}
+		//}}}
+		//{{{
+		pub fn rel_rotate(&mut self, x: f64, y: f64, z: f64)
+		{
+			self.ref_sys.rel_rotate(x, y, z);
+		}
+		//}}}
+
+
+		//{{{
+		pub fn translate_x(&mut self, x: f64)
+		{
+			self.ref_sys.translate_x(x);
+		}
+		//}}}
+		//{{{
+		pub fn translate_y(&mut self, y: f64)
+		{
+			self.ref_sys.translate_y(y);
+		}
+		//}}}
+		//{{{
+		pub fn translate_z(&mut self, z: f64)
+		{
+			self.ref_sys.translate_z(z);
+		}
+		//}}}
+		//{{{
+		pub fn translate(&mut self, x: f64, y:f64, z: f64)
+		{
+			self.ref_sys.translate(x, y, z);
+		}
+		//}}}
+
+		//{{{
+		pub fn rel_translate_x(&mut self, x: f64)
+		{
+			self.ref_sys.rel_translate_x(x);
+		}
+		//}}}
+		//{{{
+		pub fn rel_translate_y(&mut self, y: f64)
+		{
+			self.ref_sys.rel_translate_y(y);
+		}
+		//}}}
+		//{{{
+		pub fn rel_translate_z(&mut self, z: f64)
+		{
+			self.ref_sys.rel_translate_z(z);
+		}
+		//}}}
+		//{{{
+		pub fn rel_translate(&mut self, x: f64, y:f64, z: f64)
+		{
+			self.ref_sys.rel_translate(x, y, z);
+		}
+		//}}}
+
+
+		//{{{
+		pub fn scale_x(&mut self, x: f64)
+		{
+			self.ref_sys.scale_x(x);
+		}
+		//}}}
+		//{{{
+		pub fn scale_y(&mut self, y: f64)
+		{
+			self.ref_sys.scale_y(y);
+		}
+		//}}}
+		//{{{
+		pub fn scale_z(&mut self, z: f64)
+		{
+			self.ref_sys.scale_z(z);
+		}
+		//}}}
+		//{{{
+		pub fn scale(&mut self, x: f64, y:f64, z: f64)
+		{
+			self.ref_sys.scale(x, y, z);
+		}
+		//}}}
+		//{{{
+		pub fn rel_scale_x(&mut self, x: f64)
+		{
+			self.ref_sys.rel_scale_x(x);
+		}
+		//}}}
+		//{{{
+		pub fn rel_scale_y(&mut self, y: f64)
+		{
+			self.ref_sys.rel_scale_y(y);
+		}
+		//}}}
+		//{{{
+		pub fn rel_scale_z(&mut self, z: f64)
+		{
+			self.ref_sys.rel_scale_z(z);
+		}
+		//}}}
+		//{{{
+		pub fn rel_scale(&mut self, x: f64, y:f64, z: f64)
+		{
+			self.ref_sys.rel_scale(x, y, z);
+		}
+		//}}}
+
+
+		//}}}
+	}
+	//}}}
+
+	//{{{
+	impl fmt::Display for Anchor // TODO
+	{
+		fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+		{
+			use crate::IsSerialisableScope;
+			let indentation = if let Some(width) = f.width() { width } else { 0 as usize };
+
+			write!(f, "{:>indent$}", &self.get_object_anchor(), indent=indentation+1)
+		}
 	}
 	//}}}
 }
@@ -317,11 +532,14 @@ impl Shape
 #[derive(Clone)]
 pub struct Object
 {
+	pub name        : String,
 	pub shape       : Shape,
 	pub ref_sys     : crate::Matrix3D,
 	pub colour      : crate::colour::Colour,
+	pub anchors     : HashMap<String, anchors::Anchor>,
 	scad_modifier   : crate::modifiers::ScadModifier,
 	custom_modifier : crate::modifiers::CustomModifier,
+	snap_parent     : bool,
 }
 
 
@@ -337,15 +555,25 @@ impl Object
 	//}}}
 
 	//{{{
-	fn new(shape : Shape) -> Self
+	fn new(name: &str, shape : Shape) -> Self
 	{
 		Self{
+			name            : String::from(name),
 			shape           : shape,
 			ref_sys         : crate::identity3D(),
 			colour          : crate::colour::Colour::Unset, 
+			anchors         : HashMap::new(),
 			scad_modifier   : crate::modifiers::ScadModifier::Unset, 
 			custom_modifier : crate::modifiers::CustomModifier::Unset, 
+			snap_parent     : false,
 		}
+	}
+	//}}}
+
+	//{{{
+	pub fn add_anchor(&mut self, anchor: anchors::Anchor)
+	{
+		self.anchors.insert(String::from(&anchor.name), anchor);
 	}
 	//}}}
 
@@ -465,6 +693,13 @@ impl Object
 	// [ (1,0) (1,1) (1,2) (1,3) ]
 	// [ (2,0) (2,1) (2,2) (2,3) ]
 	// [ (3,0) (3,1) (3,2) (3,3) ]
+	//}}}
+
+	//{{{
+	pub fn set_ref_sys(&mut self, ref_sys: crate::Matrix3D)
+	{
+		self.ref_sys = ref_sys;
+	}
 	//}}}
 
 	//{{{
@@ -733,14 +968,29 @@ impl fmt::Display for Object
 		let indentation = if let Some(width) = f.width() { width } else { 0 as usize };
 
 		let scad_mod = self.scad_modifier.to_string();
-		// TODO: Add Anchors here
-		let additional_stuff = if let crate::modifiers::CustomModifier::ShowOrigin = self.custom_modifier {object_origin().to_string()} else {String::from("")};
-		//let additional_stuff = String::from("");
 
-		write!(f, "{}",
+		//{{{ Custom Modifiers
+
+		let mut custom_mods = String::from("");
+
+		if let crate::modifiers::CustomModifier::ShowAnchors = self.custom_modifier
+		{
+			for anchor in self.anchors.values()
+			{
+				custom_mods += &format!("{:>indent$}\n", anchor, indent=indentation+1);
+			}
+			custom_mods += &format!("{:>indent$}\n", object_origin(&(String::from("Object Origin for ")+&self.name)), indent=indentation+1);
+		}
+		if let crate::modifiers::CustomModifier::ShowOrigin = self.custom_modifier
+		{
+			custom_mods += &format!("{:>indent$}\n", object_origin(&(String::from("Object Origin for ")+&self.name)), indent=indentation+1);
+		}
+		//}}}
+
+		write!(f, "\n{}//{}\n{}", "\t".repeat(indentation), &self.name,
 			&self.colour.serialise(indentation,
 				&self.ref_sys.serialise(indentation+1,
-					&(	scad_mod + &self.shape.serialise(indentation+2) + &additional_stuff)
+					&(	scad_mod + &self.shape.serialise(indentation+2) + &custom_mods)
 				)
 			) 
 		)
@@ -753,89 +1003,87 @@ impl fmt::Display for Object
 //{{{ Create Objects
 
 //{{{
-pub fn cube(x: f64, y: f64, z: f64) -> Object
+pub fn cube(name: &str, x: f64, y: f64, z: f64) -> Object
 {
-	Object::new(Shape::Cube{ x: x,y: y,z: z })
+	Object::new(name, Shape::Cube{ x: x,y: y,z: z })
 }
 //}}}
 //{{{
-pub fn sphere(r: f64) -> Object
+pub fn sphere(name: &str, r: f64) -> Object
 {
-	Object::new(Shape::Sphere{ r: r, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
+	Object::new(name, Shape::Sphere{ r: r, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
 //}}}
 //{{{
-pub fn cylinder(h: f64, r1: f64, r2: f64) -> Object
+pub fn cylinder(name: &str, h: f64, r1: f64, r2: f64) -> Object
 {
-	Object::new(Shape::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
-}
-//}}}
-
-//{{{
-pub fn union<T: AsRef<[Object]>>(children: T) -> Object
-{
-	Object::new(Shape::Composite{ op: BooleanOp::union, children: children.as_ref().to_vec() })
-}
-//}}}
-//{{{
-pub fn difference<T: AsRef<[Object]>>(children: T) -> Object
-{
-	Object::new(Shape::Composite{ op: BooleanOp::difference, children: children.as_ref().to_vec() })
-}
-//}}}
-//{{{
-pub fn intersection<T: AsRef<[Object]>>(children: T) -> Object
-{
-	Object::new(Shape::Composite{ op: BooleanOp::intersection, children: children.as_ref().to_vec() })
-}
-//}}}
-//{{{
-pub fn hull<T: AsRef<[Object]>>(children: T) -> Object
-{
-	Object::new(Shape::Composite{ op: BooleanOp::hull, children: children.as_ref().to_vec() })
-}
-//}}}
-//{{{
-pub fn minkowski<T: AsRef<[Object]>>(children: T) -> Object
-{
-	Object::new(Shape::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() })
+	Object::new(name, Shape::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
 //}}}
 
+//{{{
+pub fn union<T: AsRef<[Object]>>(name: &str, children: T) -> Object
+{
+	Object::new(name, Shape::Composite{ op: BooleanOp::union, children: children.as_ref().to_vec() })
+}
+//}}}
+//{{{
+pub fn difference<T: AsRef<[Object]>>(name: &str, children: T) -> Object
+{
+	Object::new(name, Shape::Composite{ op: BooleanOp::difference, children: children.as_ref().to_vec() })
+}
+//}}}
+//{{{
+pub fn intersection<T: AsRef<[Object]>>(name: &str, children: T) -> Object
+{
+	Object::new(name, Shape::Composite{ op: BooleanOp::intersection, children: children.as_ref().to_vec() })
+}
+//}}}
+//{{{
+pub fn hull<T: AsRef<[Object]>>(name: &str, children: T) -> Object
+{
+	Object::new(name, Shape::Composite{ op: BooleanOp::hull, children: children.as_ref().to_vec() })
+}
+//}}}
+//{{{
+pub fn minkowski<T: AsRef<[Object]>>(name: &str, children: T) -> Object
+{
+	Object::new(name, Shape::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() })
+}
+//}}}
+
 
 //{{{
-pub fn coordinate_system() -> Object
+pub fn coordinate_system(name: &str) -> Object
 {
 	//{{{
-	let mut x1 = cylinder(1.0, 0.05, 0.05);
-	let mut x2 = cylinder(0.1, 0.1,  0.0);
+	let mut x1 = cylinder("coordinate_system::x_shaft", 1.0, 0.05, 0.05);
+	let mut x2 = cylinder("coordinate_system::x_arrow", 0.1, 0.1,  0.0);
 	x2.translate_z(1.0);
-	let mut x = union([x1, x2]);
+	let mut x = union("coordinate_system::x_axis", [x1, x2]);
 	x.rotate_y(90.0);
 	x.set_colour(colour_named("red"));
 	//}}}
 	
 	//{{{
-	let mut y1 = cylinder(1.0, 0.05, 0.05);
-	let mut y2 = cylinder(0.1, 0.1,  0.0);
+	let mut y1 = cylinder("coordinate_system::y_shaft", 1.0, 0.05, 0.05);
+	let mut y2 = cylinder("coordinate_system::y_arrow", 0.1, 0.1,  0.0);
 	y2.translate_z(1.0);
-	let mut y = union([y1, y2]);
+	let mut y = union("coordinate_system::y_axis", [y1, y2]);
 	y.rotate_x(-90.0);
 	y.set_colour(colour_named("green"));
 	//}}}
 
 	//{{{
-	let mut z1 = cylinder(1.0, 0.05, 0.05);
-	let mut z2 = cylinder(0.1, 0.1,  0.0);
+	let mut z1 = cylinder("coordinate_system::z_shaft", 1.0, 0.05, 0.05);
+	let mut z2 = cylinder("coordinate_system::z_arrow", 0.1, 0.1,  0.0);
 	z2.translate_z(1.0);
-	let mut z = union([z1, z2]);
+	let mut z = union("coordinate_system::z_axis", [z1, z2]);
 	z.set_colour(colour_named("blue"));
 	//}}}
 
-	//let mut xyz = union([x, y, z]);
-
-	let mut base = sphere(0.05);
-	let mut coord_sys = union([x, y, z, base]);
+	let mut base = sphere("coordinate_system::origin", 0.05);
+	let mut coord_sys = union("coordinate_system", [x, y, z, base]);
 
 	coord_sys.set_fn(10);
 
@@ -843,41 +1091,38 @@ pub fn coordinate_system() -> Object
 }
 //}}}
 //{{{
-pub fn object_origin() -> Object
+pub fn object_origin(name: &str) -> Object
 {
 	//{{{
-	let mut x1 = cylinder(1.0, 0.05, 0.05);
-	let mut x2 = cylinder(0.1, 0.1,  0.0);
+	let mut x1 = cylinder("object_origin::x_shaft", 1.0, 0.05, 0.05);
+	let mut x2 = cylinder("object_origin::x_arrow", 0.1, 0.1,  0.0);
 	x2.translate_z(1.0);
-	let mut x = union([x1, x2]);
+	let mut x = union("object_origin::x_axis", [x1, x2]);
 	x.rotate_y(90.0);
 	x.set_colour(colour_named("red"));
 	//}}}
 	
 	//{{{
-	let mut y1 = cylinder(1.0, 0.05, 0.05);
-	let mut y2 = cylinder(0.1, 0.1,  0.0);
+	let mut y1 = cylinder("object_origin::y_shaft", 1.0, 0.05, 0.05);
+	let mut y2 = cylinder("object_origin::y_arrow", 0.1, 0.1,  0.0);
 	y2.translate_z(1.0);
-	let mut y = union([y1, y2]);
+	let mut y = union("object_origin::y_axis", [y1, y2]);
 	y.rotate_x(-90.0);
 	y.set_colour(colour_named("green"));
 	//}}}
 
 	//{{{
-	let mut z1 = cylinder(1.0, 0.05, 0.05);
-	let mut z2 = cylinder(0.1, 0.1,  0.0);
+	let mut z1 = cylinder("object_origin::z_shaft", 1.0, 0.05, 0.05);
+	let mut z2 = cylinder("object_origin::z_arrow", 0.1, 0.1,  0.0);
 	z2.translate_z(1.0);
-	let mut z = union([z1, z2]);
+	let mut z = union("object_origin::z_axis", [z1, z2]);
 	z.set_colour(colour_named("blue"));
 	//}}}
 
-	//let mut xy = union(x, y);
-	//let mut xyz = union(xy, z);
-
-	let mut base = cube(0.5, 0.5, 0.5);
+	let mut base = cube("object_origin::origin", 0.5, 0.5, 0.5);
 	base.translate(-0.25, -0.25, -0.25);
 	base.set_colour(colour_named("red"));
-	let mut coord_sys = union([x, y, z, base]);
+	let mut coord_sys = union("object_origin", [x, y, z, base]);
 
 	coord_sys.set_fn(10);
 	coord_sys.scale(0.6, 0.6, 0.6);
@@ -887,40 +1132,40 @@ pub fn object_origin() -> Object
 }
 //}}}
 //{{{
-pub fn object_anchor() -> Object
+pub fn object_anchor(name: &str) -> Object
 {
 	//{{{
-	let mut x1 = cylinder(1.0, 0.05, 0.05);
-	let mut x2 = cylinder(0.1, 0.1,  0.0);
+	let mut x1 = cylinder("object_anchor::x_shaft", 1.0, 0.05, 0.05);
+	let mut x2 = cylinder("object_anchor::x_arrow", 0.1, 0.1,  0.0);
 	x2.translate_z(1.0);
-	let mut x = union([x1, x2]);
+	let mut x = union("object_anchor::x_axis", [x1, x2]);
 	x.rotate_y(90.0);
 	x.set_colour(colour_named("red"));
 	//}}}
 	
 	//{{{
-	let mut y1 = cylinder(1.0, 0.05, 0.05);
-	let mut y2 = cylinder(0.1, 0.1,  0.0);
+	let mut y1 = cylinder("object_anchor::x_shaft", 1.0, 0.05, 0.05);
+	let mut y2 = cylinder("object_anchor::x_arrow", 0.1, 0.1,  0.0);
 	y2.translate_z(1.0);
-	let mut y = union([y1, y2]);
+	let mut y = union("object_anchor::x_axis", [y1, y2]);
 	y.rotate_x(-90.0);
 	y.set_colour(colour_named("green"));
 	//}}}
 
 	//{{{
-	let mut z1 = cylinder(1.0, 0.05, 0.05);
-	let mut z2 = cylinder(0.1, 0.1,  0.0);
+	let mut z1 = cylinder("object_anchor::x_shaft", 1.0, 0.05, 0.05);
+	let mut z2 = cylinder("object_anchor::x_arrow", 0.1, 0.1,  0.0);
 	z2.translate_z(1.0);
-	let mut z = union([z1, z2]);
+	let mut z = union("object_anchor::x_axis", [z1, z2]);
 	z.set_colour(colour_named("blue"));
 	//}}}
 
 	//let mut xy = union(x, y);
 	//let mut xyz = union(xy, z);
 
-	let mut base = sphere(0.5);
+	let mut base = sphere("object_anchor::origin", 0.5);
 	base.set_colour(colour_named("blue"));
-	let mut coord_sys = union([x, y, z, base]);
+	let mut coord_sys = union("object anchor", [x, y, z, base]);
 
 	coord_sys.set_fn(10);
 	coord_sys.scale(0.3, 0.3, 0.3);
