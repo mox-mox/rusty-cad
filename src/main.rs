@@ -14,10 +14,28 @@ pub fn zeppelin(l: f64, r: f64) -> Object
 {
 	let mut s1 = sphere("zeppelin::front", r);
 	let mut s2 = sphere("zeppelin::rear", r);
-	s1.translate_x(-l/2.0);
-	s2.translate_x( l/2.0);
+	s1.translate_y(-l/2.0);
+	s2.translate_y( l/2.0);
 
-	hull("zeppelin", [s1, s2])
+	let mut z = hull("zeppelin", [s1, s2]);
+
+	let mut a = rusty_scad::anchors::Anchor::new("right");
+	a.translate_x(1.0);
+	z.add_anchor(a);
+
+	let mut a = rusty_scad::anchors::Anchor::new("left");
+	a.translate_x(-1.0);
+	z.add_anchor(a);
+
+	let mut a = rusty_scad::anchors::Anchor::new("front");
+	a.translate_y(l/2.0+r);
+	z.add_anchor(a);
+
+	let mut a = rusty_scad::anchors::Anchor::new("rear");
+	a.translate_y(-l/2.0-r);
+	z.add_anchor(a);
+
+	z
 }
 //}}}
 
@@ -25,79 +43,28 @@ pub fn zeppelin(l: f64, r: f64) -> Object
 
 fn main()
 {
-	//let mut m  = identity3D::<f64>();
-	//println!("\n\nm={}\n\n", m.display(5));
-	//m.translate_x(1.0);
-	//println!("\n\nm={}\n\n", m.display(5));
-	//m = mat4_inv(m);
-	//println!("\n\nm={}\n\n", m.display(5));
+	let mut c1 = zeppelin(5.0, 1.0);
+	c1.set_fn(100);
+	c1.set_debug();
+	//c1.set_show_origin();
+	c1.set_show_anchors();
+	//c1.rel_rotate_z(45.0);
+	c1.rotate_z(45.0);
+	//c1.rel_translate_x(2.0);
+	//c1.translate_x(2.0);
 
 
 
+	let mut c2 = zeppelin(5.0, 1.0);
+	c2.set_fn(100);
+	c2.set_debug();
+	c2.set_show_anchors();
+	//c2.rotate_z(45.0);
+	//c2.rel_translate_x(2.0);
 
 
+	c2.snap_to_anchor("front", &c1, &c1["rear"].clone());
 
 
-	//let mut z = zeppelin(5.0, 1.0);
-	//z.set_fn(100);
-	//z.set_colour(colour_rgba(1.0, 0.0, 1.0, 0.5));
-
-	//z.rotate_z(45.0);
-	//z.translate_x(4.0);
-
-	//println!("{}", z);
-
-
-	//let mut c = object_origin();
-	//let mut c = cube(1.0, 1.0, 1.0);
-	let mut c = zeppelin(5.0, 1.0);
-	c.set_fn(100);
-
-	c.set_debug();
-	//c.set_show_origin();
-	c.set_show_anchors();
-	//c.set_colour(colour_named("blue"));
-	//c.set_colour(colour_rgba(1.0, 0.0, 1.0, 0.5));
-	//c.translate_x(4.0);
-
-	c.rotate_z(45.0);
-	//c.rotate_y(45.0);
-	c.rel_translate_x(2.0);
-
-	let mut a = rusty_scad::anchors::Anchor::new("front");
-	a.translate_y(1.0);
-	c.add_anchor(a);
-
-
-	println!("{}", c);
-
-
-
-
-	//let mut cube = cube(5.0, 1.0, 1.0);
-	//cube.rotate_z(45.0);
-	//cube.set_colour(colour_rgba(1.0, 0.0, 1.0, 0.5));
-	////cube.set_colour(colour_named("blue"));
-
-	////let mut sphere = sphere(2.0);
-	////sphere.rotate_x(45.0);
-	////sphere.set_colour(colour_named("red"));
-	////sphere.set_fn(100);
-
-	////eprintln!("cube = {:?}\n\n\n\n", cube);
-	////eprintln!("{}\n{}", cube.serialise(), sphere.serialise());
-	////println!("{}", cube.serialise());
-	//println!("{}", cube);
-
-	//eprintln!("{}", cube.ref_sys);
-
-
-	////let mut merged = hull(cube, sphere);
-	//////merged.set_colour(colour_named("green"));
-
-
-	////println!("{}", merged.serialise());
-
-
-
+	println!("{}{}", c1, c2);
 }

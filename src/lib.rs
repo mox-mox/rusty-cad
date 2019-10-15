@@ -9,6 +9,7 @@ pub mod math; // Use 'pub mod' if you want it to be visible outside library.
 //pub use math::RefSysExt;
 pub use math::*;
 use std::collections::HashMap;
+use std::ops::{Index,IndexMut};
 
 
 
@@ -234,6 +235,7 @@ pub mod anchors
 		{
 			let mut object_anchor = crate::object_anchor(&self.name);
 			object_anchor.set_ref_sys(self.ref_sys);
+			object_anchor.scale(0.3, 0.3, 0.3);
 			object_anchor
 		}
 		//}}}
@@ -701,6 +703,22 @@ impl Object
 		self.ref_sys = ref_sys;
 	}
 	//}}}
+	//{{{
+	pub fn snap_to_anchor(&mut self, own_anchor: &str, other: &Self, other_anchor: &crate::anchors::Anchor)
+	{
+		eprintln!("SNAPPING");
+
+		//let other_matrix = multiply(other_anchor.ref_sys, other.ref_sys);
+		let other_matrix = multiply(other.ref_sys, other_anchor.ref_sys);
+		let inverse_own_anchor = invert3D(self[own_anchor].ref_sys);
+		//self.ref_sys = multiply(inverse_own_anchor, other_matrix);
+		self.ref_sys = multiply(other_matrix, inverse_own_anchor);
+
+
+
+		//self.ref_sys = ref_sys;
+	}
+	//}}}
 
 	//{{{
 	pub fn rotate_x(&mut self, x: f64)
@@ -852,8 +870,6 @@ impl Object
 		self.ref_sys.rel_scale(x, y, z);
 	}
 	//}}}
-
-
 	//}}}
 
 //
@@ -997,6 +1013,43 @@ impl fmt::Display for Object
 	}
 }
 //}}}
+
+//{{{
+impl Index<&str> for Object {
+    type Output = crate::anchors::Anchor;
+
+    fn index(&self, index: &str) -> &Self::Output
+	{
+        eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
+
+		&self.anchors[index]
+    }
+}
+
+//impl IndexMut<&str> for Object {
+//    //type Output = crate::anchors::Anchor;
+//
+//    fn index_mut(&mut self, index: &str) -> &mut Self::Output
+//	{
+//        eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
+//
+//		&mut self.anchors[index]
+//    }
+//}
+
+//impl IndexMut<Side> for Balance {
+//    fn index_mut(&mut self, index: Side) -> &mut Self::Output {
+//        println!("Accessing {:?}-side of balance mutably", index);
+//        match index {
+//            Side::Left => &mut self.left,
+//            Side::Right => &mut self.right,
+//        }
+//    }
+//}
+//}}}
+
+
+
 //}}}
 //}}}
 

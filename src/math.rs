@@ -1,4 +1,5 @@
 pub use vecmath::mat4_id as identity3D;
+pub use vecmath::mat4_inv as invert3D;
 pub use vecmath::row_mat4_mul as multiply;
 
 pub type Vector3D = vecmath::Vector4<f64>;
@@ -71,7 +72,7 @@ impl RefSysExt for Matrix3D
 		rotation[2][1] =  x.sin();
 		rotation[2][2] =  x.cos();
 
-		*self = multiply(*self, rotation);
+		*self = multiply(rotation, *self);
 	}
 	//}}}
 	//{{{
@@ -84,7 +85,7 @@ impl RefSysExt for Matrix3D
 		rotation[2][0] = -y.sin();
 		rotation[2][2] =  y.cos();
 
-		*self = multiply(*self, rotation);
+		*self = multiply(rotation, *self);
 	}
 	//}}}
 	//{{{
@@ -97,7 +98,7 @@ impl RefSysExt for Matrix3D
 		rotation[1][0] =  z.sin();
 		rotation[1][1] =  z.cos();
 
-		*self = multiply(*self, rotation);
+		*self = multiply(rotation, *self);
 	}
 	//}}}
 	//{{{
@@ -119,7 +120,7 @@ impl RefSysExt for Matrix3D
 		rotation[2][1] =  x.sin();
 		rotation[2][2] =  x.cos();
 
-		*self = multiply(rotation, *self);
+		*self = multiply(*self, rotation);
 	}
 	//}}}
 	//{{{
@@ -132,7 +133,7 @@ impl RefSysExt for Matrix3D
 		rotation[2][0] = -y.sin();
 		rotation[2][2] =  y.cos();
 
-		*self = multiply(rotation, *self);
+		*self = multiply(*self, rotation);
 	}
 	//}}}
 	//{{{
@@ -145,7 +146,7 @@ impl RefSysExt for Matrix3D
 		rotation[1][0] =  z.sin();
 		rotation[1][1] =  z.cos();
 
-		*self = multiply(rotation, *self);
+		*self = multiply(*self, rotation);
 	}
 	//}}}
 	//{{{
