@@ -38,7 +38,7 @@ trait IsSerialisableScope
 //}}}
 
 //{{{
-impl IsSerialisableScope for math::Matrix3D
+impl IsSerialisableScope for math::Matrix4D
 {
 	fn serialise(&self, indentation: usize, child : &str) -> String
 	{
@@ -48,11 +48,10 @@ impl IsSerialisableScope for math::Matrix3D
 
 		let mut retval = indent.clone();
 		retval += "multmatrix(m = \n";
-		retval += &(self.display(indentation+1) + ")\n");
-		retval += &("\t".repeat(indentation as usize) + "{\n");
+		retval += &format!("{:>indent$}\n{})\n", self, indent, indent=indentation+1);
+		retval += &format!("{}{{\n", indent);
 		retval += &child;
-		retval += "\n";
-		retval += &("\t".repeat(indentation as usize) + "};\n");
+		retval += &format!("{} }};\n", indent);
 		retval
 	}
 }
@@ -184,7 +183,7 @@ mod modifiers
 pub mod anchors
 {
 	use std::fmt;
-	pub use crate::math::RefSysExt;
+	//pub use crate::math::RefSysExt;
 	//{{{ pub struct AnchorConstraint
 
 	#[derive(Debug)]
@@ -200,12 +199,11 @@ pub mod anchors
 
 	//{{{ pub struct Anchor
 
-	#[derive(Debug)]
-	#[derive(Clone)]
+	#[derive(Debug, Clone)]
 	pub struct Anchor
 	{
 		pub name                  : String,
-		pub ref_sys               : crate::Matrix3D,
+		pub ref_sys               : crate::Matrix4D,
 		pub constrain_rotation    : AnchorConstraint,
 		pub constrain_translation : AnchorConstraint,
 		pub constrain_scale       : AnchorConstraint,
@@ -222,7 +220,7 @@ pub mod anchors
 			Self
 			{
 				name                  : String::from(name),
-				ref_sys               : crate::identity3D(),
+				ref_sys               : crate::Matrix4D::identity(),
 				constrain_rotation    : AnchorConstraint{x: false, y: false, z: false, relative: false},
 				constrain_translation : AnchorConstraint{x: false, y: false, z: false, relative: false},
 				constrain_scale       : AnchorConstraint{x: false, y: false, z: false, relative: false},
@@ -235,7 +233,7 @@ pub mod anchors
 		{
 			let mut object_anchor = crate::object_anchor(&self.name);
 			object_anchor.set_ref_sys(self.ref_sys);
-			object_anchor.scale(0.3, 0.3, 0.3);
+			object_anchor.rel_scale(0.3, 0.3, 0.3);
 			object_anchor
 		}
 		//}}}
@@ -250,7 +248,7 @@ pub mod anchors
 		//}}}
 
 		//{{{
-		pub fn set_ref_sys(&mut self, ref_sys: crate::Matrix3D)
+		pub fn set_ref_sys(&mut self, ref_sys: crate::Matrix4D)
 		{
 			self.ref_sys = ref_sys;
 		}
@@ -536,7 +534,7 @@ pub struct Object
 {
 	pub name        : String,
 	pub shape       : Shape,
-	pub ref_sys     : crate::Matrix3D,
+	pub ref_sys     : crate::Matrix4D,
 	pub colour      : crate::colour::Colour,
 	pub anchors     : HashMap<String, anchors::Anchor>,
 	scad_modifier   : crate::modifiers::ScadModifier,
@@ -562,7 +560,7 @@ impl Object
 		Self{
 			name            : String::from(name),
 			shape           : shape,
-			ref_sys         : crate::identity3D(),
+			ref_sys         : crate::Matrix4D::identity(),
 			colour          : crate::colour::Colour::Unset, 
 			anchors         : HashMap::new(),
 			scad_modifier   : crate::modifiers::ScadModifier::Unset, 
@@ -698,7 +696,7 @@ impl Object
 	//}}}
 
 	//{{{
-	pub fn set_ref_sys(&mut self, ref_sys: crate::Matrix3D)
+	pub fn set_ref_sys(&mut self, ref_sys: crate::Matrix4D)
 	{
 		self.ref_sys = ref_sys;
 	}
@@ -706,17 +704,7 @@ impl Object
 	//{{{
 	pub fn snap_to_anchor(&mut self, own_anchor: &str, other: &Self, other_anchor: &crate::anchors::Anchor)
 	{
-		eprintln!("SNAPPING");
-
-		//let other_matrix = multiply(other_anchor.ref_sys, other.ref_sys);
-		let other_matrix = multiply(other.ref_sys, other_anchor.ref_sys);
-		let inverse_own_anchor = invert3D(self[own_anchor].ref_sys);
-		//self.ref_sys = multiply(inverse_own_anchor, other_matrix);
-		self.ref_sys = multiply(other_matrix, inverse_own_anchor);
-
-
-
-		//self.ref_sys = ref_sys;
+		self.ref_sys = !self[own_anchor].ref_sys * other_anchor.ref_sys * other.ref_sys;
 	}
 	//}}}
 
@@ -1047,9 +1035,6 @@ impl Index<&str> for Object {
 //    }
 //}
 //}}}
-
-
-
 //}}}
 //}}}
 

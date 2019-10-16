@@ -7,7 +7,7 @@ extern crate rusty_scad;
 use rusty_scad::*;
 //use rusty_scad::IsSerialisableScope;
 use vecmath::mat4_inv;
-
+use rusty_scad::math::*;
 
 //{{{
 pub fn zeppelin(l: f64, r: f64) -> Object
@@ -29,10 +29,12 @@ pub fn zeppelin(l: f64, r: f64) -> Object
 
 	let mut a = rusty_scad::anchors::Anchor::new("front");
 	a.translate_y(l/2.0+r);
+	a.rel_rotate_x(-45.0);
 	z.add_anchor(a);
 
 	let mut a = rusty_scad::anchors::Anchor::new("rear");
 	a.translate_y(-l/2.0-r);
+	a.rel_rotate_z(45.0);
 	z.add_anchor(a);
 
 	z
@@ -43,6 +45,26 @@ pub fn zeppelin(l: f64, r: f64) -> Object
 
 fn main()
 {
+
+	//let mut m1 = rusty_scad::math::Matrix4D::identity();
+	//m1.translate_x(10.0);
+	//m1.rotate_z(45.0);
+
+	////m1.rotate_x(7.0);
+	////m1.translate_x(2.0);
+	////m1.translate_y(3.0);
+	////m1.translate_z(4.0);
+
+	//println!("{}", m1);
+
+
+
+
+
+
+
+
+
 	let mut c1 = zeppelin(5.0, 1.0);
 	c1.set_fn(100);
 	c1.set_debug();
