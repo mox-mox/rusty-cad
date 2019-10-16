@@ -860,98 +860,95 @@ impl Object
 	//}}}
 	//}}}
 
-//
-//	//{{{ Get 3D Coordinates, Rotation, Scale, Shear
-//	
-//	// See: https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
-//	//{{{ Positions in a MultMatrix
-//	//
-//	// [ (0,0) (0,1) (0,2) (0,3) ]
-//	// [ (1,0) (1,1) (1,2) (1,3) ]
-//	// [ (2,0) (2,1) (2,2) (2,3) ]
-//	// [ (3,0) (3,1) (3,2) (3,3) ]
-//	//}}}
-//
-//
-//	//{{{
-//	pub fn get_rotate_x(&mut self) -> f64
-//	{
-//		0.0
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_rotate_y(&mut self) -> f64
-//	{
-//		0.0
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_rotate_z(&mut self) -> f64
-//	{
-//		0.0
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_rotate(&mut self) -> ( f64, f64, f64)
-//	{
-//		(0.0, 0.0, 0.0)
-//	}
-//	//}}}
-//
-//	//{{{
-//	pub fn get_translate_x(&mut self) -> f64
-//	{
-//		self.ref_sys[[0,3]]
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_translate_y(&mut self) -> f64
-//	{
-//		self.ref_sys[[1,3]]
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_translate_z(&mut self) -> f64
-//	{
-//		self.ref_sys[[2,3]]
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_translate(&mut self) -> (f64, f64, f64)
-//	{
-//		(self.get_translate_x(), self.get_translate_y(), self.get_translate_z())
-//	}
-//	//}}}
-//
-//	//{{{
-//	pub fn get_scale_x(&mut self) -> f64
-//	{
-//		use ndarray::s;
-//		l2_norm(self.ref_sys.slice(s![0, ..]))
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_scale_y(&mut self) -> f64
-//	{
-//		use ndarray::s;
-//		l2_norm(self.ref_sys.slice(s![1, ..]))
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_scale_z(&mut self) -> f64
-//	{
-//		use ndarray::s;
-//		l2_norm(self.ref_sys.slice(s![2, ..]))
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_scale(&mut self) -> (f64, f64, f64)
-//	{
-//		(self.get_scale_x(), self.get_scale_y(), self.get_scale_z())
-//	}
-//	//}}}
-//	//}}}
-//
+
+	//{{{ Get 3D Coordinates, Rotation, Scale, Shear
+	
+	// See: https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
+	//{{{ Positions in a MultMatrix
+	//
+	// [ (0,0) (0,1) (0,2) (0,3) ]
+	// [ (1,0) (1,1) (1,2) (1,3) ]
+	// [ (2,0) (2,1) (2,2) (2,3) ]
+	// [ (3,0) (3,1) (3,2) (3,3) ]
+	//}}}
+
+
+	//{{{
+	pub fn get_rotate_x(&mut self) -> f64
+	{
+		self.ref_sys.get_rotate_x()
+	}
+	//}}}
+	//{{{
+	pub fn get_rotate_y(&mut self) -> f64
+	{
+		self.ref_sys.get_rotate_x()
+	}
+	//}}}
+	//{{{
+	pub fn get_rotate_z(&mut self) -> f64
+	{
+		self.ref_sys.get_rotate_x()
+	}
+	//}}}
+	//{{{
+	pub fn get_rotate(&mut self) -> ( f64, f64, f64)
+	{
+		self.ref_sys.get_rotate()
+	}
+	//}}}
+
+	//{{{
+	pub fn get_translate_x(&mut self) -> f64
+	{
+		self.ref_sys.get_translate_x()
+	}
+	//}}}
+	//{{{
+	pub fn get_translate_y(&mut self) -> f64
+	{
+		self.ref_sys.get_translate_y()
+	}
+	//}}}
+	//{{{
+	pub fn get_translate_z(&mut self) -> f64
+	{
+		self.ref_sys.get_translate_z()
+	}
+	//}}}
+	//{{{
+	pub fn get_translate(&mut self) -> (f64, f64, f64)
+	{
+		self.ref_sys.get_translate()
+	}
+	//}}}
+
+	//{{{
+	pub fn get_scale_x(&mut self) -> f64
+	{
+		self.ref_sys.get_scale_x()
+	}
+	//}}}
+	//{{{
+	pub fn get_scale_y(&mut self) -> f64
+	{
+		self.ref_sys.get_scale_y()
+	}
+	//}}}
+	//{{{
+	pub fn get_scale_z(&mut self) -> f64
+	{
+		self.ref_sys.get_scale_z()
+	}
+	//}}}
+	//{{{
+	pub fn get_scale(&mut self) -> (f64, f64, f64)
+	{
+		self.ref_sys.get_scale()
+	}
+	//}}}
+	//}}}
+
 
 }
 //}}}

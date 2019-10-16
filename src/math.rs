@@ -185,7 +185,7 @@ impl Matrix4D
 	//}}}
 
 	//{{{
-	pub fn row(&self, i: f64) -> Vector4D
+	pub fn row(&self, i: i32) -> Vector4D
 	{
 		let i = i as usize;
 		Vector4D([self[i][0], self[i][1], self[i][2], self[i][3]])
@@ -193,7 +193,7 @@ impl Matrix4D
 	//}}}
 
 	//{{{
-	pub fn column(&self, i: f64) -> Vector4D
+	pub fn column(&self, i: i32) -> Vector4D
 	{
 		let i = i as usize;
 		Vector4D([self[0][i], self[1][i], self[2][i], self[3][i]])
@@ -468,99 +468,115 @@ impl Matrix4D
 	//}}}
 	//}}}
 
-//
-//	//{{{ Get 3D Coordinates, Rotation, Scale, Shear
-//	
-//	// See: https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
-//	//{{{ Positions in a MultMatrix
-//	//
-//	// [ (0,0) (0,1) (0,2) (0,3) ]
-//	// [ (1,0) (1,1) (1,2) (1,3) ]
-//	// [ (2,0) (2,1) (2,2) (2,3) ]
-//	// [ (3,0) (3,1) (3,2) (3,3) ]
-//	//}}}
-//
-//
-//	//{{{
-//	pub fn get_rotate_x(&mut self) -> f64
-//	{
-//		0.0
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_rotate_y(&mut self) -> f64
-//	{
-//		0.0
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_rotate_z(&mut self) -> f64
-//	{
-//		0.0
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_rotate(&mut self) -> ( f64, f64, f64)
-//	{
-//		(0.0, 0.0, 0.0)
-//	}
-//	//}}}
-//
-//	//{{{
-//	pub fn get_translate_x(&mut self) -> f64
-//	{
-//		self.ref_sys[[0,3]]
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_translate_y(&mut self) -> f64
-//	{
-//		self.ref_sys[[1,3]]
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_translate_z(&mut self) -> f64
-//	{
-//		self.ref_sys[[2,3]]
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_translate(&mut self) -> (f64, f64, f64)
-//	{
-//		(self.get_translate_x(), self.get_translate_y(), self.get_translate_z())
-//	}
-//	//}}}
-//
-//	//{{{
-//	pub fn get_scale_x(&mut self) -> f64
-//	{
-//		use ndarray::s;
-//		l2_norm(self.ref_sys.slice(s![0, ..]))
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_scale_y(&mut self) -> f64
-//	{
-//		use ndarray::s;
-//		l2_norm(self.ref_sys.slice(s![1, ..]))
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_scale_z(&mut self) -> f64
-//	{
-//		use ndarray::s;
-//		l2_norm(self.ref_sys.slice(s![2, ..]))
-//	}
-//	//}}}
-//	//{{{
-//	pub fn get_scale(&mut self) -> (f64, f64, f64)
-//	{
-//		(self.get_scale_x(), self.get_scale_y(), self.get_scale_z())
-//	}
-//	//}}}
-//	//}}}
-//
 
+	//{{{ Get 3D Coordinates, Rotation, Scale, Shear
+	
+	// See: https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
+	//{{{ Positions in a MultMatrix
+	//
+	// [ (0,0) (0,1) (0,2) (0,3) ]
+	// [ (1,0) (1,1) (1,2) (1,3) ]
+	// [ (2,0) (2,1) (2,2) (2,3) ]
+	// [ (3,0) (3,1) (3,2) (3,3) ]
+	//}}}
+
+
+	//{{{ Positions in an Affine Matrix
+	//
+	// [    Sx+cox(y)+cos(z)             -sin(z)              sin(y)              deltaX ]
+	// [              sin(z)    Sy+cos(x)+cos(z)             -sin(x)              deltaX ]
+	// [             -sin(y)              sin(x)    Sz+cos(x)+cos(y)              deltaX ]
+	// [                   0                   0                   0                   1 ]
+	//}}}
+	//{{{ Positions in a Rotation Matrix
+	//
+	// [       cox(y)+cos(z)             -sin(z)              sin(y)               (0,3) ]
+	// [              sin(z)       cos(x)+cos(z)             -sin(x)               (1,3) ]
+	// [             -sin(y)              sin(x)       cos(x)+cos(y)               (2,3) ]
+	// [               (3,0)               (3,1)               (3,2)               (3,3) ]
+	//}}}
+	//{{{
+	pub fn get_rotate_x(&mut self) -> f64
+	{
+		(self[1][2]/self.get_scale_y()).asin().to_degrees()
+	}
+	//}}}
+	//{{{
+	pub fn get_rotate_y(&mut self) -> f64
+	{
+		(self[2][0]/self.get_scale_z()).asin().to_degrees()
+	}
+	//}}}
+	//{{{
+	pub fn get_rotate_z(&mut self) -> f64
+	{
+		//(self[0][1]/self.get_scale_x()).asin().to_degrees()
+		let s01       =self[0][1];
+		let scale_x   =self.get_scale_x();
+		let s01_scaled=self[0][1]/self.get_scale_x();
+		let angle     =(self[0][1]/self.get_scale_x()).asin().to_degrees();
+		eprintln!("s01={}\nscale_x={}\ns01_scaled={}\nangle={}", s01, scale_x, s01_scaled,angle);
+
+		angle
+	}
+	//}}}
+	//{{{
+	pub fn get_rotate(&mut self) -> ( f64, f64, f64)
+	{
+		(self.get_rotate_x(), self.get_rotate_y(), self.get_rotate_z())
+	}
+	//}}}
+
+	//{{{
+	pub fn get_translate_x(&mut self) -> f64
+	{
+		self[0][3]
+	}
+	//}}}
+	//{{{
+	pub fn get_translate_y(&mut self) -> f64
+	{
+		self[1][3]
+	}
+	//}}}
+	//{{{
+	pub fn get_translate_z(&mut self) -> f64
+	{
+		self[2][3]
+	}
+	//}}}
+	//{{{
+	pub fn get_translate(&mut self) -> (f64, f64, f64)
+	{
+		(self.get_translate_x(), self.get_translate_y(), self.get_translate_z())
+	}
+	//}}}
+
+	//{{{
+	pub fn get_scale_x(&mut self) -> f64
+	{
+		self.column(0).l2_norm().sqrt()
+	}
+	//}}}
+	//{{{
+	pub fn get_scale_y(&mut self) -> f64
+	{
+		self.column(1).l2_norm().sqrt()
+	}
+	//}}}
+	//{{{
+	pub fn get_scale_z(&mut self) -> f64
+	{
+		self.column(2).l2_norm().sqrt()
+	}
+	//}}}
+	//{{{
+	pub fn get_scale(&mut self) -> (f64, f64, f64)
+	{
+		(self.get_scale_x(), self.get_scale_y(), self.get_scale_z())
+	}
+	//}}}
+	//}}}
 }
 //}}}
 //}}}
@@ -657,7 +673,7 @@ impl Mul<Vector4D> for Vector4D
 impl Vector4D
 {
 	//{{{
-	fn l2_norm(&self) -> f64
+	pub fn l2_norm(&self) -> f64
 	{
 		vecmath::vec4_dot(**self, **self)
 	}

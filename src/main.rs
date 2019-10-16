@@ -45,48 +45,51 @@ pub fn zeppelin(l: f64, r: f64) -> Object
 
 fn main()
 {
+	let mut m1 = cube("test", 1.0, 1.0, 1.0);
+	m1.translate_x(10.0);
+	m1.rel_rotate_z(45.0);
+	m1.rel_scale(2.0, 2.0, 2.0);
 
-	//let mut m1 = rusty_scad::math::Matrix4D::identity();
-	//m1.translate_x(10.0);
-	//m1.rotate_z(45.0);
+	//m1.rotate_x(7.0);
+	//m1.translate_x(2.0);
+	//m1.translate_y(3.0);
+	//m1.translate_z(4.0);
 
-	////m1.rotate_x(7.0);
-	////m1.translate_x(2.0);
-	////m1.translate_y(3.0);
-	////m1.translate_z(4.0);
-
-	//println!("{}", m1);
-
-
-
-
-
-
+	eprintln!("{}", m1);
+	eprintln!("scale       = {:?}", m1.get_scale());
+	eprintln!("translation = {:?}", m1.get_translate());
+	eprintln!("rotation    = {:?}", m1.get_rotate());
+	println!("{}", m1);
 
 
 
-	let mut c1 = zeppelin(5.0, 1.0);
-	c1.set_fn(100);
-	c1.set_debug();
-	//c1.set_show_origin();
-	c1.set_show_anchors();
-	//c1.rel_rotate_z(45.0);
-	c1.rotate_z(45.0);
-	//c1.rel_translate_x(2.0);
-	//c1.translate_x(2.0);
 
 
 
-	let mut c2 = zeppelin(5.0, 1.0);
-	c2.set_fn(100);
-	c2.set_debug();
-	c2.set_show_anchors();
-	//c2.rotate_z(45.0);
-	//c2.rel_translate_x(2.0);
 
 
-	c2.snap_to_anchor("front", &c1, &c1["rear"].clone());
+	//let mut c1 = zeppelin(5.0, 1.0);
+	//c1.set_fn(100);
+	//c1.set_debug();
+	////c1.set_show_origin();
+	//c1.set_show_anchors();
+	////c1.rel_rotate_z(45.0);
+	//c1.rotate_z(45.0);
+	////c1.rel_translate_x(2.0);
+	////c1.translate_x(2.0);
 
 
-	println!("{}{}", c1, c2);
+
+	//let mut c2 = zeppelin(5.0, 1.0);
+	//c2.set_fn(100);
+	//c2.set_debug();
+	//c2.set_show_anchors();
+	////c2.rotate_z(45.0);
+	////c2.rel_translate_x(2.0);
+
+
+	//c2.snap_to_anchor("front", &c1, &c1["rear"].clone());
+
+
+	//println!("{}{}", c1, c2);
 }
