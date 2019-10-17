@@ -9,7 +9,7 @@ pub mod math; // Use 'pub mod' if you want it to be visible outside library.
 //pub use math::RefSysExt;
 pub use math::*;
 use std::collections::HashMap;
-use std::ops::{Index,IndexMut};
+use std::ops::{Index,IndexMut,ShlAssign,Fn};
 
 
 
@@ -704,7 +704,8 @@ impl Object
 	//{{{
 	pub fn snap_to_anchor(&mut self, own_anchor: &str, other: &Self, other_anchor: &crate::anchors::Anchor)
 	{
-		self.ref_sys = !self[own_anchor].ref_sys * other_anchor.ref_sys * other.ref_sys;
+		//TODO
+		//self.ref_sys = !self[own_anchor].ref_sys * other_anchor.ref_sys * other.ref_sys;
 	}
 	//}}}
 
@@ -999,19 +1000,44 @@ impl fmt::Display for Object
 }
 //}}}
 
-//{{{
-impl Index<&str> for Object {
-    type Output = crate::anchors::Anchor;
 
-    fn index(&self, index: &str) -> &Self::Output
-	{
-        eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
+//{{{ Index Operator for Object
 
-		&self.anchors[index]
-    }
+struct ObjectIndexHelper<'a>
+{
+	pub anchor: &'a crate::anchors::Anchor,
+	pub object: &'a Object,
 }
 
-//impl IndexMut<&str> for Object {
+//impl Index<&str> for Object {
+//    type Output = crate::anchors::Anchor;
+//
+//    fn index(&self, index: &str) -> &Self::Output
+//	{
+//        eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
+//
+//		&self.anchors[index]
+//    }
+//}
+
+
+
+
+// Normal Index operator
+//impl Index<&str> for Object {
+//    type Output = crate::anchors::Anchor;
+//
+//    fn index(&self, index: &str) -> &Self::Output
+//	{
+//        eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
+//
+//		&self.anchors[index]
+//    }
+//}
+
+// Does not work because HashMap dows not support mutable indexing
+//impl IndexMut<&str> for Object
+//{
 //    //type Output = crate::anchors::Anchor;
 //
 //    fn index_mut(&mut self, index: &str) -> &mut Self::Output
@@ -1021,17 +1047,32 @@ impl Index<&str> for Object {
 //		&mut self.anchors[index]
 //    }
 //}
+//}}}
 
-//impl IndexMut<Side> for Balance {
-//    fn index_mut(&mut self, index: Side) -> &mut Self::Output {
-//        println!("Accessing {:?}-side of balance mutably", index);
-//        match index {
-//            Side::Left => &mut self.left,
-//            Side::Right => &mut self.right,
-//        }
+////{{{ The Snapping operator
+//
+//// parent["anchor_1"] <<= child["anchor_2"]; // Child's coordinates will be changed so that anchor_2
+//// will reside exactly where anchor_1 is.
+//impl ShlAssign<&mut Self> for Object
+//{
+//    fn shl_assign(&mut self, rhs: &mut Self)
+//	{
+//		// TODO
 //    }
 //}
+////}}}
+
+//{{{
+
+
+
+
 //}}}
+
+
+
+
+
 //}}}
 //}}}
 

@@ -50,19 +50,18 @@ fn main()
 	m1.rel_rotate_z(45.0);
 	m1.rel_scale(2.0, 2.0, 2.0);
 
-	//m1.rotate_x(7.0);
-	//m1.translate_x(2.0);
-	//m1.translate_y(3.0);
-	//m1.translate_z(4.0);
-
-	eprintln!("{}", m1);
-	eprintln!("scale       = {:?}", m1.get_scale());
-	eprintln!("translation = {:?}", m1.get_translate());
-	eprintln!("rotation    = {:?}", m1.get_rotate());
+	eprintln!("{:2}", m1);
+	eprintln!("scale       = {:.4?}", m1.get_scale());
+	eprintln!("translation = {:.4?}", m1.get_translate());
+	eprintln!("rotation    = {:.4?}", m1.get_rotate());
 	println!("{}", m1);
 
 
+	// Idea: Use
+	//parent["anchor"] <<= child["anchor"];
+	// to anchor child to parent.
 
+	//m1["front"].snap_to(z["rear"]);
 
 
 

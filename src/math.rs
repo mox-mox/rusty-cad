@@ -510,14 +510,7 @@ impl Matrix4D
 	//{{{
 	pub fn get_rotate_z(&mut self) -> f64
 	{
-		//(self[0][1]/self.get_scale_x()).asin().to_degrees()
-		let s01       =self[0][1];
-		let scale_x   =self.get_scale_x();
-		let s01_scaled=self[0][1]/self.get_scale_x();
-		let angle     =(self[0][1]/self.get_scale_x()).asin().to_degrees();
-		eprintln!("s01={}\nscale_x={}\ns01_scaled={}\nangle={}", s01, scale_x, s01_scaled,angle);
-
-		angle
+		(self[0][1]/self.get_scale_x()).asin().to_degrees()
 	}
 	//}}}
 	//{{{
