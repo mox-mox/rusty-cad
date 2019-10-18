@@ -45,50 +45,36 @@ pub fn zeppelin(l: f64, r: f64) -> Object
 
 fn main()
 {
-	let mut m1 = cube("test", 1.0, 1.0, 1.0);
-	m1.translate_x(10.0);
-	m1.rel_rotate_z(45.0);
-	m1.rel_scale(2.0, 2.0, 2.0);
-
-	eprintln!("{:2}", m1);
-	eprintln!("scale       = {:.4?}", m1.get_scale());
-	eprintln!("translation = {:.4?}", m1.get_translate());
-	eprintln!("rotation    = {:.4?}", m1.get_rotate());
-	println!("{}", m1);
 
 
-	// Idea: Use
-	//parent["anchor"] <<= child["anchor"];
-	// to anchor child to parent.
 
+
+
+	let mut c1 = zeppelin(5.0, 1.0);
+	c1.set_fn(100);
+	c1.set_debug();
+	//c1.set_show_origin();
+	c1.set_show_anchors();
+	//c1.rel_rotate_z(45.0);
+	c1.rotate_z(45.0);
+	//c1.rel_translate_x(2.0);
+	//c1.translate_x(2.0);
+
+
+
+	let mut c2 = zeppelin(5.0, 1.0);
+	c2.set_fn(100);
+	c2.set_debug();
+	c2.set_show_anchors();
+	//c2.rotate_z(45.0);
+	//c2.rel_translate_x(2.0);
+
+
+	// This code is ugly.
+	c2.snap_to_anchor("front", &c1, &c1["rear"].clone());
+	// I would like to to something like this:
 	//m1["front"].snap_to(z["rear"]);
 
 
-
-
-
-	//let mut c1 = zeppelin(5.0, 1.0);
-	//c1.set_fn(100);
-	//c1.set_debug();
-	////c1.set_show_origin();
-	//c1.set_show_anchors();
-	////c1.rel_rotate_z(45.0);
-	//c1.rotate_z(45.0);
-	////c1.rel_translate_x(2.0);
-	////c1.translate_x(2.0);
-
-
-
-	//let mut c2 = zeppelin(5.0, 1.0);
-	//c2.set_fn(100);
-	//c2.set_debug();
-	//c2.set_show_anchors();
-	////c2.rotate_z(45.0);
-	////c2.rel_translate_x(2.0);
-
-
-	//c2.snap_to_anchor("front", &c1, &c1["rear"].clone());
-
-
-	//println!("{}{}", c1, c2);
+	println!("{}{}", c1, c2);
 }

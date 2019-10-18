@@ -1,12 +1,3 @@
-//pub use vecmath::mat4_id as identity3D;
-//pub use vecmath::mat4_inv as invert3D;
-//pub use vecmath::row_mat4_mul as multiply;
-
-//pub type Vector3D = vecmath::Vector4<f64>;
-//pub type Point3D  = vecmath::Vector4<f64>;
-//pub type Matrix3D = vecmath::Matrix4<f64>;
-
-
 pub use core::borrow::{Borrow, BorrowMut};
 pub use std::convert::{AsRef, AsMut};
 pub use std::ops::{Deref, DerefMut, Not, Add, Sub, Mul, BitXor};
@@ -496,75 +487,75 @@ impl Matrix4D
 	// [               (3,0)               (3,1)               (3,2)               (3,3) ]
 	//}}}
 	//{{{
-	pub fn get_rotate_x(&mut self) -> f64
+	pub fn get_rotate_x(&self) -> f64
 	{
 		(self[1][2]/self.get_scale_y()).asin().to_degrees()
 	}
 	//}}}
 	//{{{
-	pub fn get_rotate_y(&mut self) -> f64
+	pub fn get_rotate_y(&self) -> f64
 	{
 		(self[2][0]/self.get_scale_z()).asin().to_degrees()
 	}
 	//}}}
 	//{{{
-	pub fn get_rotate_z(&mut self) -> f64
+	pub fn get_rotate_z(&self) -> f64
 	{
 		(self[0][1]/self.get_scale_x()).asin().to_degrees()
 	}
 	//}}}
 	//{{{
-	pub fn get_rotate(&mut self) -> ( f64, f64, f64)
+	pub fn get_rotate(&self) -> ( f64, f64, f64)
 	{
 		(self.get_rotate_x(), self.get_rotate_y(), self.get_rotate_z())
 	}
 	//}}}
 
 	//{{{
-	pub fn get_translate_x(&mut self) -> f64
+	pub fn get_translate_x(&self) -> f64
 	{
 		self[0][3]
 	}
 	//}}}
 	//{{{
-	pub fn get_translate_y(&mut self) -> f64
+	pub fn get_translate_y(&self) -> f64
 	{
 		self[1][3]
 	}
 	//}}}
 	//{{{
-	pub fn get_translate_z(&mut self) -> f64
+	pub fn get_translate_z(&self) -> f64
 	{
 		self[2][3]
 	}
 	//}}}
 	//{{{
-	pub fn get_translate(&mut self) -> (f64, f64, f64)
+	pub fn get_translate(&self) -> (f64, f64, f64)
 	{
 		(self.get_translate_x(), self.get_translate_y(), self.get_translate_z())
 	}
 	//}}}
 
 	//{{{
-	pub fn get_scale_x(&mut self) -> f64
+	pub fn get_scale_x(&self) -> f64
 	{
 		self.column(0).l2_norm().sqrt()
 	}
 	//}}}
 	//{{{
-	pub fn get_scale_y(&mut self) -> f64
+	pub fn get_scale_y(&self) -> f64
 	{
 		self.column(1).l2_norm().sqrt()
 	}
 	//}}}
 	//{{{
-	pub fn get_scale_z(&mut self) -> f64
+	pub fn get_scale_z(&self) -> f64
 	{
 		self.column(2).l2_norm().sqrt()
 	}
 	//}}}
 	//{{{
-	pub fn get_scale(&mut self) -> (f64, f64, f64)
+	pub fn get_scale(&self) -> (f64, f64, f64)
 	{
 		(self.get_scale_x(), self.get_scale_y(), self.get_scale_z())
 	}
@@ -1061,446 +1052,300 @@ impl Vector4D
 //}}}
 
 
-//
-//
-////{{{
-//pub trait RefSysExt
-//{
-//	fn display(&self, indentation: usize) -> String;
-//
-//	fn     rotate_x(&mut self, x: f64);
-//	fn     rotate_y(&mut self, y: f64);
-//	fn     rotate_z(&mut self, z: f64);
-//	fn     rotate(  &mut self, x: f64, y: f64, z: f64);
-//	fn rel_rotate_x(&mut self, x: f64);
-//	fn rel_rotate_y(&mut self, y: f64);
-//	fn rel_rotate_z(&mut self, z: f64);
-//	fn rel_rotate(  &mut self, x: f64, y: f64, z: f64);
-//
-//	fn     translate_x(&mut self, x: f64);
-//	fn     translate_y(&mut self, y: f64);
-//	fn     translate_z(&mut self, z: f64);
-//	fn     translate(  &mut self, x: f64, y:f64, z: f64);
-//	fn rel_translate_x(&mut self, x: f64);
-//	fn rel_translate_y(&mut self, y: f64);
-//	fn rel_translate_z(&mut self, z: f64);
-//	fn rel_translate(  &mut self, x: f64, y:f64, z: f64);
-//
-//	fn     scale_x(&mut self, x: f64);
-//	fn     scale_y(&mut self, y: f64);
-//	fn     scale_z(&mut self, z: f64);
-//	fn     scale(  &mut self, x: f64, y:f64, z: f64);
-//	fn rel_scale_x(&mut self, x: f64);
-//	fn rel_scale_y(&mut self, y: f64);
-//	fn rel_scale_z(&mut self, z: f64);
-//	fn rel_scale(  &mut self, x: f64, y:f64, z: f64);
-//
-//
-//	//fn get_rotate_x(&mut self) -> f64;
-//	//fn get_rotate_y(&mut self) -> f64;
-//	//fn get_rotate_z(&mut self) -> f64;
-//	//fn get_rotate(  &mut self) -> ( f64, f64, f64);
-//
-//	//fn get_translate_x(&mut self) -> f64;
-//	//fn get_translate_y(&mut self) -> f64;
-//	//fn get_translate_z(&mut self) -> f64;
-//	//fn get_translate(&mut self) -> (f64, f64, f64);
-//
-//	//fn get_scale_x(&mut self) -> f64;
-//	//fn get_scale_y(&mut self) -> f64;
-//	//fn get_scale_z(&mut self) -> f64;
-//	//fn get_scale(  &mut self) -> (f64, f64, f64);
-//}
-////}}}
-//
-////{{{
-//impl RefSysExt for Matrix3D
-//{
-//	//{{{
-//	fn display(&self, indentation: usize) -> String
-//	{
-//		let indent   = "\t".repeat(indentation as usize);
-//		( format!("{}[{:16.10?},\n", indent, self[0])
-//		+&format!("{} {:16.10?},\n", indent, self[1])
-//		+&format!("{} {:16.10?},\n", indent, self[2])
-//		+&format!("{} {:16.10?}]",   indent, self[3]))
-//	}
-//	//}}}
-//
-//	////{{{
-//	//fn l2_norm(x: ndarray::ArrayView1<f64>) -> f64
-//	//{
-//	//	// Taken from:  https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/linear_algebra.html
-//	//	//x.dot(&x).sqrt()
-//	//	0.0
-//	//}
-//	////}}}
-//
-//	//{{{ Positions in a MultMatrix
-//	//
-//	// [ (0,0) (0,1) (0,2) (0,3) ]
-//	// [ (1,0) (1,1) (1,2) (1,3) ]
-//	// [ (2,0) (2,1) (2,2) (2,3) ]
-//	// [ (3,0) (3,1) (3,2) (3,3) ]
-//	//}}}
-//
-//	//{{{ 3D Manipulations
-//	//{{{Rotations
-//	//{{{
-//	fn rotate_x(&mut self, x: f64)
-//	{
-//		let x = x.to_radians();
-//		let mut rotation=identity3D();
-//		rotation[1][1] =  x.cos();
-//		rotation[1][2] = -x.sin();
-//		rotation[2][1] =  x.sin();
-//		rotation[2][2] =  x.cos();
-//
-//		*self = multiply(rotation, *self);
-//	}
-//	//}}}
-//	//{{{
-//	fn rotate_y(&mut self, y: f64)
-//	{
-//		let y = y.to_radians();
-//		let mut rotation=identity3D();
-//		rotation[0][0] =  y.cos();
-//		rotation[0][2] =  y.sin();
-//		rotation[2][0] = -y.sin();
-//		rotation[2][2] =  y.cos();
-//
-//		*self = multiply(rotation, *self);
-//	}
-//	//}}}
-//	//{{{
-//	fn rotate_z(&mut self, z: f64)
-//	{
-//		let z = z.to_radians();
-//		let mut rotation=identity3D();
-//		rotation[0][0] =  z.cos();
-//		rotation[0][1] = -z.sin();
-//		rotation[1][0] =  z.sin();
-//		rotation[1][1] =  z.cos();
-//
-//		*self = multiply(rotation, *self);
-//	}
-//	//}}}
-//	//{{{
-//	fn rotate(&mut self, x: f64, y: f64, z: f64)
-//	{
-//		self.rotate_x(x);
-//		self.rotate_y(y);
-//		self.rotate_z(z);
-//	}
-//	//}}}
-//
-//	//{{{
-//	fn rel_rotate_x(&mut self, x: f64)
-//	{
-//		let x = x.to_radians();
-//		let mut rotation=identity3D();
-//		rotation[1][1] =  x.cos();
-//		rotation[1][2] = -x.sin();
-//		rotation[2][1] =  x.sin();
-//		rotation[2][2] =  x.cos();
-//
-//		*self = multiply(*self, rotation);
-//	}
-//	//}}}
-//	//{{{
-//	fn rel_rotate_y(&mut self, y: f64)
-//	{
-//		let y = y.to_radians();
-//		let mut rotation=identity3D();
-//		rotation[0][0] =  y.cos();
-//		rotation[0][2] =  y.sin();
-//		rotation[2][0] = -y.sin();
-//		rotation[2][2] =  y.cos();
-//
-//		*self = multiply(*self, rotation);
-//	}
-//	//}}}
-//	//{{{
-//	fn rel_rotate_z(&mut self, z: f64)
-//	{
-//		let z = z.to_radians();
-//		let mut rotation=identity3D();
-//		rotation[0][0] =  z.cos();
-//		rotation[0][1] = -z.sin();
-//		rotation[1][0] =  z.sin();
-//		rotation[1][1] =  z.cos();
-//
-//		*self = multiply(*self, rotation);
-//	}
-//	//}}}
-//	//{{{
-//	fn rel_rotate(&mut self, x: f64, y: f64, z: f64)
-//	{
-//		self.rel_rotate_x(x);
-//		self.rel_rotate_y(y);
-//		self.rel_rotate_z(z);
-//	}
-//	//}}}
-//	//}}}
-//
-//	//{{{Translations
-//	//{{{
-//	fn translate_x(&mut self, x: f64)
-//	{
-//		let mut translation=identity3D();
-//		translation[0][3] =  x;
-//
-//		*self = multiply(translation, *self);
-//	}
-//	//}}}
-//	//{{{
-//	fn translate_y(&mut self, y: f64)
-//	{
-//		let mut translation=identity3D();
-//		translation[1][3] =  y;
-//
-//		*self = multiply(translation, *self);
-//	}
-//	//}}}
-//	//{{{
-//	fn translate_z(&mut self, z: f64)
-//	{
-//		let mut translation=identity3D();
-//		translation[2][3] =  z;
-//
-//		*self = multiply(translation, *self);
-//	}
-//	//}}}
-//	//{{{
-//	fn translate(&mut self, x: f64, y:f64, z: f64)
-//	{
-//		let mut translation=identity3D();
-//		translation[0][3] =  x;
-//		translation[1][3] =  y;
-//		translation[2][3] =  z;
-//
-//		*self = multiply(*self, translation);
-//	}
-//	//}}}
-//
-//	//{{{
-//	fn rel_translate_x(&mut self, x: f64)
-//	{
-//		let mut translation=identity3D();
-//		translation[0][3] =  x;
-//
-//		*self = multiply(*self, translation);
-//	}
-//	//}}}
-//	//{{{
-//	fn rel_translate_y(&mut self, y: f64)
-//	{
-//		let mut translation=identity3D();
-//		translation[1][3] =  y;
-//
-//		*self = multiply(*self, translation);
-//	}
-//	//}}}
-//	//{{{
-//	fn rel_translate_z(&mut self, z: f64)
-//	{
-//		let mut translation=identity3D();
-//		translation[2][3] =  z;
-//
-//		*self = multiply(*self, translation);
-//	}
-//	//}}}
-//	//{{{
-//	fn rel_translate(&mut self, x: f64, y:f64, z: f64)
-//	{
-//		let mut translation=identity3D();
-//		translation[0][3] =  x;
-//		translation[1][3] =  y;
-//		translation[2][3] =  z;
-//
-//		*self = multiply(translation, *self);
-//	}
-//	//}}}
-//	//}}}
-//
-//	//{{{ Scale
-//	//{{{
-//	fn scale_x(&mut self, x: f64)
-//	{
-//		let mut scale=identity3D();
-//		scale[0][0] =  x;
-//
-//		*self = multiply(*self, scale);
-//	}
-//	//}}}
-//	//{{{
-//	fn scale_y(&mut self, y: f64)
-//	{
-//		let mut scale=identity3D();
-//		scale[1][1] =  y;
-//
-//		*self = multiply(*self, scale);
-//	}
-//	//}}}
-//	//{{{
-//	fn scale_z(&mut self, z: f64)
-//	{
-//		let mut scale=identity3D();
-//		scale[2][2] =  z;
-//
-//		*self = multiply(*self, scale);
-//	}
-//	//}}}
-//	//{{{
-//	fn scale(&mut self, x: f64, y:f64, z: f64)
-//	{
-//		let mut scale=identity3D();
-//		scale[0][0] =  x;
-//		scale[1][1] =  y;
-//		scale[2][2] =  z;
-//
-//		*self = multiply(*self, scale);
-//	}
-//	//}}}
-//
-//	//{{{
-//	fn rel_scale_x(&mut self, x: f64)
-//	{
-//		let mut scale=identity3D();
-//		scale[0][0] =  x;
-//
-//		*self = multiply(scale, *self);
-//	}
-//	//}}}
-//	//{{{
-//	fn rel_scale_y(&mut self, y: f64)
-//	{
-//		let mut scale=identity3D();
-//		scale[1][1] =  y;
-//
-//		*self = multiply(scale, *self);
-//	}
-//	//}}}
-//	//{{{
-//	fn rel_scale_z(&mut self, z: f64)
-//	{
-//		let mut scale=identity3D();
-//		scale[2][2] =  z;
-//
-//		*self = multiply(scale, *self);
-//	}
-//	//}}}
-//	//{{{
-//	fn rel_scale(&mut self, x: f64, y:f64, z: f64)
-//	{
-//		let mut scale=identity3D();
-//		scale[0][0] =  x;
-//		scale[1][1] =  y;
-//		scale[2][2] =  z;
-//
-//		*self = multiply(scale, *self);
-//	}
-//	//}}}
-//	//}}}
-//	//}}}
-//
-////
-////	//{{{ Get 3D Coordinates, Rotation, Scale, Shear
-////	
-////	// See: https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
-////	//{{{ Positions in a MultMatrix
-////	//
-////	// [ (0,0) (0,1) (0,2) (0,3) ]
-////	// [ (1,0) (1,1) (1,2) (1,3) ]
-////	// [ (2,0) (2,1) (2,2) (2,3) ]
-////	// [ (3,0) (3,1) (3,2) (3,3) ]
-////	//}}}
-////
-////
-////	//{{{
-////	pub fn get_rotate_x(&mut self) -> f64
-////	{
-////		0.0
-////	}
-////	//}}}
-////	//{{{
-////	pub fn get_rotate_y(&mut self) -> f64
-////	{
-////		0.0
-////	}
-////	//}}}
-////	//{{{
-////	pub fn get_rotate_z(&mut self) -> f64
-////	{
-////		0.0
-////	}
-////	//}}}
-////	//{{{
-////	pub fn get_rotate(&mut self) -> ( f64, f64, f64)
-////	{
-////		(0.0, 0.0, 0.0)
-////	}
-////	//}}}
-////
-////	//{{{
-////	pub fn get_translate_x(&mut self) -> f64
-////	{
-////		self.ref_sys[[0,3]]
-////	}
-////	//}}}
-////	//{{{
-////	pub fn get_translate_y(&mut self) -> f64
-////	{
-////		self.ref_sys[[1,3]]
-////	}
-////	//}}}
-////	//{{{
-////	pub fn get_translate_z(&mut self) -> f64
-////	{
-////		self.ref_sys[[2,3]]
-////	}
-////	//}}}
-////	//{{{
-////	pub fn get_translate(&mut self) -> (f64, f64, f64)
-////	{
-////		(self.get_translate_x(), self.get_translate_y(), self.get_translate_z())
-////	}
-////	//}}}
-////
-////	//{{{
-////	pub fn get_scale_x(&mut self) -> f64
-////	{
-////		use ndarray::s;
-////		l2_norm(self.ref_sys.slice(s![0, ..]))
-////	}
-////	//}}}
-////	//{{{
-////	pub fn get_scale_y(&mut self) -> f64
-////	{
-////		use ndarray::s;
-////		l2_norm(self.ref_sys.slice(s![1, ..]))
-////	}
-////	//}}}
-////	//{{{
-////	pub fn get_scale_z(&mut self) -> f64
-////	{
-////		use ndarray::s;
-////		l2_norm(self.ref_sys.slice(s![2, ..]))
-////	}
-////	//}}}
-////	//{{{
-////	pub fn get_scale(&mut self) -> (f64, f64, f64)
-////	{
-////		(self.get_scale_x(), self.get_scale_y(), self.get_scale_z())
-////	}
-////	//}}}
-////	//}}}
-////
-//
-//}
-////}}}
-//
-//
-//
-//
-////You can impl Deref, Borrow and AsRef, which should cover all needs at callsite.
+//{{{
+pub trait HasRefSys
+{
+	fn ref_sys_mut(&mut self) -> &mut Matrix4D;
+	fn ref_sys(&self) -> &Matrix4D;
+}
+//}}}
+
+//{{{
+pub trait Is3DObject
+{
+	fn rotate_x(&mut self, x: f64);
+	fn rotate_y(&mut self, y: f64);
+	fn rotate_z(&mut self, z: f64);
+	fn rotate(&mut self, x: f64, y: f64, z: f64);
+	fn rel_rotate_x(&mut self, x: f64);
+	fn rel_rotate_y(&mut self, y: f64);
+	fn rel_rotate_z(&mut self, z: f64);
+	fn rel_rotate(&mut self, x: f64, y: f64, z: f64);
+	fn translate_x(&mut self, x: f64);
+	fn translate_y(&mut self, y: f64);
+	fn translate_z(&mut self, z: f64);
+	fn translate(&mut self, x: f64, y:f64, z: f64);
+	fn rel_translate_x(&mut self, x: f64);
+	fn rel_translate_y(&mut self, y: f64);
+	fn rel_translate_z(&mut self, z: f64);
+	fn rel_translate(&mut self, x: f64, y:f64, z: f64);
+	fn scale_x(&mut self, x: f64);
+	fn scale_y(&mut self, y: f64);
+	fn scale_z(&mut self, z: f64);
+	fn scale(&mut self, x: f64, y:f64, z: f64);
+	fn rel_scale_x(&mut self, x: f64);
+	fn rel_scale_y(&mut self, y: f64);
+	fn rel_scale_z(&mut self, z: f64);
+	fn rel_scale(&mut self, x: f64, y:f64, z: f64);
+
+	fn get_rotate_x(&self) -> f64;
+	fn get_rotate_y(&self) -> f64;
+	fn get_rotate_z(&self) -> f64;
+	fn get_rotate(&self) -> ( f64, f64, f64);
+	fn get_translate_x(&self) -> f64;
+	fn get_translate_y(&self) -> f64;
+	fn get_translate_z(&self) -> f64;
+	fn get_translate(&self) -> (f64, f64, f64);
+	fn get_scale_x(&self) -> f64;
+	fn get_scale_y(&self) -> f64;
+	fn get_scale_z(&self) -> f64;
+	fn get_scale(&self) -> (f64, f64, f64);
+}
+//}}}
+
+//{{{
+impl<T> Is3DObject for T where T: HasRefSys
+{
+	//{{{ 3D-Manipulation
+
+	//{{{
+	fn rotate_x(&mut self, x: f64)
+	{
+		self.ref_sys_mut().rotate_x(x);
+	}
+	//}}}
+	//{{{
+	fn rotate_y(&mut self, y: f64)
+	{
+		self.ref_sys_mut().rotate_y(y);
+	}
+	//}}}
+	//{{{
+	fn rotate_z(&mut self, z: f64)
+	{
+		self.ref_sys_mut().rotate_z(z);
+	}
+	//}}}
+	//{{{
+	fn rotate(&mut self, x: f64, y: f64, z: f64)
+	{
+		self.ref_sys_mut().rotate(x, y, z);
+	}
+	//}}}
+
+	//{{{
+	fn rel_rotate_x(&mut self, x: f64)
+	{
+		self.ref_sys_mut().rel_rotate_x(x);
+	}
+	//}}}
+	//{{{
+	fn rel_rotate_y(&mut self, y: f64)
+	{
+		self.ref_sys_mut().rel_rotate_y(y);
+	}
+	//}}}
+	//{{{
+	fn rel_rotate_z(&mut self, z: f64)
+	{
+		self.ref_sys_mut().rel_rotate_z(z);
+	}
+	//}}}
+	//{{{
+	fn rel_rotate(&mut self, x: f64, y: f64, z: f64)
+	{
+		self.ref_sys_mut().rel_rotate(x, y, z);
+	}
+	//}}}
+
+
+	//{{{
+	fn translate_x(&mut self, x: f64)
+	{
+		self.ref_sys_mut().translate_x(x);
+	}
+	//}}}
+	//{{{
+	fn translate_y(&mut self, y: f64)
+	{
+		self.ref_sys_mut().translate_y(y);
+	}
+	//}}}
+	//{{{
+	fn translate_z(&mut self, z: f64)
+	{
+		self.ref_sys_mut().translate_z(z);
+	}
+	//}}}
+	//{{{
+	fn translate(&mut self, x: f64, y:f64, z: f64)
+	{
+		self.ref_sys_mut().translate(x, y, z);
+	}
+	//}}}
+
+	//{{{
+	fn rel_translate_x(&mut self, x: f64)
+	{
+		self.ref_sys_mut().rel_translate_x(x);
+	}
+	//}}}
+	//{{{
+	fn rel_translate_y(&mut self, y: f64)
+	{
+		self.ref_sys_mut().rel_translate_y(y);
+	}
+	//}}}
+	//{{{
+	fn rel_translate_z(&mut self, z: f64)
+	{
+		self.ref_sys_mut().rel_translate_z(z);
+	}
+	//}}}
+	//{{{
+	fn rel_translate(&mut self, x: f64, y:f64, z: f64)
+	{
+		self.ref_sys_mut().rel_translate(x, y, z);
+	}
+	//}}}
+
+
+	//{{{
+	fn scale_x(&mut self, x: f64)
+	{
+		self.ref_sys_mut().scale_x(x);
+	}
+	//}}}
+	//{{{
+	fn scale_y(&mut self, y: f64)
+	{
+		self.ref_sys_mut().scale_y(y);
+	}
+	//}}}
+	//{{{
+	fn scale_z(&mut self, z: f64)
+	{
+		self.ref_sys_mut().scale_z(z);
+	}
+	//}}}
+	//{{{
+	fn scale(&mut self, x: f64, y:f64, z: f64)
+	{
+		self.ref_sys_mut().scale(x, y, z);
+	}
+	//}}}
+	//{{{
+	fn rel_scale_x(&mut self, x: f64)
+	{
+		self.ref_sys_mut().rel_scale_x(x);
+	}
+	//}}}
+	//{{{
+	fn rel_scale_y(&mut self, y: f64)
+	{
+		self.ref_sys_mut().rel_scale_y(y);
+	}
+	//}}}
+	//{{{
+	fn rel_scale_z(&mut self, z: f64)
+	{
+		self.ref_sys_mut().rel_scale_z(z);
+	}
+	//}}}
+	//{{{
+	fn rel_scale(&mut self, x: f64, y:f64, z: f64)
+	{
+		self.ref_sys_mut().rel_scale(x, y, z);
+	}
+	//}}}
+	//}}}
+
+	//{{{ Get 3D Coordinates, Rotation, Scale, Shear
+	
+	// See: https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
+	//{{{ Positions in a MultMatrix
+	//
+	// [ (0,0) (0,1) (0,2) (0,3) ]
+	// [ (1,0) (1,1) (1,2) (1,3) ]
+	// [ (2,0) (2,1) (2,2) (2,3) ]
+	// [ (3,0) (3,1) (3,2) (3,3) ]
+	//}}}
+
+
+	//{{{
+	fn get_rotate_x(&self) -> f64
+	{
+		self.ref_sys().get_rotate_x()
+	}
+	//}}}
+	//{{{
+	fn get_rotate_y(&self) -> f64
+	{
+		self.ref_sys().get_rotate_x()
+	}
+	//}}}
+	//{{{
+	fn get_rotate_z(&self) -> f64
+	{
+		self.ref_sys().get_rotate_x()
+	}
+	//}}}
+	//{{{
+	fn get_rotate(&self) -> ( f64, f64, f64)
+	{
+		self.ref_sys().get_rotate()
+	}
+	//}}}
+
+	//{{{
+	fn get_translate_x(&self) -> f64
+	{
+		self.ref_sys().get_translate_x()
+	}
+	//}}}
+	//{{{
+	fn get_translate_y(&self) -> f64
+	{
+		self.ref_sys().get_translate_y()
+	}
+	//}}}
+	//{{{
+	fn get_translate_z(&self) -> f64
+	{
+		self.ref_sys().get_translate_z()
+	}
+	//}}}
+	//{{{
+	fn get_translate(&self) -> (f64, f64, f64)
+	{
+		self.ref_sys().get_translate()
+	}
+	//}}}
+
+	//{{{
+	fn get_scale_x(&self) -> f64
+	{
+		self.ref_sys().get_scale_x()
+	}
+	//}}}
+	//{{{
+	fn get_scale_y(&self) -> f64
+	{
+		self.ref_sys().get_scale_y()
+	}
+	//}}}
+	//{{{
+	fn get_scale_z(&self) -> f64
+	{
+		self.ref_sys().get_scale_z()
+	}
+	//}}}
+	//{{{
+	fn get_scale(&self) -> (f64, f64, f64)
+	{
+		self.ref_sys().get_scale()
+	}
+	//}}}
+	//}}}
+}
+//}}}

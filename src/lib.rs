@@ -3,20 +3,25 @@
 #![allow(unused_mut)]
 #![allow(unused_imports)]
 
+/// Idea:
+/// There are a number of functions (see last section "create objects") to create 3D objects.
+/// They are all of type 'Object' and you can call methods on them to translate, rotate, scale, etc.
+/// For CSG, you use the union(), difference(), intersection(), hull() and minkowski() functions which take an array of Objects and return an Object.
+/// 
+/// For nicer placement, you can define 'Anchors' on Objects. They work by defining a point and direction relative to the origin of an Object and allow snapping objects together (bit of matrix math).
+
+/// TODO: Much more documentation...
+
+
+
+
+
 extern crate vecmath;
 pub mod math; // Use 'pub mod' if you want it to be visible outside library.
 
-//pub use math::RefSysExt;
 pub use math::*;
 use std::collections::HashMap;
 use std::ops::{Index,IndexMut,ShlAssign,Fn};
-
-
-
-
-
-
-
 
 extern crate ndarray;
 use std::fmt;
@@ -179,10 +184,12 @@ mod modifiers
 }
 //}}}
 
-//{{{ TODO:
+//{{{
 pub mod anchors
 {
 	use std::fmt;
+	use crate::math::HasRefSys;
+	use crate::math::Is3DObject;
 	//pub use crate::math::RefSysExt;
 	//{{{ pub struct AnchorConstraint
 
@@ -210,6 +217,21 @@ pub mod anchors
 		pub constrain_shear       : AnchorConstraint,
 	}
 	//}}}
+
+	//{{{
+	impl HasRefSys for Anchor
+	{
+	    fn ref_sys_mut(&mut self) -> &mut crate::Matrix4D
+		{
+			&mut self.ref_sys
+	    }
+	    fn ref_sys(&self) -> &crate::Matrix4D
+		{
+			&self.ref_sys
+	    }
+	}
+	//}}}
+
 
 	//{{{
 	impl Anchor
@@ -458,7 +480,6 @@ pub enum Shape
 	Sphere    { r: f64, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64> },
 	Cylinder  { h: f64, r1 : f64, r2 : f64, face_angle  : Option<f64>, face_size   : Option<f64>, face_number : Option<i32> },
 
-	//Composite { op: BooleanOp, c1: Box<Object>, c2: Box<Object> },
 	Composite { op: BooleanOp, children: Vec<Object> },
 }
 
@@ -542,6 +563,19 @@ pub struct Object
 	snap_parent     : bool,
 }
 
+//{{{
+impl HasRefSys for Object
+{
+    fn ref_sys_mut(&mut self) -> &mut Matrix4D
+	{
+		&mut self.ref_sys
+    }
+    fn ref_sys(&self) -> &Matrix4D
+	{
+		&self.ref_sys
+    }
+}
+//}}}
 
 //{{{
 impl Object
@@ -685,16 +719,6 @@ impl Object
 	//}}}
 	//}}}
 
-	//{{{ 3D-Manipulation
-
-	//{{{ Positions in a MultMatrix
-	//
-	// [ (0,0) (0,1) (0,2) (0,3) ]
-	// [ (1,0) (1,1) (1,2) (1,3) ]
-	// [ (2,0) (2,1) (2,2) (2,3) ]
-	// [ (3,0) (3,1) (3,2) (3,3) ]
-	//}}}
-
 	//{{{
 	pub fn set_ref_sys(&mut self, ref_sys: crate::Matrix4D)
 	{
@@ -704,264 +728,35 @@ impl Object
 	//{{{
 	pub fn snap_to_anchor(&mut self, own_anchor: &str, other: &Self, other_anchor: &crate::anchors::Anchor)
 	{
-		//TODO
-		//self.ref_sys = !self[own_anchor].ref_sys * other_anchor.ref_sys * other.ref_sys;
-	}
-	//}}}
 
-	//{{{
-	pub fn rotate_x(&mut self, x: f64)
-	{
-		self.ref_sys.rotate_x(x);
-	}
-	//}}}
-	//{{{
-	pub fn rotate_y(&mut self, y: f64)
-	{
-		self.ref_sys.rotate_y(y);
-	}
-	//}}}
-	//{{{
-	pub fn rotate_z(&mut self, z: f64)
-	{
-		self.ref_sys.rotate_z(z);
-	}
-	//}}}
-	//{{{
-	pub fn rotate(&mut self, x: f64, y: f64, z: f64)
-	{
-		self.ref_sys.rotate(x, y, z);
-	}
-	//}}}
+		//{{{ Generate inverse own anchor
 
-	//{{{
-	pub fn rel_rotate_x(&mut self, x: f64)
-	{
-		self.ref_sys.rel_rotate_x(x);
-	}
-	//}}}
-	//{{{
-	pub fn rel_rotate_y(&mut self, y: f64)
-	{
-		self.ref_sys.rel_rotate_y(y);
-	}
-	//}}}
-	//{{{
-	pub fn rel_rotate_z(&mut self, z: f64)
-	{
-		self.ref_sys.rel_rotate_z(z);
-	}
-	//}}}
-	//{{{
-	pub fn rel_rotate(&mut self, x: f64, y: f64, z: f64)
-	{
-		self.ref_sys.rel_rotate(x, y, z);
+		//}}}
+		//{{{ Generate other anchor
+
+		//}}}
+		
+
+
+
+
+
+
+
+
+		self.ref_sys = !self[own_anchor].ref_sys * other_anchor.ref_sys * other.ref_sys;
 	}
 	//}}}
 
 
-	//{{{
-	pub fn translate_x(&mut self, x: f64)
-	{
-		self.ref_sys.translate_x(x);
-	}
-	//}}}
-	//{{{
-	pub fn translate_y(&mut self, y: f64)
-	{
-		self.ref_sys.translate_y(y);
-	}
-	//}}}
-	//{{{
-	pub fn translate_z(&mut self, z: f64)
-	{
-		self.ref_sys.translate_z(z);
-	}
-	//}}}
-	//{{{
-	pub fn translate(&mut self, x: f64, y:f64, z: f64)
-	{
-		self.ref_sys.translate(x, y, z);
-	}
-	//}}}
-
-	//{{{
-	pub fn rel_translate_x(&mut self, x: f64)
-	{
-		self.ref_sys.rel_translate_x(x);
-	}
-	//}}}
-	//{{{
-	pub fn rel_translate_y(&mut self, y: f64)
-	{
-		self.ref_sys.rel_translate_y(y);
-	}
-	//}}}
-	//{{{
-	pub fn rel_translate_z(&mut self, z: f64)
-	{
-		self.ref_sys.rel_translate_z(z);
-	}
-	//}}}
-	//{{{
-	pub fn rel_translate(&mut self, x: f64, y:f64, z: f64)
-	{
-		self.ref_sys.rel_translate(x, y, z);
-	}
-	//}}}
-
-
-	//{{{
-	pub fn scale_x(&mut self, x: f64)
-	{
-		self.ref_sys.scale_x(x);
-	}
-	//}}}
-	//{{{
-	pub fn scale_y(&mut self, y: f64)
-	{
-		self.ref_sys.scale_y(y);
-	}
-	//}}}
-	//{{{
-	pub fn scale_z(&mut self, z: f64)
-	{
-		self.ref_sys.scale_z(z);
-	}
-	//}}}
-	//{{{
-	pub fn scale(&mut self, x: f64, y:f64, z: f64)
-	{
-		self.ref_sys.scale(x, y, z);
-	}
-	//}}}
-	//{{{
-	pub fn rel_scale_x(&mut self, x: f64)
-	{
-		self.ref_sys.rel_scale_x(x);
-	}
-	//}}}
-	//{{{
-	pub fn rel_scale_y(&mut self, y: f64)
-	{
-		self.ref_sys.rel_scale_y(y);
-	}
-	//}}}
-	//{{{
-	pub fn rel_scale_z(&mut self, z: f64)
-	{
-		self.ref_sys.rel_scale_z(z);
-	}
-	//}}}
-	//{{{
-	pub fn rel_scale(&mut self, x: f64, y:f64, z: f64)
-	{
-		self.ref_sys.rel_scale(x, y, z);
-	}
-	//}}}
-	//}}}
-
-
-	//{{{ Get 3D Coordinates, Rotation, Scale, Shear
-	
-	// See: https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
-	//{{{ Positions in a MultMatrix
-	//
-	// [ (0,0) (0,1) (0,2) (0,3) ]
-	// [ (1,0) (1,1) (1,2) (1,3) ]
-	// [ (2,0) (2,1) (2,2) (2,3) ]
-	// [ (3,0) (3,1) (3,2) (3,3) ]
-	//}}}
-
-
-	//{{{
-	pub fn get_rotate_x(&mut self) -> f64
-	{
-		self.ref_sys.get_rotate_x()
-	}
-	//}}}
-	//{{{
-	pub fn get_rotate_y(&mut self) -> f64
-	{
-		self.ref_sys.get_rotate_x()
-	}
-	//}}}
-	//{{{
-	pub fn get_rotate_z(&mut self) -> f64
-	{
-		self.ref_sys.get_rotate_x()
-	}
-	//}}}
-	//{{{
-	pub fn get_rotate(&mut self) -> ( f64, f64, f64)
-	{
-		self.ref_sys.get_rotate()
-	}
-	//}}}
-
-	//{{{
-	pub fn get_translate_x(&mut self) -> f64
-	{
-		self.ref_sys.get_translate_x()
-	}
-	//}}}
-	//{{{
-	pub fn get_translate_y(&mut self) -> f64
-	{
-		self.ref_sys.get_translate_y()
-	}
-	//}}}
-	//{{{
-	pub fn get_translate_z(&mut self) -> f64
-	{
-		self.ref_sys.get_translate_z()
-	}
-	//}}}
-	//{{{
-	pub fn get_translate(&mut self) -> (f64, f64, f64)
-	{
-		self.ref_sys.get_translate()
-	}
-	//}}}
-
-	//{{{
-	pub fn get_scale_x(&mut self) -> f64
-	{
-		self.ref_sys.get_scale_x()
-	}
-	//}}}
-	//{{{
-	pub fn get_scale_y(&mut self) -> f64
-	{
-		self.ref_sys.get_scale_y()
-	}
-	//}}}
-	//{{{
-	pub fn get_scale_z(&mut self) -> f64
-	{
-		self.ref_sys.get_scale_z()
-	}
-	//}}}
-	//{{{
-	pub fn get_scale(&mut self) -> (f64, f64, f64)
-	{
-		self.ref_sys.get_scale()
-	}
-	//}}}
-	//}}}
-
-
+	//fn get_child(&'a self, name) -> DynamicChild<'a> {
+	//fn get_child<'a>(&'a self, index: &str) -> ObjectIndexHelper<'a>
+	//{
+	//	ObjectIndexHelper{ anchor: &self.anchors[index], object: self }
+	//}
 }
 //}}}
 
-//{{{ TODO
-fn l2_norm(x: ndarray::ArrayView1<f64>) -> f64
-{
-	// Taken from:  https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/linear_algebra.html
-	//x.dot(&x).sqrt()
-	0.0
-}
-//}}}
 //{{{
 impl fmt::Display for Object
 {
@@ -1003,38 +798,47 @@ impl fmt::Display for Object
 
 //{{{ Index Operator for Object
 
-struct ObjectIndexHelper<'a>
+
+
+//{{{ Index -> (Object, Anchor) Does not work // <<=== This is the problematic part
+//impl Index<&str> for Object
+//{
+//    type Output = ObjectIndexHelper;
+//
+//    fn index(&self, index: &str) -> &ObjectIndexHelper
+//	{
+//        eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
+//
+//		ObjectIndexHelper{ anchor: Box::new(self.anchors[index]), object: Box::new(self) }
+//    }
+//}
+
+//struct ObjectIndexHelper<'a>
+//{
+//	pub anchor: &'a crate::anchors::Anchor,
+//	pub object: &'a Object,
+//}
+//}}}
+
+// This would allow calling functions that need an objects and an anchors like
+// do_something_with_object_and_anchor(my_object["my_anchor_name"]);
+
+
+//{{{ Normal Index operator: Works but is insufficient for my use case.
+impl Index<&str> for Object
 {
-	pub anchor: &'a crate::anchors::Anchor,
-	pub object: &'a Object,
+    type Output = crate::anchors::Anchor;
+
+    fn index(&self, index: &str) -> &Self::Output
+	{
+        eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
+
+		&self.anchors[index]
+    }
 }
+//}}}
 
-//impl Index<&str> for Object {
-//    type Output = crate::anchors::Anchor;
-//
-//    fn index(&self, index: &str) -> &Self::Output
-//	{
-//        eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
-//
-//		&self.anchors[index]
-//    }
-//}
-
-
-
-
-// Normal Index operator
-//impl Index<&str> for Object {
-//    type Output = crate::anchors::Anchor;
-//
-//    fn index(&self, index: &str) -> &Self::Output
-//	{
-//        eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
-//
-//		&self.anchors[index]
-//    }
-//}
-
+//{{{ IndexMut
 // Does not work because HashMap dows not support mutable indexing
 //impl IndexMut<&str> for Object
 //{
@@ -1048,29 +852,7 @@ struct ObjectIndexHelper<'a>
 //    }
 //}
 //}}}
-
-////{{{ The Snapping operator
-//
-//// parent["anchor_1"] <<= child["anchor_2"]; // Child's coordinates will be changed so that anchor_2
-//// will reside exactly where anchor_1 is.
-//impl ShlAssign<&mut Self> for Object
-//{
-//    fn shl_assign(&mut self, rhs: &mut Self)
-//	{
-//		// TODO
-//    }
-//}
-////}}}
-
-//{{{
-
-
-
-
 //}}}
-
-
-
 
 
 //}}}
