@@ -496,7 +496,7 @@ impl Shape
 			//{{{
 			Shape::Cube{x,y,z}                                        =>
 			{
-				tabs + "cube([" + &x.to_string() + ", " + &y.to_string() + ", " + &z.to_string() + "]);"
+				tabs + "cube([" + &x.to_string() + ", " + &y.to_string() + ", " + &z.to_string() + "], center=true);"
 			}
 			//}}}
 			//{{{
@@ -1035,7 +1035,4 @@ pub fn object_anchor(name: &str) -> Object
 
 
 //}}}
-
-
-
 

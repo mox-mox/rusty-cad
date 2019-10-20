@@ -5,76 +5,200 @@
 
 extern crate rusty_scad;
 use rusty_scad::*;
-//use rusty_scad::IsSerialisableScope;
-use vecmath::mat4_inv;
-use rusty_scad::math::*;
+
+const MATTRESS_LENGTH   : f64 = 200.0;
+const STORAGE_LENGTH    : f64 =  41.0;
+const MATTRESS_WIDTH    : f64 = 140.0;
+
+const FRAME_HEIGHT      : f64 =  20.0;
+const FRAME_WIDTH       : f64 =   3.0;
+
+const BED_LENGTH        : f64 = MATTRESS_LENGTH+STORAGE_LENGTH+3.0*FRAME_WIDTH;
+const BED_WIDTH         : f64 = MATTRESS_WIDTH+2.0*FRAME_WIDTH;
 
 //{{{
-pub fn zeppelin(l: f64, r: f64) -> Object
+pub fn sideboard(name: &str, notches: i32) -> Object
 {
-	let mut s1 = sphere("zeppelin::front", r);
-	let mut s2 = sphere("zeppelin::rear", r);
-	s1.translate_y(-l/2.0);
-	s2.translate_y( l/2.0);
+	let mut board = cube(&(String::from("base board for ")+name), FRAME_WIDTH, BED_LENGTH, FRAME_HEIGHT);
 
-	let mut z = hull("zeppelin", [s1, s2]);
+	let mut parts = vec![board];
 
-	let mut a = rusty_scad::anchors::Anchor::new("right");
-	a.translate_x(1.0);
-	z.add_anchor(a);
+	//{{{ Cut out the end dovetails
 
-	let mut a = rusty_scad::anchors::Anchor::new("left");
-	a.translate_x(-1.0);
-	z.add_anchor(a);
+	let mut cutout = cube(&(String::from("end cutout for ")+name), FRAME_WIDTH*2.0, FRAME_WIDTH*2.0, FRAME_HEIGHT/(notches as f64));
+	//cutout.set_debug();
 
-	let mut a = rusty_scad::anchors::Anchor::new("front");
-	a.translate_y(l/2.0+r);
-	a.rel_rotate_x(-45.0);
-	z.add_anchor(a);
+	//{{{ Make sure the cutout overlaps the board edge
+	{
+		let mut cutout1 = cutout.clone();
+		cutout1.translate(0.0, BED_LENGTH/2.0, FRAME_HEIGHT/2.0);
+		parts.push(cutout1);
 
-	let mut a = rusty_scad::anchors::Anchor::new("rear");
-	a.translate_y(-l/2.0-r);
-	a.rel_rotate_z(45.0);
-	z.add_anchor(a);
+		let mut cutout2 = cutout.clone();
+		cutout2.translate(0.0, -BED_LENGTH/2.0, FRAME_HEIGHT/2.0);
+		parts.push(cutout2);
+	}
+	//}}}
 
-	z
+	cutout.translate_z(FRAME_HEIGHT*(1.0/(notches as f64)-1.0)/2.0);
+	for i in (1..notches).step_by(2)
+	{
+		let mut cutout1 = cutout.clone();
+		cutout1.translate(0.0, BED_LENGTH/2.0, (i as f64)*FRAME_HEIGHT/(notches as f64));
+		parts.push(cutout1);
+
+		let mut cutout2 = cutout.clone();
+		cutout2.translate(0.0, -BED_LENGTH/2.0, (i as f64)*FRAME_HEIGHT/(notches as f64));
+		parts.push(cutout2);
+	}
+	//}}}
+
+
+	//{{{ Cut out the notches for the bulkhead
+
+	let mut cutout = cube(&(String::from("bulkhead cutout for ")+name), FRAME_WIDTH, FRAME_WIDTH, FRAME_HEIGHT/(notches as f64));
+	cutout.translate(1.0, -BED_LENGTH/2.0+200.0+FRAME_WIDTH*1.5, -FRAME_HEIGHT/2.0);
+	//cutout.set_debug();
+
+	for i in (1..notches).step_by(2)
+	{
+		let mut cutout = cutout.clone();
+		cutout.translate_z((i as f64)*FRAME_HEIGHT/(notches as f64));
+		parts.push(cutout);
+	}
+	//}}}
+
+
+	let mut board = difference(name, parts);
+
+	board.translate_y(BED_LENGTH/2.0-103.0);
+	board
+}
+//}}}
+
+//{{{
+pub fn frontboard(name: &str, notches: i32) -> Object
+{
+	let mut board = cube(&(String::from("base board for ")+name), BED_WIDTH, FRAME_WIDTH, FRAME_HEIGHT);
+
+	let mut parts = vec![board];
+
+	//{{{ Cut out the end dovetails
+
+	let mut cutout = cube(&(String::from("end cutout for ")+name), FRAME_WIDTH*2.0, FRAME_WIDTH*2.0, FRAME_HEIGHT/(notches as f64));
+	//cutout.set_debug();
+
+	//{{{ Make sure the cutout overlaps the board edge
+	{
+		let mut cutout1 = cutout.clone();
+		cutout1.translate( BED_WIDTH/2.0, 0.0, -FRAME_HEIGHT/2.0);
+		parts.push(cutout1);
+
+		let mut cutout2 = cutout.clone();
+		cutout2.translate(-BED_WIDTH/2.0, 0.0, -FRAME_HEIGHT/2.0);
+		parts.push(cutout2);
+	}
+	//}}}
+
+	cutout.translate_z(-FRAME_HEIGHT*(1.0/(notches as f64)-1.0)/2.0);
+	for i in (1..notches).step_by(2)
+	{
+		let mut cutout1 = cutout.clone();
+		cutout1.translate( BED_WIDTH/2.0, 0.0, -(i as f64)*FRAME_HEIGHT/(notches as f64));
+		parts.push(cutout1);
+
+		let mut cutout2 = cutout.clone();
+		cutout2.translate(-BED_WIDTH/2.0, 0.0, -(i as f64)*FRAME_HEIGHT/(notches as f64));
+		parts.push(cutout2);
+	}
+	//}}}
+
+	let mut board = difference(name, parts);
+
+	board
+}
+//}}}
+
+//{{{
+pub fn bulkhead(name: &str, notches: i32) -> Object
+{
+	let mut board = cube(&(String::from("base board for ")+name), BED_WIDTH+2.0*FRAME_WIDTH, FRAME_WIDTH, FRAME_HEIGHT);
+
+	let mut parts = vec![board];
+
+	//{{{ Cut out the end dovetails
+
+	let mut cutout = cube(&(String::from("end cutout for ")+name), FRAME_WIDTH*2.0, FRAME_WIDTH*2.0, FRAME_HEIGHT/(notches as f64));
+	//cutout.set_debug();
+
+	//{{{ Make sure the cutout overlaps the board edge
+	{
+		let mut cutout1 = cutout.clone();
+		cutout1.translate( BED_WIDTH/2.0+FRAME_WIDTH, 0.0, -FRAME_HEIGHT/2.0);
+		parts.push(cutout1);
+
+		let mut cutout2 = cutout.clone();
+		cutout2.translate(-BED_WIDTH/2.0-FRAME_WIDTH, 0.0, -FRAME_HEIGHT/2.0);
+		parts.push(cutout2);
+	}
+	//}}}
+
+	cutout.translate_z(-FRAME_HEIGHT*(1.0/(notches as f64)-1.0)/2.0);
+	for i in (1..notches).step_by(2)
+	{
+		let mut cutout1 = cutout.clone();
+		cutout1.translate( BED_WIDTH/2.0+FRAME_WIDTH, 0.0, -(i as f64)*FRAME_HEIGHT/(notches as f64));
+		parts.push(cutout1);
+
+		let mut cutout2 = cutout.clone();
+		cutout2.translate(-BED_WIDTH/2.0-FRAME_WIDTH, 0.0, -(i as f64)*FRAME_HEIGHT/(notches as f64));
+		parts.push(cutout2);
+	}
+	//}}}
+
+	let mut board = difference(name, parts);
+
+	board
 }
 //}}}
 
 
 
+
+
 fn main()
 {
+	//{{{ Print all the constants
+
+	eprintln!("MATTRESS_LENGTH = {}", MATTRESS_LENGTH);
+	eprintln!("STORAGE_LENGTH  = {}", STORAGE_LENGTH );
+	eprintln!("MATTRESw_WIDTH  = {}", MATTRESS_WIDTH );
+	eprintln!("BED_LENGTH      = {}", BED_LENGTH     );
+	eprintln!("BED_WIDTH       = {}", BED_WIDTH      );
+	eprintln!("FRAME_HEIGHT    = {}", FRAME_HEIGHT   );
+	eprintln!("FRAME_WIDTH     = {}", FRAME_WIDTH    );
+	//}}}
+
+	let mut sideboard_l = sideboard("Sideboard", 6);
+	sideboard_l.translate_x(-(BED_WIDTH-FRAME_WIDTH)/2.0);
+	sideboard_l.set_colour(colour_named("red"));
+	println!("{}", sideboard_l);
+
+	let mut sideboard_r = sideboard_l.clone();
+	sideboard_r.scale_x(-1.0);
+	println!("{}", sideboard_r);
+
+	let mut headboard = frontboard("Headboard 1", 6);
+	headboard.translate_y(-(200.0+FRAME_WIDTH)/2.0);
+	headboard.set_colour(colour_named("green"));
+	//headboard.set_root();
+	//headboard.set_debug();
+	println!("{}", headboard);
+
+	let mut footboard = frontboard("Footboard 1", 6);
+	footboard.translate_y(BED_LENGTH-100.0-1.5*FRAME_WIDTH);
+	footboard.set_colour(colour_named("green"));
+	println!("{}", footboard);
 
 
-
-
-
-	let mut c1 = zeppelin(5.0, 1.0);
-	c1.set_fn(100);
-	c1.set_debug();
-	//c1.set_show_origin();
-	c1.set_show_anchors();
-	//c1.rel_rotate_z(45.0);
-	c1.rotate_z(45.0);
-	//c1.rel_translate_x(2.0);
-	//c1.translate_x(2.0);
-
-
-
-	let mut c2 = zeppelin(5.0, 1.0);
-	c2.set_fn(100);
-	c2.set_debug();
-	c2.set_show_anchors();
-	//c2.rotate_z(45.0);
-	//c2.rel_translate_x(2.0);
-
-
-	// This code is ugly.
-	c2.snap_to_anchor("front", &c1, &c1["rear"].clone());
-	// I would like to to something like this:
-	//m1["front"].snap_to(z["rear"]);
-
-
-	println!("{}{}", c1, c2);
 }
