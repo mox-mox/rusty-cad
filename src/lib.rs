@@ -479,6 +479,7 @@ pub enum Shape
 	Cube      { x: f64, y: f64, z: f64},
 	Sphere    { r: f64, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64> },
 	Cylinder  { h: f64, r1 : f64, r2 : f64, face_angle  : Option<f64>, face_size   : Option<f64>, face_number : Option<i32> },
+	Text      { text: String, font: String, size: i32, spacing: f64 },
 
 	Composite { op: BooleanOp, children: Vec<Object> },
 }
@@ -519,13 +520,12 @@ impl Shape
 				tabs + "cylinder( h=" + &h.to_string() + ", r1=" + &r1.to_string() + ", r2=" + &r2.to_string() + &fan + &faa + &fas + ");"
 			}
 			//}}}
-			////{{{
-			//Shape::Composite{op, c1, c2} =>
-			//{
-			//	//tabs + &format!("{:?}", &op) + "() {\n" + &(*c1.to_string()) + "\n" + &(*c2.to_string()) + "\n};"
-			//	format!("{0}{1:?}()\n{0}{{\n{2:>indent$}\n{3:>indent$}\n{0} }};", tabs, &op, c1, c2, indent=indent)
-			//}
-			////}}}
+			//{{{
+			Shape::Text{ref text, ref font, size, spacing} =>
+			{
+				format!("{0}text(\"{1}\", font=\"{2}\", spacing={3}, size={4});", tabs, &text, &font, spacing, size)
+			}
+			//}}}
 			//{{{
 			Shape::Composite{op, children} =>
 			{
@@ -637,7 +637,7 @@ impl Object
 			Shape::Cube{x,y,z}                                                => {},
 			Shape::Sphere{r,ref mut face_number,face_angle,face_size}         => *face_number = Some(num),
 			Shape::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size} => *face_number = Some(num),
-			//Shape::Composite{ref op,ref mut c1,ref mut c2}                  => { c1.set_fn(num); c2.set_fn(num); },
+			Shape::Text{ref text, ref font, size, spacing}                    => {},
 			Shape::Composite{ref op,ref mut children}                         => { for child in children { child.set_fn(num) } },
 		}
 	}
@@ -650,7 +650,7 @@ impl Object
 			Shape::Cube{x,y,z}                                                => {},
 			Shape::Sphere{r,face_number,ref mut face_angle,face_size}         => *face_angle = Some(num),
 			Shape::Cylinder{h,r1,r2,face_number,ref mut face_angle,face_size} => *face_angle = Some(num),
-			//Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fa(num); c2.set_fa(num); },
+			Shape::Text{ref text, ref font, size, spacing}                    => {},
 			Shape::Composite{ref op,ref mut children}                         => { for child in children { child.set_fa(num) } },
 		}
 	}
@@ -663,7 +663,7 @@ impl Object
 			Shape::Cube{x,y,z}                                                => {},
 			Shape::Sphere{r,face_number,face_angle,ref mut face_size}         => *face_size = Some(num),
 			Shape::Cylinder{h,r1,r2,face_number,face_angle,ref mut face_size} => *face_size = Some(num),
-			//Shape::Composite{ref op,ref mut c1,ref mut c2}                    => { c1.set_fs(num); c2.set_fs(num); },
+			Shape::Text{ref text, ref font, size, spacing}                    => {},
 			Shape::Composite{ref op,ref mut children}                         => { for child in children { child.set_fs(num) } },
 		}
 	}
@@ -878,6 +878,12 @@ pub fn cylinder(name: &str, h: f64, r1: f64, r2: f64) -> Object
 	Object::new(name, Shape::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
 //}}}
+//{{{
+pub fn text(name: &str, text: &str, font: &str, size: i32, spacing: f64) -> Object
+{
+	Object::new(name, Shape::Text{ text: String::from(text), font: String::from(font), size: size, spacing: spacing })
+}
+//}}}
 
 //{{{
 pub fn union<T: AsRef<[Object]>>(name: &str, children: T) -> Object
@@ -910,33 +916,33 @@ pub fn minkowski<T: AsRef<[Object]>>(name: &str, children: T) -> Object
 }
 //}}}
 
+//{{{
+pub fn arrow(name: &str, length: f64, width: f64) -> Object
+{
+	let mut shaft = cylinder(&(String::from(name)+"::arrow::shaft"), 0.9*length,     width, width);
+	let mut tip   = cylinder(&(String::from(name)+"::arrow::tip"),   0.1*length, 2.0*width,   0.0);
+	tip.translate_z(0.9*length);
+	union(name, [shaft, tip])
+}
+//}}}
 
 //{{{
 pub fn coordinate_system(name: &str) -> Object
 {
 	//{{{
-	let mut x1 = cylinder("coordinate_system::x_shaft", 1.0, 0.05, 0.05);
-	let mut x2 = cylinder("coordinate_system::x_arrow", 0.1, 0.1,  0.0);
-	x2.translate_z(1.0);
-	let mut x = union("coordinate_system::x_axis", [x1, x2]);
+	let mut x = arrow("coordinate_system::x_axis", 1.0, 0.05);
 	x.rotate_y(90.0);
 	x.set_colour(colour_named("red"));
 	//}}}
 	
 	//{{{
-	let mut y1 = cylinder("coordinate_system::y_shaft", 1.0, 0.05, 0.05);
-	let mut y2 = cylinder("coordinate_system::y_arrow", 0.1, 0.1,  0.0);
-	y2.translate_z(1.0);
-	let mut y = union("coordinate_system::y_axis", [y1, y2]);
+	let mut y = arrow("coordinate_system::y_axis", 1.0, 0.05);
 	y.rotate_x(-90.0);
 	y.set_colour(colour_named("green"));
 	//}}}
 
 	//{{{
-	let mut z1 = cylinder("coordinate_system::z_shaft", 1.0, 0.05, 0.05);
-	let mut z2 = cylinder("coordinate_system::z_arrow", 0.1, 0.1,  0.0);
-	z2.translate_z(1.0);
-	let mut z = union("coordinate_system::z_axis", [z1, z2]);
+	let mut z = arrow("coordinate_system::z_axis", 1.0, 0.05);
 	z.set_colour(colour_named("blue"));
 	//}}}
 
@@ -952,28 +958,19 @@ pub fn coordinate_system(name: &str) -> Object
 pub fn object_origin(name: &str) -> Object
 {
 	//{{{
-	let mut x1 = cylinder("object_origin::x_shaft", 1.0, 0.05, 0.05);
-	let mut x2 = cylinder("object_origin::x_arrow", 0.1, 0.1,  0.0);
-	x2.translate_z(1.0);
-	let mut x = union("object_origin::x_axis", [x1, x2]);
+	let mut x = arrow("object_origin::x_axis", 1.0, 0.05);
 	x.rotate_y(90.0);
 	x.set_colour(colour_named("red"));
 	//}}}
 	
 	//{{{
-	let mut y1 = cylinder("object_origin::y_shaft", 1.0, 0.05, 0.05);
-	let mut y2 = cylinder("object_origin::y_arrow", 0.1, 0.1,  0.0);
-	y2.translate_z(1.0);
-	let mut y = union("object_origin::y_axis", [y1, y2]);
+	let mut y = arrow("object_origin::y_axis", 1.0, 0.05);
 	y.rotate_x(-90.0);
 	y.set_colour(colour_named("green"));
 	//}}}
 
 	//{{{
-	let mut z1 = cylinder("object_origin::z_shaft", 1.0, 0.05, 0.05);
-	let mut z2 = cylinder("object_origin::z_arrow", 0.1, 0.1,  0.0);
-	z2.translate_z(1.0);
-	let mut z = union("object_origin::z_axis", [z1, z2]);
+	let mut z = arrow("object_origin::z_axis", 1.0, 0.05);
 	z.set_colour(colour_named("blue"));
 	//}}}
 
@@ -993,33 +990,21 @@ pub fn object_origin(name: &str) -> Object
 pub fn object_anchor(name: &str) -> Object
 {
 	//{{{
-	let mut x1 = cylinder("object_anchor::x_shaft", 1.0, 0.05, 0.05);
-	let mut x2 = cylinder("object_anchor::x_arrow", 0.1, 0.1,  0.0);
-	x2.translate_z(1.0);
-	let mut x = union("object_anchor::x_axis", [x1, x2]);
+	let mut x = arrow("object_anchor::x_axis", 1.0, 0.05);
 	x.rotate_y(90.0);
 	x.set_colour(colour_named("red"));
 	//}}}
 	
 	//{{{
-	let mut y1 = cylinder("object_anchor::x_shaft", 1.0, 0.05, 0.05);
-	let mut y2 = cylinder("object_anchor::x_arrow", 0.1, 0.1,  0.0);
-	y2.translate_z(1.0);
-	let mut y = union("object_anchor::x_axis", [y1, y2]);
+	let mut y = arrow("object_anchor::y_axis", 1.0, 0.05);
 	y.rotate_x(-90.0);
 	y.set_colour(colour_named("green"));
 	//}}}
 
 	//{{{
-	let mut z1 = cylinder("object_anchor::x_shaft", 1.0, 0.05, 0.05);
-	let mut z2 = cylinder("object_anchor::x_arrow", 0.1, 0.1,  0.0);
-	z2.translate_z(1.0);
-	let mut z = union("object_anchor::x_axis", [z1, z2]);
+	let mut z = arrow("object_anchor::z_axis", 1.0, 0.05);
 	z.set_colour(colour_named("blue"));
 	//}}}
-
-	//let mut xy = union(x, y);
-	//let mut xyz = union(xy, z);
 
 	let mut base = sphere("object_anchor::origin", 0.5);
 	base.set_colour(colour_named("blue"));

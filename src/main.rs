@@ -10,6 +10,10 @@ const MATTRESS_LENGTH         : f64 = 200.0;
 const STORAGE_LENGTH          : f64 =  41.0;
 const MATTRESS_WIDTH          : f64 = 140.0;
 
+//                                    Rounded   400kg   500kg
+const MOTOR_WIDTH             : f64 =  50.0; // 41.8; // 48.2
+const MOTOR_HEIGHT            : f64 =  16.0; // 14.7; // 18.0
+const MOTOR_DEPTH             : f64 =  25.0; // 18.8; // 27.0
 const FRAME_HEIGHT            : f64 =  20.0;
 const FRAME_THICKNESS         : f64 =   3.0;
 
@@ -145,20 +149,17 @@ pub fn headboard(name: &str, notches: i32) -> Object
 
 	//{{{ Add the Grooves for the cover boards
 
-	{
-		let mut bottom_groove = cube(&(String::from("end cutout for ")+name), MATTRESS_WIDTH, FRAME_THICKNESS, COVER_THICKNESS);
-		bottom_groove.translate_z(-(FRAME_HEIGHT-COVER_THICKNESS)/2.0+0.5);
-		bottom_groove.translate_y(-FRAME_THICKNESS+COVER_GROOVE_DEPTH);
-		bottom_groove.set_debug();
-		parts.push(bottom_groove);
-	}
-	{
-		let mut bottom_groove = cube(&(String::from("end cutout for ")+name), MATTRESS_WIDTH, FRAME_THICKNESS, COVER_THICKNESS);
-		bottom_groove.translate_z(-(FRAME_HEIGHT-COVER_THICKNESS)/2.0+0.5+CABLE_HOUSING_HEIGHT+COVER_THICKNESS);
-		bottom_groove.translate_y(-FRAME_THICKNESS+COVER_GROOVE_DEPTH);
-		bottom_groove.set_debug();
-		parts.push(bottom_groove);
-	}
+	let mut bottom_groove = cube(&(String::from("end cutout for ")+name), MATTRESS_WIDTH+2.0*COVER_GROOVE_DEPTH, FRAME_THICKNESS, COVER_THICKNESS);
+	bottom_groove.translate_z(-(FRAME_HEIGHT-COVER_THICKNESS)/2.0+0.5);
+	bottom_groove.translate_y(-FRAME_THICKNESS+COVER_GROOVE_DEPTH);
+	bottom_groove.set_debug();
+	parts.push(bottom_groove);
+
+	let mut upper_groove_l = cube(&(String::from("end cutout for ")+name), MATTRESS_WIDTH, FRAME_THICKNESS, COVER_THICKNESS);
+	upper_groove_l.translate_z(-(FRAME_HEIGHT-COVER_THICKNESS)/2.0+0.5+CABLE_HOUSING_HEIGHT+COVER_THICKNESS);
+	upper_groove_l.translate_y(-FRAME_THICKNESS+COVER_GROOVE_DEPTH);
+	upper_groove_l.set_debug();
+	parts.push(upper_groove_l);
 	//}}}
 
 	let mut board = difference(name, parts);
@@ -187,6 +188,19 @@ fn main()
 	eprintln!("FRAME_THICKNESS     = {}", FRAME_THICKNESS    );
 	//}}}
 
+	let csys = coordinate_system("tester");
+	println!("{}", csys);
+
+	let text = text("tester", "FooBar", "profont", 10, 1.0);
+	println!("{}", text);
+
+
+
+
+
+
+
+
 	let mut sideboard_l = sideboard("Sideboard", 6);
 	sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
 	sideboard_l.set_colour(colour_named("red"));
@@ -199,7 +213,7 @@ fn main()
 	let mut headboard = headboard("Headboard", 6);
 	headboard.translate_y(-(200.0+FRAME_THICKNESS)/2.0);
 	headboard.set_colour(colour_named("green"));
-	headboard.set_root();
+	//headboard.set_root();
 	println!("{}", headboard);
 
 	let mut footboard = footboard("Footboard", 6);
