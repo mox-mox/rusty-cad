@@ -6,58 +6,55 @@
 extern crate rusty_scad;
 use rusty_scad::*;
 
-const MATTRESS_LENGTH   : f64 = 200.0;
-const STORAGE_LENGTH    : f64 =  41.0;
-const MATTRESS_WIDTH    : f64 = 140.0;
+const MATTRESS_LENGTH         : f64 = 200.0;
+const STORAGE_LENGTH          : f64 =  41.0;
+const MATTRESS_WIDTH          : f64 = 140.0;
 
-const FRAME_HEIGHT      : f64 =  20.0;
-const FRAME_WIDTH       : f64 =   3.0;
+const FRAME_HEIGHT            : f64 =  20.0;
+const FRAME_THICKNESS         : f64 =   3.0;
 
-const BED_LENGTH        : f64 = MATTRESS_LENGTH+STORAGE_LENGTH+3.0*FRAME_WIDTH;
-const BED_WIDTH         : f64 = MATTRESS_WIDTH+2.0*FRAME_WIDTH;
+const COVER_THICKNESS         : f64 =   0.5;
+const COVER_GROOVE_DEPTH      : f64 =   1.0;
+const CABLE_HOUSING_HEIGHT    : f64 =   3.0;
 
+const BED_LENGTH              : f64 = MATTRESS_LENGTH+STORAGE_LENGTH+3.0*FRAME_THICKNESS;
+const BED_WIDTH               : f64 = MATTRESS_WIDTH+2.0*FRAME_THICKNESS;
+
+
+//{{{ Board Templates
 //{{{
 pub fn sideboard(name: &str, notches: i32) -> Object
 {
-	let mut board = cube(&(String::from("base board for ")+name), FRAME_WIDTH, BED_LENGTH, FRAME_HEIGHT);
+	let mut board = cube(&(String::from("base board for ")+name), FRAME_THICKNESS, BED_LENGTH-2.0*FRAME_THICKNESS, FRAME_HEIGHT);
 
 	let mut parts = vec![board];
 
-	//{{{ Cut out the end dovetails
+	//{{{ Add the end dovetails
 
-	let mut cutout = cube(&(String::from("end cutout for ")+name), FRAME_WIDTH*2.0, FRAME_WIDTH*2.0, FRAME_HEIGHT/(notches as f64));
-	//cutout.set_debug();
+	let mut dovetail = cube(&(String::from("end dovetail for ")+name), FRAME_THICKNESS, FRAME_THICKNESS, FRAME_HEIGHT/(notches as f64));
+	//dovetail.set_debug();
 
-	//{{{ Make sure the cutout overlaps the board edge
-	{
-		let mut cutout1 = cutout.clone();
-		cutout1.translate(0.0, BED_LENGTH/2.0, FRAME_HEIGHT/2.0);
-		parts.push(cutout1);
-
-		let mut cutout2 = cutout.clone();
-		cutout2.translate(0.0, -BED_LENGTH/2.0, FRAME_HEIGHT/2.0);
-		parts.push(cutout2);
-	}
-	//}}}
-
-	cutout.translate_z(FRAME_HEIGHT*(1.0/(notches as f64)-1.0)/2.0);
+	dovetail.translate_z(FRAME_HEIGHT*(1.0-1.0/(notches as f64))/2.0);
 	for i in (1..notches).step_by(2)
 	{
-		let mut cutout1 = cutout.clone();
-		cutout1.translate(0.0, BED_LENGTH/2.0, (i as f64)*FRAME_HEIGHT/(notches as f64));
-		parts.push(cutout1);
+		let mut dovetail1 = dovetail.clone();
+		dovetail1.translate(0.0, BED_LENGTH/2.0-FRAME_THICKNESS/2.0, (-i as f64)*FRAME_HEIGHT/(notches as f64));
+		parts.push(dovetail1);
 
-		let mut cutout2 = cutout.clone();
-		cutout2.translate(0.0, -BED_LENGTH/2.0, (i as f64)*FRAME_HEIGHT/(notches as f64));
-		parts.push(cutout2);
+		let mut dovetail2 = dovetail.clone();
+		dovetail2.translate(0.0, -BED_LENGTH/2.0+FRAME_THICKNESS/2.0, (-i as f64)*FRAME_HEIGHT/(notches as f64));
+		parts.push(dovetail2);
 	}
 	//}}}
 
+	let mut board = union(name, parts);
+
+	let mut parts = vec![board];
 
 	//{{{ Cut out the notches for the bulkhead
 
-	let mut cutout = cube(&(String::from("bulkhead cutout for ")+name), FRAME_WIDTH, FRAME_WIDTH, FRAME_HEIGHT/(notches as f64));
-	cutout.translate(1.0, -BED_LENGTH/2.0+200.0+FRAME_WIDTH*1.5, -FRAME_HEIGHT/2.0);
+	let mut cutout = cube(&(String::from("bulkhead cutout for ")+name), FRAME_THICKNESS, FRAME_THICKNESS, FRAME_HEIGHT/(notches as f64));
+	cutout.translate(1.0, -BED_LENGTH/2.0+200.0+FRAME_THICKNESS*1.5, -FRAME_HEIGHT/2.0);
 	//cutout.set_debug();
 
 	for i in (1..notches).step_by(2)
@@ -79,37 +76,88 @@ pub fn sideboard(name: &str, notches: i32) -> Object
 //{{{
 pub fn frontboard(name: &str, notches: i32) -> Object
 {
-	let mut board = cube(&(String::from("base board for ")+name), BED_WIDTH, FRAME_WIDTH, FRAME_HEIGHT);
+	let mut board = cube(&(String::from("base board for ")+name), BED_WIDTH-2.0*FRAME_THICKNESS, FRAME_THICKNESS, FRAME_HEIGHT);
 
 	let mut parts = vec![board];
 
-	//{{{ Cut out the end dovetails
+	//{{{ Add the end dovetails
 
-	let mut cutout = cube(&(String::from("end cutout for ")+name), FRAME_WIDTH*2.0, FRAME_WIDTH*2.0, FRAME_HEIGHT/(notches as f64));
+	let mut cutout = cube(&(String::from("end cutout for ")+name), FRAME_THICKNESS, FRAME_THICKNESS, FRAME_HEIGHT/(notches as f64));
 	//cutout.set_debug();
 
-	//{{{ Make sure the cutout overlaps the board edge
+	cutout.translate_z(-FRAME_HEIGHT*(1.0-1.0/(notches as f64))/2.0);
+	for i in (1..notches).step_by(2)
 	{
 		let mut cutout1 = cutout.clone();
-		cutout1.translate( BED_WIDTH/2.0, 0.0, -FRAME_HEIGHT/2.0);
+		cutout1.translate( BED_WIDTH/2.0-FRAME_THICKNESS/2.0, 0.0, (i as f64)*FRAME_HEIGHT/(notches as f64));
 		parts.push(cutout1);
 
 		let mut cutout2 = cutout.clone();
-		cutout2.translate(-BED_WIDTH/2.0, 0.0, -FRAME_HEIGHT/2.0);
+		cutout2.translate(-BED_WIDTH/2.0+FRAME_THICKNESS/2.0, 0.0, (i as f64)*FRAME_HEIGHT/(notches as f64));
 		parts.push(cutout2);
 	}
 	//}}}
 
-	cutout.translate_z(-FRAME_HEIGHT*(1.0/(notches as f64)-1.0)/2.0);
+	let mut board = union(name, parts);
+
+	board
+}
+//}}}
+//}}}
+
+//{{{
+pub fn bulkhead(name: &str, notches: i32) -> Object
+{
+	let mut board = cube(&(String::from("base board for ")+name), BED_WIDTH-2.0*FRAME_THICKNESS, FRAME_THICKNESS, FRAME_HEIGHT);
+
+	let mut parts = vec![board];
+
+	//{{{ Add the end dovetails
+
+	let mut cutout = cube(&(String::from("end cutout for ")+name), FRAME_THICKNESS, FRAME_THICKNESS, FRAME_HEIGHT/(notches as f64));
+	//cutout.set_debug();
+
+	cutout.translate_z(-FRAME_HEIGHT*(1.0)/2.0);
 	for i in (1..notches).step_by(2)
 	{
 		let mut cutout1 = cutout.clone();
-		cutout1.translate( BED_WIDTH/2.0, 0.0, -(i as f64)*FRAME_HEIGHT/(notches as f64));
+		cutout1.translate( BED_WIDTH/2.0-FRAME_THICKNESS/2.0-1.0, 0.0, (i as f64)*FRAME_HEIGHT/(notches as f64));
 		parts.push(cutout1);
 
 		let mut cutout2 = cutout.clone();
-		cutout2.translate(-BED_WIDTH/2.0, 0.0, -(i as f64)*FRAME_HEIGHT/(notches as f64));
+		cutout2.translate(-BED_WIDTH/2.0+FRAME_THICKNESS/2.0+1.0, 0.0, (i as f64)*FRAME_HEIGHT/(notches as f64));
 		parts.push(cutout2);
+	}
+	//}}}
+
+	let mut board = union(name, parts);
+
+	board
+}
+//}}}
+
+//{{{
+pub fn headboard(name: &str, notches: i32) -> Object
+{
+	let mut board = frontboard(name, notches);
+
+	let mut parts = vec![board];
+
+	//{{{ Add the Grooves for the cover boards
+
+	{
+		let mut bottom_groove = cube(&(String::from("end cutout for ")+name), MATTRESS_WIDTH, FRAME_THICKNESS, COVER_THICKNESS);
+		bottom_groove.translate_z(-(FRAME_HEIGHT-COVER_THICKNESS)/2.0+0.5);
+		bottom_groove.translate_y(-FRAME_THICKNESS+COVER_GROOVE_DEPTH);
+		bottom_groove.set_debug();
+		parts.push(bottom_groove);
+	}
+	{
+		let mut bottom_groove = cube(&(String::from("end cutout for ")+name), MATTRESS_WIDTH, FRAME_THICKNESS, COVER_THICKNESS);
+		bottom_groove.translate_z(-(FRAME_HEIGHT-COVER_THICKNESS)/2.0+0.5+CABLE_HOUSING_HEIGHT+COVER_THICKNESS);
+		bottom_groove.translate_y(-FRAME_THICKNESS+COVER_GROOVE_DEPTH);
+		bottom_groove.set_debug();
+		parts.push(bottom_groove);
 	}
 	//}}}
 
@@ -120,51 +168,11 @@ pub fn frontboard(name: &str, notches: i32) -> Object
 //}}}
 
 //{{{
-pub fn bulkhead(name: &str, notches: i32) -> Object
+pub fn footboard(name: &str, notches: i32) -> Object
 {
-	let mut board = cube(&(String::from("base board for ")+name), BED_WIDTH+2.0*FRAME_WIDTH, FRAME_WIDTH, FRAME_HEIGHT);
-
-	let mut parts = vec![board];
-
-	//{{{ Cut out the end dovetails
-
-	let mut cutout = cube(&(String::from("end cutout for ")+name), FRAME_WIDTH*2.0, FRAME_WIDTH*2.0, FRAME_HEIGHT/(notches as f64));
-	//cutout.set_debug();
-
-	//{{{ Make sure the cutout overlaps the board edge
-	{
-		let mut cutout1 = cutout.clone();
-		cutout1.translate( BED_WIDTH/2.0+FRAME_WIDTH, 0.0, -FRAME_HEIGHT/2.0);
-		parts.push(cutout1);
-
-		let mut cutout2 = cutout.clone();
-		cutout2.translate(-BED_WIDTH/2.0-FRAME_WIDTH, 0.0, -FRAME_HEIGHT/2.0);
-		parts.push(cutout2);
-	}
-	//}}}
-
-	cutout.translate_z(-FRAME_HEIGHT*(1.0/(notches as f64)-1.0)/2.0);
-	for i in (1..notches).step_by(2)
-	{
-		let mut cutout1 = cutout.clone();
-		cutout1.translate( BED_WIDTH/2.0+FRAME_WIDTH, 0.0, -(i as f64)*FRAME_HEIGHT/(notches as f64));
-		parts.push(cutout1);
-
-		let mut cutout2 = cutout.clone();
-		cutout2.translate(-BED_WIDTH/2.0-FRAME_WIDTH, 0.0, -(i as f64)*FRAME_HEIGHT/(notches as f64));
-		parts.push(cutout2);
-	}
-	//}}}
-
-	let mut board = difference(name, parts);
-
-	board
+	frontboard(name, notches)
 }
 //}}}
-
-
-
-
 
 fn main()
 {
@@ -176,11 +184,11 @@ fn main()
 	eprintln!("BED_LENGTH      = {}", BED_LENGTH     );
 	eprintln!("BED_WIDTH       = {}", BED_WIDTH      );
 	eprintln!("FRAME_HEIGHT    = {}", FRAME_HEIGHT   );
-	eprintln!("FRAME_WIDTH     = {}", FRAME_WIDTH    );
+	eprintln!("FRAME_THICKNESS     = {}", FRAME_THICKNESS    );
 	//}}}
 
 	let mut sideboard_l = sideboard("Sideboard", 6);
-	sideboard_l.translate_x(-(BED_WIDTH-FRAME_WIDTH)/2.0);
+	sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
 	sideboard_l.set_colour(colour_named("red"));
 	println!("{}", sideboard_l);
 
@@ -188,17 +196,21 @@ fn main()
 	sideboard_r.scale_x(-1.0);
 	println!("{}", sideboard_r);
 
-	let mut headboard = frontboard("Headboard 1", 6);
-	headboard.translate_y(-(200.0+FRAME_WIDTH)/2.0);
+	let mut headboard = headboard("Headboard", 6);
+	headboard.translate_y(-(200.0+FRAME_THICKNESS)/2.0);
 	headboard.set_colour(colour_named("green"));
-	//headboard.set_root();
-	//headboard.set_debug();
+	headboard.set_root();
 	println!("{}", headboard);
 
-	let mut footboard = frontboard("Footboard 1", 6);
-	footboard.translate_y(BED_LENGTH-100.0-1.5*FRAME_WIDTH);
+	let mut footboard = footboard("Footboard", 6);
+	footboard.translate_y(BED_LENGTH-100.0-1.5*FRAME_THICKNESS);
 	footboard.set_colour(colour_named("green"));
 	println!("{}", footboard);
 
+	let mut bulkhead = bulkhead("Bulkhead", 6);
+	bulkhead.translate_y((MATTRESS_LENGTH+FRAME_THICKNESS)/2.0);
+	bulkhead.set_colour(colour_named("yellow"));
+	//bulkhead.set_root();
+	println!("{}", bulkhead);
 
 }
