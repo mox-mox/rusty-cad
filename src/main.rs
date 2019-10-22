@@ -188,43 +188,44 @@ fn main()
 	eprintln!("FRAME_THICKNESS     = {}", FRAME_THICKNESS    );
 	//}}}
 
-	let csys = coordinate_system("tester");
-	println!("{}", csys);
+	//let csys = coordinate_system("tester");
+	//println!("{}", csys);
 
-	let text = text("tester", "FooBar", "profont", 10, 1.0);
-	println!("{}", text);
+	//let text = text("tester", "FooBar", "profont", 10, 1.0);
+	//println!("{}", text);
 
-
-
-
-
+	let mut cube = cube_coords("tester", 1.0, 2.0, -3.0, -10.0, 10.0, 10.0);
+	println!("{}", cube);
 
 
 
-	let mut sideboard_l = sideboard("Sideboard", 6);
-	sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
-	sideboard_l.set_colour(colour_named("red"));
-	println!("{}", sideboard_l);
 
-	let mut sideboard_r = sideboard_l.clone();
-	sideboard_r.scale_x(-1.0);
-	println!("{}", sideboard_r);
 
-	let mut headboard = headboard("Headboard", 6);
-	headboard.translate_y(-(200.0+FRAME_THICKNESS)/2.0);
-	headboard.set_colour(colour_named("green"));
-	//headboard.set_root();
-	println!("{}", headboard);
 
-	let mut footboard = footboard("Footboard", 6);
-	footboard.translate_y(BED_LENGTH-100.0-1.5*FRAME_THICKNESS);
-	footboard.set_colour(colour_named("green"));
-	println!("{}", footboard);
+	//let mut sideboard_l = sideboard("Sideboard", 6);
+	//sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
+	//sideboard_l.set_colour(colour_named("red"));
+	//println!("{}", sideboard_l);
 
-	let mut bulkhead = bulkhead("Bulkhead", 6);
-	bulkhead.translate_y((MATTRESS_LENGTH+FRAME_THICKNESS)/2.0);
-	bulkhead.set_colour(colour_named("yellow"));
-	//bulkhead.set_root();
-	println!("{}", bulkhead);
+	//let mut sideboard_r = sideboard_l.clone();
+	//sideboard_r.scale_x(-1.0);
+	//println!("{}", sideboard_r);
+
+	//let mut footboard = footboard("Footboard", 6);
+	//footboard.translate_y(-(200.0+FRAME_THICKNESS)/2.0);
+	//footboard.set_colour(colour_named("green"));
+	////footboard.set_root();
+	//println!("{}", footboard);
+
+	//let mut headboard = headboard("Headboard", 6);
+	//headboard.translate_y(BED_LENGTH-100.0-1.5*FRAME_THICKNESS);
+	//headboard.set_colour(colour_named("green"));
+	//println!("{}", headboard);
+
+	//let mut bulkhead = bulkhead("Bulkhead", 6);
+	//bulkhead.translate_y((MATTRESS_LENGTH+FRAME_THICKNESS)/2.0);
+	//bulkhead.set_colour(colour_named("yellow"));
+	////bulkhead.set_root();
+	//println!("{}", bulkhead);
 
 }

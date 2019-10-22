@@ -750,10 +750,10 @@ impl Object
 
 
 	//fn get_child(&'a self, name) -> DynamicChild<'a> {
-	//fn get_child<'a>(&'a self, index: &str) -> ObjectIndexHelper<'a>
-	//{
-	//	ObjectIndexHelper{ anchor: &self.anchors[index], object: self }
-	//}
+	fn get_anchor<'a>(&'a self, index: &str) -> ObjectIndexHelper<'a>
+	{
+		ObjectIndexHelper{ anchor: &self.anchors[index], object: self }
+	}
 }
 //}}}
 
@@ -813,11 +813,11 @@ impl fmt::Display for Object
 //    }
 //}
 
-//struct ObjectIndexHelper<'a>
-//{
-//	pub anchor: &'a crate::anchors::Anchor,
-//	pub object: &'a Object,
-//}
+struct ObjectIndexHelper<'a>
+{
+	pub anchor: &'a crate::anchors::Anchor,
+	pub object: &'a Object,
+}
 //}}}
 
 // This would allow calling functions that need an objects and an anchors like
@@ -864,6 +864,22 @@ impl Index<&str> for Object
 pub fn cube(name: &str, x: f64, y: f64, z: f64) -> Object
 {
 	Object::new(name, Shape::Cube{ x: x,y: y,z: z })
+}
+//}}}
+//{{{
+pub fn cube_coords(name: &str, x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> Object
+{
+	let x = (x1.abs() - x2.abs()).abs();
+	let y = (y1.abs() - y2.abs()).abs();
+	let z = (z1.abs() - z2.abs()).abs();
+
+	let x_shift = if x1<x2 { x1 } else { x2 };
+	let y_shift = if y1<y2 { y1 } else { y2 };
+	let z_shift = if z1<z2 { z1 } else { z2 };
+
+	let mut cube = Object::new(name, Shape::Cube{ x: x,y: y,z: z });
+	cube.translate(x/2.0+x_shift, y/2.0+y_shift,z/2.0+z_shift);
+	cube
 }
 //}}}
 //{{{
