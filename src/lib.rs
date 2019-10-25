@@ -869,9 +869,9 @@ pub fn cube(name: &str, x: f64, y: f64, z: f64) -> Object
 //{{{
 pub fn cube_coords(name: &str, x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> Object
 {
-	let x = (x1.abs() - x2.abs()).abs();
-	let y = (y1.abs() - y2.abs()).abs();
-	let z = (z1.abs() - z2.abs()).abs();
+	let x = (x1 - x2).abs();
+	let y = (y1 - y2).abs();
+	let z = (z1 - z2).abs();
 
 	let x_shift = if x1<x2 { x1 } else { x2 };
 	let y_shift = if y1<y2 { y1 } else { y2 };
