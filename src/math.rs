@@ -200,6 +200,7 @@ impl Matrix4D
 	//}}}
 
 	//{{{ 3D Manipulations
+
 	//{{{Rotations
 	//{{{
 	pub fn rotate_x(&mut self, x: f64)

@@ -28,8 +28,8 @@ const FRAME_SLAT_WIDTH        : f64 =  10.0;
 const FRAME_SLAT_THICKNESS    : f64 =   4.0;
 const FRAME_SLAT_SPACING      : f64 = (MATTRESS_LENGTH-(FRAME_SLAT_COUNT as f64)*FRAME_SLAT_WIDTH)/((FRAME_SLAT_COUNT as f64)-0.5);
 
-const BOTTOM_COVER_BOTTOM     : f64 = -0.5*FRAME_HEIGHT+0.5;
-const MIDDLE_COVER_BOTTOM     : f64 = -0.5*FRAME_HEIGHT+0.5+COVER_THICKNESS+CABLE_HOUSING_HEIGHT;
+const BOTTOM_COVER_BOTTOM     : f64 = -0.5*FRAME_HEIGHT;
+const MIDDLE_COVER_BOTTOM     : f64 = -0.5*FRAME_HEIGHT+COVER_THICKNESS+CABLE_HOUSING_HEIGHT;
 
 const BED_LENGTH              : f64 = MATTRESS_LENGTH+STORAGE_LENGTH+3.0*FRAME_THICKNESS;
 const BED_WIDTH               : f64 = MATTRESS_WIDTH+2.0*FRAME_THICKNESS;
@@ -37,6 +37,9 @@ const BED_WIDTH               : f64 = MATTRESS_WIDTH+2.0*FRAME_THICKNESS;
 // The mattress will be centered
 const FOOT_END                : f64 = -MATTRESS_LENGTH/2.0;
 const HEAD_END                : f64 =  MATTRESS_LENGTH/2.0+(BED_LENGTH-MATTRESS_LENGTH)-2.0*FRAME_THICKNESS;
+
+const ROLL_WIDTH              : f64 =  0.7;
+const ROLL_DIAMETER           : f64 =  2.5;
 
 
 //{{{
@@ -199,7 +202,16 @@ pub fn sideboard(name: &str) -> Object
 		parts.append(&mut cover_cutouts_side(name, FRAME_THICKNESS/2.0));
 	}
 	//}}}
-	let board = difference(name, parts);
+	let mut board = difference(name, parts);
+
+	//{{{ Add some anchors TODO
+
+	let mut a = rusty_scad::anchors::Anchor::new("left");
+	a.translate_z(11.0);
+	a.rel_rotate_y(90.0);
+	board.add_anchor(a);
+
+	//}}}
 
 	board
 }
@@ -379,6 +391,33 @@ pub fn frame_slat(name: &str) -> Object
 //}}}
 
 
+//{{{
+pub fn small_roll(name: &str) -> Object
+{
+	let mut roll1 = cylinder(&(String::from("Lower half roll for ") + name), 0.5*ROLL_WIDTH, 0.4*ROLL_DIAMETER, 0.5*ROLL_DIAMETER);
+	roll1.scale_z(-1.0);
+	let roll2 = cylinder(&(String::from("Upper half roll for ") + name), 0.5*ROLL_WIDTH, 0.4*ROLL_DIAMETER, 0.5*ROLL_DIAMETER);
+	let mut roll = union(name, [roll1, roll2]);
+	roll.set_fn(20);
+
+	//{{{ Add some anchors TODO
+
+	{
+		let mut a = rusty_scad::anchors::Anchor::new("Origin");
+		//a.translate_z(11.0);
+		roll.add_anchor(a);
+	}
+	{
+		let mut a = rusty_scad::anchors::Anchor::new("Contact");
+		a.translate(-0.5*ROLL_DIAMETER, -0.5*ROLL_DIAMETER, 0.0);
+		roll.add_anchor(a);
+	}
+
+	//}}}
+
+	roll
+}
+//}}}
 
 
 fn main()
@@ -398,6 +437,7 @@ fn main()
 	let mut sideboard_l = sideboard("Sideboard_L");
 	sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
 	sideboard_l.set_colour(colour_named("red"));
+	sideboard_l.set_show_anchors();
 	println!("{}", sideboard_l);
 	//}}}
 
@@ -498,4 +538,9 @@ fn main()
 
 	//}}}
 
+	//{{{
+	let mut roll = small_roll("tester");
+	roll.anchor("Contact").snap_to(&mut sideboard_l.anchor("left"));
+	println!("{}", roll);
+	//}}}
 }

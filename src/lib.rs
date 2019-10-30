@@ -21,7 +21,7 @@ pub mod math; // Use 'pub mod' if you want it to be visible outside library.
 
 pub use math::*;
 use std::collections::HashMap;
-use std::ops::{Index,IndexMut,ShlAssign,Fn};
+use std::ops::{Index,IndexMut,ShlAssign,Fn,BitAnd};
 
 extern crate ndarray;
 use std::fmt;
@@ -188,19 +188,38 @@ mod modifiers
 pub mod anchors
 {
 	use std::fmt;
+	use std::ops::{BitAnd, BitOr};
 	use crate::math::HasRefSys;
 	use crate::math::Is3DObject;
 	//pub use crate::math::RefSysExt;
 	//{{{ pub struct AnchorConstraint
 
-	#[derive(Debug)]
-	#[derive(Clone)]
+	#[derive(Debug, Clone, Copy)]
 	pub struct AnchorConstraint
 	{
 		pub x        : bool,
 		pub y        : bool,
 		pub z        : bool,
 		pub relative : bool,
+	}
+
+	impl BitAnd for AnchorConstraint
+	{
+		type Output = Self;
+
+		fn bitand(self, other: Self) -> Self::Output
+		{
+			AnchorConstraint{x: self.x & other.x, y: self.y & other.y, z: self.z & other.z, relative: self.relative & other.relative}
+		}
+	}
+	impl BitOr for AnchorConstraint
+	{
+		type Output = Self;
+
+		fn bitor(self, other: Self) -> Self::Output
+		{
+			AnchorConstraint{x: self.x | other.x, y: self.y | other.y, z: self.z | other.z, relative: self.relative | other.relative}
+		}
 	}
 	//}}}
 
@@ -604,12 +623,6 @@ impl Object
 	}
 	//}}}
 
-	//{{{
-	pub fn add_anchor(&mut self, anchor: anchors::Anchor)
-	{
-		self.anchors.insert(String::from(&anchor.name), anchor);
-	}
-	//}}}
 
 	//{{{ Helpers
 	
@@ -725,35 +738,35 @@ impl Object
 		self.ref_sys = ref_sys;
 	}
 	//}}}
+
+
 	//{{{
-	pub fn snap_to_anchor(&mut self, own_anchor: &str, other: &Self, other_anchor: &crate::anchors::Anchor)
+	pub fn add_anchor(&mut self, anchor: anchors::Anchor)
 	{
-
-		//{{{ Generate inverse own anchor
-
-		//}}}
-		//{{{ Generate other anchor
-
-		//}}}
-		
-
-
-
-
-
-
-
-
-		self.ref_sys = !self[own_anchor].ref_sys * other_anchor.ref_sys * other.ref_sys;
+		self.anchors.insert(String::from(&anchor.name), anchor);
 	}
 	//}}}
-
-
-	//fn get_child(&'a self, name) -> DynamicChild<'a> {
-	fn get_anchor<'a>(&'a self, index: &str) -> ObjectIndexHelper<'a>
+	//{{{
+	pub fn anchor<'a>(&'a mut self, index: &'a str) -> ObjectIndexHelper<'a>
 	{
-		ObjectIndexHelper{ anchor: &self.anchors[index], object: self }
+		//ObjectIndexHelper{ anchor: &self.anchors[index], object: self }
+		ObjectIndexHelper{ anchor_name: index, object: self }
 	}
+	//}}}
+	////{{{
+	//pub fn snap_to_anchor(&mut self, own_anchor: &str, other: &Self, other_anchor: &crate::anchors::Anchor)
+	//{
+
+	//	//{{{ Generate inverse own anchor
+
+	//	//}}}
+	//	//{{{ Generate other anchor
+
+	//	//}}}
+
+	//	self.ref_sys = !self[own_anchor].ref_sys * other_anchor.ref_sys * other.ref_sys;
+	//}
+	////}}}
 }
 //}}}
 
@@ -796,6 +809,80 @@ impl fmt::Display for Object
 //}}}
 
 
+
+//{{{ Snapping
+
+pub struct ObjectIndexHelper<'a>
+{
+	//pub anchor: &'a crate::anchors::Anchor,
+	pub anchor_name: &'a str,
+	pub object:      &'a mut Object,
+}
+
+impl ObjectIndexHelper<'_>
+{
+	//{{{
+	pub fn snap_to(&mut self, other: &mut Self)
+	{
+		// Usage: child_object.anchor("anchor2").snap_to(parent_object.anchor("anchor1"));
+		let child_anchor = self.object.anchors[self.anchor_name].clone();
+		let child_object = &mut self.object;
+
+		let parent_anchor  = &other.object.anchors[other.anchor_name];
+		let parent_object  = &other.object;
+
+		//let child_anchor : &mut anchors::Anchor = &mut other.anchor;
+		//let child_object : &mut Object = &mut other.object;
+
+		//let constrain_rotation     = parent_anchor.constrain_rotation     & child_anchor.constrain_rotation;
+		//let constrain_translation  = parent_anchor.constrain_translation  & child_anchor.constrain_translation;
+		//let constrain_scale        = parent_anchor.constrain_scale        & child_anchor.constrain_scale;
+		//let constrain_shear        = parent_anchor.constrain_shear        & child_anchor.constrain_shear;
+
+		////{{{ Generate inverse own anchor
+
+		//let mut own_anchor=Matrix4D::identity();
+		//if constrain_rotation.x || constrain_rotation.y || constrain_rotation.z
+		//{
+		//	own_anchor.rotate(
+		//		-child_anchor.get_rotate_x()*((constrain_rotation.x as i32) as f64),
+		//		-child_anchor.get_rotate_y()*((constrain_rotation.y as i32) as f64),
+		//		-child_anchor.get_rotate_z()*((constrain_rotation.z as i32) as f64));
+		//}
+
+		//if constrain_translation.x || constrain_translation.y || constrain_translation.z
+		//{
+		//	own_anchor.translate(
+		//		-child_anchor.get_translate_x()*((constrain_translation.x as i32) as f64),
+		//		-child_anchor.get_translate_y()*((constrain_translation.y as i32) as f64),
+		//		-child_anchor.get_translate_z()*((constrain_translation.z as i32) as f64));
+		//}
+		////}}}
+		////{{{ Generate other anchor
+
+		////}}}
+
+
+		let new_origin = !child_anchor.ref_sys * parent_anchor.ref_sys * parent_object.ref_sys;
+		eprintln!("new_origin = {}", new_origin);
+
+		child_object.ref_sys = !child_anchor.ref_sys * parent_anchor.ref_sys * parent_object.ref_sys;
+		//child_object.set_ref_sys(!child_anchor.ref_sys * parent_anchor.ref_sys * parent_object.ref_sys);
+	}
+	//}}}
+
+}
+
+
+//}}}
+
+
+
+
+
+
+
+
 //{{{ Index Operator for Object
 
 
@@ -813,11 +900,6 @@ impl fmt::Display for Object
 //    }
 //}
 
-struct ObjectIndexHelper<'a>
-{
-	pub anchor: &'a crate::anchors::Anchor,
-	pub object: &'a Object,
-}
 //}}}
 
 // This would allow calling functions that need an objects and an anchors like
