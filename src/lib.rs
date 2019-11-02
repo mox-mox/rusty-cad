@@ -971,7 +971,7 @@ pub fn sphere(name: &str, r: f64) -> Object
 }
 //}}}
 //{{{
-pub fn cylinder(name: &str, h: f64, r1: f64, r2: f64) -> Object
+pub fn cylinder(name: &str, h: f64, r1: f64, r2: f64) -> Object // Stands along the z-axis, r1 is at the orgigin, r2 is h away from the origin
 {
 	Object::new(name, Shape::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
@@ -1013,6 +1013,36 @@ pub fn minkowski<T: AsRef<[Object]>>(name: &str, children: T) -> Object
 	Object::new(name, Shape::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() })
 }
 //}}}
+
+//{{{
+pub fn pipe(name: &str, l: f64, r_outer: f64, r_inner: f64) -> Object // Pipe of length l with inner radius r_inner and outer radius r_outer
+{
+	let     outer = cylinder(&(String::from("base cylinder for ")+name), l, r_outer, r_outer);
+	let mut inner = cylinder(&(String::from("base cylinder for ")+name), l+2.0, r_inner, r_inner);
+	inner.translate_z(-1.0);
+	difference(name, [outer, inner])
+}
+//}}}
+//{{{
+pub fn wedge(name: &str, x: f64, y: f64, angle: f64) -> Object
+{
+	let     lower = cube_coords(&(String::from("base cylinder for ")+name), 0.0, 0.0, 0.0, x, y, 0.000000000000001);
+	let mut upper = cube_coords(&(String::from("base cylinder for ")+name), 0.0, 0.0, 0.0, x, y, 0.000000000000001);
+	upper.rotate_y(-angle);
+	hull(name, [lower, upper])
+}
+//}}}
+//{{{
+pub fn pipe_cut(name: &str, l: f64, r_outer: f64, r_inner: f64, angle: f64) -> Object
+{
+	let     pipe    = pipe(&(String::from("base pipe for ")+name), l, r_outer, r_inner);
+	let mut stencil = wedge(&(String::from("wedge for ")+name), 10.0*r_outer+2.0, -l, angle);
+	stencil.rotate_x(-90.0);
+	//inner.translate_z(-1.0);
+	intersection(name, [pipe, stencil])
+}
+//}}}
+
 
 //{{{
 pub fn arrow(name: &str, length: f64, width: f64) -> Object

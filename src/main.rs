@@ -41,6 +41,14 @@ const HEAD_END                : f64 =  MATTRESS_LENGTH/2.0+(BED_LENGTH-MATTRESS_
 const ROLL_WIDTH              : f64 =  0.7;
 const ROLL_DIAMETER           : f64 =  2.5;
 
+const DRILL_INSET             : f64 =  1.0;
+const DRILL_DEPTH             : f64 = 18.0;
+const DRILL_BORE_MINOR        : f64 =  1.0;
+const DRILL_BORE_MAJOR        : f64 =  1.0;
+const DRILL_MID_MINOR         : f64 =   DRILL_INSET + 0.5*DRILL_BORE_MINOR;
+const DRILL_MID_MAJOR         : f64 =   DRILL_INSET + 0.5*DRILL_BORE_MAJOR;
+const DRILL_BOTTOM            : f64 = -(DRILL_DEPTH - 0.5*FRAME_HEIGHT);
+
 
 //{{{
 pub fn dovetails(name: &str, bottom_stage: f64) -> Vec<Object>
@@ -159,6 +167,20 @@ pub fn cover_cutouts_side(name: &str, x: f64) -> Vec<Object>
 //}}}
 //}}}
 
+//{{{
+pub fn drill_minor(name: &str) -> Vec<Object>
+{
+	let mut parts = vec![];
+
+	let mut drill = cylinder(&(String::from("minor vertical drill for ")+name), DRILL_DEPTH+1.0, 0.5*DRILL_BORE_MINOR, 0.5*DRILL_BORE_MINOR);
+	drill.translate_z(DRILL_BOTTOM);
+	drill.set_fn(20);
+	//drill.set_debug();
+	parts.push(drill);
+
+	parts
+}
+//}}}
 
 
 //{{{
@@ -202,6 +224,20 @@ pub fn sideboard(name: &str) -> Object
 		parts.append(&mut cover_cutouts_side(name, FRAME_THICKNESS/2.0));
 	}
 	//}}}
+	//{{{ Add the drills
+	{
+		let mut drill = drill_minor(name);
+		drill[0].translate(-0.5*FRAME_THICKNESS+DRILL_MID_MINOR, HEAD_END+FRAME_THICKNESS-DRILL_MID_MINOR, 0.0);
+		parts.append(&mut drill);
+	}
+	//}}}
+	//{{{ Add the drills
+	{
+		let mut drill = drill_minor(name);
+		drill[0].translate(-0.5*FRAME_THICKNESS+DRILL_MID_MINOR, FOOT_END-FRAME_THICKNESS+DRILL_MID_MINOR, 0.0);
+		parts.append(&mut drill);
+	}
+	//}}}
 	let mut board = difference(name, parts);
 
 	//{{{ Add some anchors TODO
@@ -210,6 +246,7 @@ pub fn sideboard(name: &str) -> Object
 	a.translate_z(11.0);
 	a.rel_rotate_y(90.0);
 	board.add_anchor(a);
+	//board.set_debug();
 
 	//}}}
 
@@ -262,6 +299,20 @@ pub fn headboard(name: &str) -> Object
 	//{{{ Add the cover grooves
 
 	parts.append(&mut cover_cutouts_front(name, -FRAME_THICKNESS/2.0));
+	//}}}
+	//{{{ Add the drills
+	{
+		let mut drill = drill_minor(name);
+		drill[0].translate(-0.5*BED_WIDTH+DRILL_MID_MINOR, 0.5*FRAME_THICKNESS-DRILL_MID_MINOR, 0.0);
+		parts.append(&mut drill);
+	}
+	//}}}
+	//{{{ Add the drills
+	{
+		let mut drill = drill_minor(name);
+		drill[0].translate( 0.5*BED_WIDTH-DRILL_MID_MINOR, 0.5*FRAME_THICKNESS-DRILL_MID_MINOR, 0.0);
+		parts.append(&mut drill);
+	}
 	//}}}
 	let mut board = difference(name, parts);
 
@@ -419,128 +470,206 @@ pub fn small_roll(name: &str) -> Object
 }
 //}}}
 
-
-fn main()
+//{{{
+pub fn sprenger_block_3511100355(name: &str) -> Object
 {
-	////{{{ Print all the constants
+	const ROLL_DIAMETER           : f64 =  2.5;
+	const ROLL_WIDTH              : f64 =  0.7;
+	const ROLL_HEIGHT             : f64 =  1.7;
 
-	//eprintln!("MATTRESS_LENGTH = {}", MATTRESS_LENGTH);
-	//eprintln!("STORAGE_LENGTH  = {}", STORAGE_LENGTH );
-	//eprintln!("MATTRESw_WIDTH  = {}", MATTRESS_WIDTH );
-	//eprintln!("BED_LENGTH      = {}", BED_LENGTH     );
-	//eprintln!("BED_WIDTH       = {}", BED_WIDTH      );
-	//eprintln!("FRAME_HEIGHT    = {}", FRAME_HEIGHT   );
-	//eprintln!("FRAME_THICKNESS     = {}", FRAME_THICKNESS    );
-	////}}}
 
-	//{{{
-	let mut sideboard_l = sideboard("Sideboard_L");
-	sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
-	sideboard_l.set_colour(colour_named("red"));
-	sideboard_l.set_show_anchors();
-	println!("{}", sideboard_l);
-	//}}}
+	const BLOCK_WIDTH             : f64 = 1.02;
+	const BLOCK_DIAMETER          : f64 =  2.5;
+	const BLOCK_HEIGHT            : f64 =  3.38;
+	const BLOCK_HEIGHT_SLANT      : f64 =  2.2;
+	const BASE_WIDTH              : f64 =  3.5;
 
-	//{{{
-	let mut sideboard_r = sideboard_l.clone();
-	sideboard_r.name = String::from("Sideboard_R");
-	sideboard_r.scale_x(-1.0);
-	println!("{}", sideboard_r);
-	//}}}
+	let block = cube_coords(&(String::from("base board for ")+name),
+		-0.5*BASE_WIDTH,
+		-0.5*BLOCK_DIAMETER,
+		0.0,
+		 0.5*BASE_WIDTH,
+		 0.5*BLOCK_DIAMETER,
+		BLOCK_HEIGHT);
 
-	//{{{
-	let mut headboard = headboard("Headboard");
-	headboard.translate_y(BED_LENGTH-100.0-1.5*FRAME_THICKNESS);
-	headboard.set_colour(colour_named("green"));
-	println!("{}", headboard);
-	//}}}
-
-	//{{{
-	let mut footboard = footboard("Footboard");
-	footboard.translate_y(-(200.0+FRAME_THICKNESS)/2.0);
-	footboard.set_colour(colour_named("green"));
-	println!("{}", footboard);
-	//}}}
-
-	//{{{
-	let mut bulkhead = bulkhead("Bulkhead");
-	bulkhead.translate_y((MATTRESS_LENGTH+FRAME_THICKNESS)/2.0);
-	bulkhead.set_colour(colour_named("yellow"));
-	println!("{}", bulkhead);
-	//}}}
-
-	//{{{
-	let mut bottom_cover = cube_coords("Bottom cover",
-		-(0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH),
-		HEAD_END+COVER_GROOVE_DEPTH,
-		BOTTOM_COVER_BOTTOM,
-
-		0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH,
-		0.5*MATTRESS_LENGTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
-		BOTTOM_COVER_BOTTOM+COVER_THICKNESS,
-		);
-	bottom_cover.set_colour(colour_named("blue"));
-	println!("{}", bottom_cover);
-	//}}}
-
-	//{{{
-	let mut middle_cover_l = cube_coords("Bottom cover",
-		-(0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH),
-		HEAD_END+COVER_GROOVE_DEPTH,
-		MIDDLE_COVER_BOTTOM,
-
-		-0.5*MOTOR_WIDTH-FRAME_THICKNESS+COVER_GROOVE_DEPTH,
-		0.5*MATTRESS_LENGTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
-		MIDDLE_COVER_BOTTOM+COVER_THICKNESS,
-		);
-	middle_cover_l.set_colour(colour_named("blue"));
-	println!("{}", middle_cover_l);
-	//}}}
-
-	//{{{
-	let mut middle_cover_r = cube_coords("Bottom cover",
-		0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH,
-		HEAD_END+COVER_GROOVE_DEPTH,
-		MIDDLE_COVER_BOTTOM,
-
-		0.5*MOTOR_WIDTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
-		0.5*MATTRESS_LENGTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
-		MIDDLE_COVER_BOTTOM+COVER_THICKNESS,
-		);
-	middle_cover_r.set_colour(colour_named("blue"));
-	println!("{}", middle_cover_r);
-	//}}}
-
-	//{{{
-	let mut bulkhead_spacer_l = bulkhead_spacer("Bulkhead spacer L");
-	bulkhead_spacer_l.translate_x(-0.5*(MOTOR_WIDTH+FRAME_THICKNESS));
-	println!("{}", bulkhead_spacer_l);
-	//}}}
-
-	//{{{
-	let mut bulkhead_spacer_r = bulkhead_spacer_l.clone();
-	bulkhead_spacer_r.name = String::from("Bulkhead spacer R");
-	bulkhead_spacer_r.scale_x(-1.0);
-	println!("{}", bulkhead_spacer_r);
-	//}}}
-
-	//{{{ Slat Frame
-
-	for i in 0..FRAME_SLAT_COUNT
+	let mut parts = vec![block];
 	{
-		let mut slat = frame_slat(&format!("Frame slat {}", i));
-		slat.translate(0.0, -0.5*(MATTRESS_LENGTH-FRAME_SLAT_WIDTH)+((2*i) as f64)*FRAME_SLAT_SPACING, -0.5*(FRAME_HEIGHT-FRAME_SLAT_THICKNESS));
-		println!("{}", slat);
+		let mut c1=cylinder(&(String::from("base board for ")+name), BLOCK_DIAMETER+2.0, 0.175, 0.175);
+		c1.rotate_x(90.0);
+		c1.translate(-0.51-0.175, 1.0+0.5*BLOCK_DIAMETER, 0.175+0.13);
+		c1.set_debug();
+		parts.push(c1);
+	}
+	{
+		let mut c1=cylinder(&(String::from("base board for ")+name), BLOCK_DIAMETER+2.0, 0.175, 0.175);
+		c1.rotate_x(90.0);
+		c1.translate(0.51+0.175, 1.0+0.5*BLOCK_DIAMETER, 0.175+0.13);
+		c1.set_debug();
+		parts.push(c1);
+	}
+	{
+		let mut c1=cylinder(&(String::from("base board for ")+name), BLOCK_DIAMETER+2.0, 0.175, 0.175);
+		c1.rotate_x(90.0);
+		c1.translate(0.51+0.175, 1.0+0.5*BLOCK_DIAMETER, 0.175+0.13);
+		c1.set_debug();
+		parts.push(c1);
 	}
 
 
 
 
-	//}}}
+	let mut board = difference(name, parts);
+	board.set_fn(20);
+
+	board
+}
+//}}}
+
+fn main()
+{
+
+
+//
+//	////{{{ Print all the constants
+//
+//	//eprintln!("MATTRESS_LENGTH = {}", MATTRESS_LENGTH);
+//	//eprintln!("STORAGE_LENGTH  = {}", STORAGE_LENGTH );
+//	//eprintln!("MATTRESw_WIDTH  = {}", MATTRESS_WIDTH );
+//	//eprintln!("BED_LENGTH      = {}", BED_LENGTH     );
+//	//eprintln!("BED_WIDTH       = {}", BED_WIDTH      );
+//	//eprintln!("FRAME_HEIGHT    = {}", FRAME_HEIGHT   );
+//	//eprintln!("FRAME_THICKNESS     = {}", FRAME_THICKNESS    );
+//	////}}}
+//
+//	//{{{
+//	let mut sideboard_l = sideboard("Sideboard_L");
+//	sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
+//	sideboard_l.set_colour(colour_named("red"));
+//	sideboard_l.set_show_anchors();
+//	println!("{}", sideboard_l);
+//	//}}}
+//
+//	//{{{
+//	let mut sideboard_r = sideboard_l.clone();
+//	sideboard_r.name = String::from("Sideboard_R");
+//	sideboard_r.scale_x(-1.0);
+//	println!("{}", sideboard_r);
+//	//}}}
+//
+//	//{{{
+//	let mut headboard = headboard("Headboard");
+//	headboard.translate_y(BED_LENGTH-100.0-1.5*FRAME_THICKNESS);
+//	headboard.set_colour(colour_named("green"));
+//	println!("{}", headboard);
+//	//}}}
+//
+//	//{{{
+//	let mut footboard = footboard("Footboard");
+//	footboard.translate_y(-(200.0+FRAME_THICKNESS)/2.0);
+//	footboard.set_colour(colour_named("green"));
+//	println!("{}", footboard);
+//	//}}}
+//
+//	//{{{
+//	let mut bulkhead = bulkhead("Bulkhead");
+//	bulkhead.translate_y((MATTRESS_LENGTH+FRAME_THICKNESS)/2.0);
+//	bulkhead.set_colour(colour_named("yellow"));
+//	println!("{}", bulkhead);
+//	//}}}
+//
+//	//{{{
+//	let mut bottom_cover = cube_coords("Bottom cover",
+//		-(0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH),
+//		HEAD_END+COVER_GROOVE_DEPTH,
+//		BOTTOM_COVER_BOTTOM,
+//
+//		0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH,
+//		0.5*MATTRESS_LENGTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
+//		BOTTOM_COVER_BOTTOM+COVER_THICKNESS,
+//		);
+//	bottom_cover.set_colour(colour_named("blue"));
+//	println!("{}", bottom_cover);
+//	//}}}
+//
+//	//{{{
+//	let mut middle_cover_l = cube_coords("Bottom cover",
+//		-(0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH),
+//		HEAD_END+COVER_GROOVE_DEPTH,
+//		MIDDLE_COVER_BOTTOM,
+//
+//		-0.5*MOTOR_WIDTH-FRAME_THICKNESS+COVER_GROOVE_DEPTH,
+//		0.5*MATTRESS_LENGTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
+//		MIDDLE_COVER_BOTTOM+COVER_THICKNESS,
+//		);
+//	middle_cover_l.set_colour(colour_named("blue"));
+//	println!("{}", middle_cover_l);
+//	//}}}
+//
+//	//{{{
+//	let mut middle_cover_r = cube_coords("Bottom cover",
+//		0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH,
+//		HEAD_END+COVER_GROOVE_DEPTH,
+//		MIDDLE_COVER_BOTTOM,
+//
+//		0.5*MOTOR_WIDTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
+//		0.5*MATTRESS_LENGTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
+//		MIDDLE_COVER_BOTTOM+COVER_THICKNESS,
+//		);
+//	middle_cover_r.set_colour(colour_named("blue"));
+//	println!("{}", middle_cover_r);
+//	//}}}
+//
+//	//{{{
+//	let mut bulkhead_spacer_l = bulkhead_spacer("Bulkhead spacer L");
+//	bulkhead_spacer_l.translate_x(-0.5*(MOTOR_WIDTH+FRAME_THICKNESS));
+//	println!("{}", bulkhead_spacer_l);
+//	//}}}
+//
+//	//{{{
+//	let mut bulkhead_spacer_r = bulkhead_spacer_l.clone();
+//	bulkhead_spacer_r.name = String::from("Bulkhead spacer R");
+//	bulkhead_spacer_r.scale_x(-1.0);
+//	println!("{}", bulkhead_spacer_r);
+//	//}}}
+//
+//	//{{{ Slat Frame
+//
+//	for i in 0..FRAME_SLAT_COUNT
+//	{
+//		let mut slat = frame_slat(&format!("Frame slat {}", i));
+//		slat.translate(0.0, -0.5*(MATTRESS_LENGTH-FRAME_SLAT_WIDTH)+((2*i) as f64)*FRAME_SLAT_SPACING, -0.5*(FRAME_HEIGHT-FRAME_SLAT_THICKNESS));
+//		println!("{}", slat);
+//	}
+//
+//
+//
+//
+//	//}}}
+//
+//	//{{{
+//	let mut roll = small_roll("tester");
+//	roll.anchor("Contact").snap_to(&mut sideboard_l.anchor("left"));
+//	println!("{}", roll);
+//	//}}}
+//
 
 	//{{{
-	let mut roll = small_roll("tester");
-	roll.anchor("Contact").snap_to(&mut sideboard_l.anchor("left"));
-	println!("{}", roll);
+	let mut block = sprenger_block_3511100355("tester");
+	//println!("{}", block);
+	//}}}
+	////{{{
+	//let mut pipe = pipe("tester", 3.0, 2.0, 1.0);
+	//pipe.set_fn(20);
+	//println!("{}", pipe);
+	////}}}
+	////{{{
+	//let mut wedge = wedge("tester", 3.0, 2.0, 45.0);
+	//println!("{}", wedge);
+	////}}}
+
+	//{{{
+	let mut pipe = pipe_cut("tester", 3.0, 2.0, 1.0, 185.0);
+	pipe.set_fn(50);
+	println!("{}", pipe);
 	//}}}
 }
