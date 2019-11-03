@@ -13,10 +13,12 @@
 /// TODO: Much more documentation...
 
 
+mod object_2d;
+pub use crate::object_2d::*;
 mod object_3d;
 pub use crate::object_3d::*;
 
-extern crate vecmath;
+//extern crate vecmath;:
 pub mod math; // Use 'pub mod' if you want it to be visible outside library.
 
 pub use math::*;
@@ -37,25 +39,6 @@ trait IsSerialisableScope
 
 //}}}
 
-//{{{
-impl IsSerialisableScope for math::Matrix3D
-{
-	fn serialise(&self, indentation: usize, child : &str) -> String
-	{
-		let indent   = "\t".repeat(indentation as usize);
-		//                              "multmatrix(m = [";
-		let shift_in = indent.clone() + "                ";
-
-		let mut retval = indent.clone();
-		retval += "multmatrix(m = \n";
-		retval += &format!("{:>indent$}\n{})\n", self, indent, indent=indentation+1);
-		retval += &format!("{}{{\n", indent);
-		retval += &child;
-		retval += &format!("{} }};\n", indent);
-		retval
-	}
-}
-//}}}
 
 //{{{
 //mod colour
@@ -132,7 +115,6 @@ impl IsSerialisableScope for math::Matrix3D
 //{{{
 //mod modifiers
 //{
-	//use std::fmt;
 	// openscad modifiers: #: debug, %: background, !: root, *:disable
 	//{{{ pub enum ScadModifier
 

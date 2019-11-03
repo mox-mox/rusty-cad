@@ -4,8 +4,28 @@ use std::collections::HashMap;
 use crate::math::{Is3DObject, HasRefSys3D, Matrix3D};
 use crate::IsSerialisableScope;
 
-use std::ops::Index;
+use std::ops::{Index, IndexMut};
 use crate::Colour;
+
+//{{{
+impl IsSerialisableScope for crate::math::Matrix3D
+{
+	fn serialise(&self, indentation: usize, child : &str) -> String
+	{
+		let indent   = "\t".repeat(indentation as usize);
+		//                              "multmatrix(m = [";
+		let shift_in = indent.clone() + "                ";
+
+		let mut retval = indent.clone();
+		retval += "multmatrix(m = \n";
+		retval += &format!("{:>indent$}\n{})\n", self, indent, indent=indentation+1);
+		retval += &format!("{}{{\n", indent);
+		retval += &child;
+		retval += &format!("{} }};\n", indent);
+		retval
+	}
+}
+//}}}
 
 //{{{
 pub mod anchors
@@ -17,7 +37,7 @@ pub mod anchors
 	//pub use crate::math::RefSysExt;
 	//{{{ pub struct AnchorConstraint
 
-	#[derive(Debug, Clone, Copy)]
+	#[derive(Default, Debug, Clone, Copy)]
 	pub struct AnchorConstraint
 	{
 		pub x        : bool,
@@ -48,7 +68,7 @@ pub mod anchors
 
 	//{{{ pub struct Anchor
 
-	#[derive(Debug, Clone)]
+	#[derive(Default, Debug, Clone)]
 	pub struct Anchor
 	{
 		pub name                  : String,
@@ -71,6 +91,10 @@ pub mod anchors
 		{
 			&self.ref_sys
 	    }
+		fn set_ref_sys(&mut self, ref_sys: crate::Matrix3D)
+		{
+			self.ref_sys = ref_sys;
+		}
 	}
 	//}}}
 
@@ -93,183 +117,13 @@ pub mod anchors
 		}
 		//}}}
 		//{{{
-		fn get_object_anchor(&self) -> crate::Object
+		fn get_object_anchor(&self) -> crate::Object3D
 		{
-			let mut object_anchor = crate::object_anchor(&self.name);
+			let mut object_anchor = crate::object_3d::object_anchor(&self.name);
 			object_anchor.set_ref_sys(self.ref_sys);
 			object_anchor.rel_scale(0.3, 0.3, 0.3);
 			object_anchor
 		}
-		//}}}
-		//{{{ 3D-Manipulation
-
-		//{{{ Positions in a MultMatrix
-		//
-		// [ (0,0) (0,1) (0,2) (0,3) ]
-		// [ (1,0) (1,1) (1,2) (1,3) ]
-		// [ (2,0) (2,1) (2,2) (2,3) ]
-		// [ (3,0) (3,1) (3,2) (3,3) ]
-		//}}}
-
-		//{{{
-		pub fn set_ref_sys(&mut self, ref_sys: crate::Matrix3D)
-		{
-			self.ref_sys = ref_sys;
-		}
-		//}}}
-
-		//{{{
-		pub fn rotate_x(&mut self, x: f64)
-		{
-			self.ref_sys.rotate_x(x);
-		}
-		//}}}
-		//{{{
-		pub fn rotate_y(&mut self, y: f64)
-		{
-			self.ref_sys.rotate_y(y);
-		}
-		//}}}
-		//{{{
-		pub fn rotate_z(&mut self, z: f64)
-		{
-			self.ref_sys.rotate_z(z);
-		}
-		//}}}
-		//{{{
-		pub fn rotate(&mut self, x: f64, y: f64, z: f64)
-		{
-			self.ref_sys.rotate(x, y, z);
-		}
-		//}}}
-
-		//{{{
-		pub fn rel_rotate_x(&mut self, x: f64)
-		{
-			self.ref_sys.rel_rotate_x(x);
-		}
-		//}}}
-		//{{{
-		pub fn rel_rotate_y(&mut self, y: f64)
-		{
-			self.ref_sys.rel_rotate_y(y);
-		}
-		//}}}
-		//{{{
-		pub fn rel_rotate_z(&mut self, z: f64)
-		{
-			self.ref_sys.rel_rotate_z(z);
-		}
-		//}}}
-		//{{{
-		pub fn rel_rotate(&mut self, x: f64, y: f64, z: f64)
-		{
-			self.ref_sys.rel_rotate(x, y, z);
-		}
-		//}}}
-
-
-		//{{{
-		pub fn translate_x(&mut self, x: f64)
-		{
-			self.ref_sys.translate_x(x);
-		}
-		//}}}
-		//{{{
-		pub fn translate_y(&mut self, y: f64)
-		{
-			self.ref_sys.translate_y(y);
-		}
-		//}}}
-		//{{{
-		pub fn translate_z(&mut self, z: f64)
-		{
-			self.ref_sys.translate_z(z);
-		}
-		//}}}
-		//{{{
-		pub fn translate(&mut self, x: f64, y:f64, z: f64)
-		{
-			self.ref_sys.translate(x, y, z);
-		}
-		//}}}
-
-		//{{{
-		pub fn rel_translate_x(&mut self, x: f64)
-		{
-			self.ref_sys.rel_translate_x(x);
-		}
-		//}}}
-		//{{{
-		pub fn rel_translate_y(&mut self, y: f64)
-		{
-			self.ref_sys.rel_translate_y(y);
-		}
-		//}}}
-		//{{{
-		pub fn rel_translate_z(&mut self, z: f64)
-		{
-			self.ref_sys.rel_translate_z(z);
-		}
-		//}}}
-		//{{{
-		pub fn rel_translate(&mut self, x: f64, y:f64, z: f64)
-		{
-			self.ref_sys.rel_translate(x, y, z);
-		}
-		//}}}
-
-
-		//{{{
-		pub fn scale_x(&mut self, x: f64)
-		{
-			self.ref_sys.scale_x(x);
-		}
-		//}}}
-		//{{{
-		pub fn scale_y(&mut self, y: f64)
-		{
-			self.ref_sys.scale_y(y);
-		}
-		//}}}
-		//{{{
-		pub fn scale_z(&mut self, z: f64)
-		{
-			self.ref_sys.scale_z(z);
-		}
-		//}}}
-		//{{{
-		pub fn scale(&mut self, x: f64, y:f64, z: f64)
-		{
-			self.ref_sys.scale(x, y, z);
-		}
-		//}}}
-		//{{{
-		pub fn rel_scale_x(&mut self, x: f64)
-		{
-			self.ref_sys.rel_scale_x(x);
-		}
-		//}}}
-		//{{{
-		pub fn rel_scale_y(&mut self, y: f64)
-		{
-			self.ref_sys.rel_scale_y(y);
-		}
-		//}}}
-		//{{{
-		pub fn rel_scale_z(&mut self, z: f64)
-		{
-			self.ref_sys.rel_scale_z(z);
-		}
-		//}}}
-		//{{{
-		pub fn rel_scale(&mut self, x: f64, y:f64, z: f64)
-		{
-			self.ref_sys.rel_scale(x, y, z);
-		}
-		//}}}
-
-
 		//}}}
 	}
 	//}}}
@@ -289,7 +143,7 @@ pub mod anchors
 }
 //}}}
 
-//{{{ Define Object
+//{{{ Define Object3D
 
 //{{{ pub enum BooleanOp
 
@@ -315,9 +169,10 @@ pub enum Shape
 	Cube      { x: f64, y: f64, z: f64},
 	Sphere    { r: f64, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64> },
 	Cylinder  { h: f64, r1 : f64, r2 : f64, face_angle  : Option<f64>, face_size   : Option<f64>, face_number : Option<i32> },
+	// TODO: Polyhedron
 	Text      { text: String, font: String, size: i32, spacing: f64 },
 
-	Composite { op: BooleanOp, children: Vec<Object> },
+	Composite { op: BooleanOp, children: Vec<Object3D> },
 }
 
 //{{{
@@ -383,11 +238,11 @@ impl Shape
 
 //}}}
 
-//{{{pub struct Object
+//{{{pub struct Object3D
 
 #[derive(Debug)]
 #[derive(Clone)]
-pub struct Object
+pub struct Object3D
 {
 	pub name        : String,
 	pub shape       : Shape,
@@ -400,21 +255,7 @@ pub struct Object
 }
 
 //{{{
-impl HasRefSys3D for Object
-{
-    fn ref_sys_mut(&mut self) -> &mut Matrix3D
-	{
-		&mut self.ref_sys
-    }
-    fn ref_sys(&self) -> &Matrix3D
-	{
-		&self.ref_sys
-    }
-}
-//}}}
-
-//{{{
-impl Object
+impl Object3D
 {
 	//{{{ Positions in a MultMatrix
 	//
@@ -549,46 +390,45 @@ impl Object
 	//}}}
 	//}}}
 
-	//{{{
-	pub fn set_ref_sys(&mut self, ref_sys: crate::Matrix3D)
-	{
-		self.ref_sys = ref_sys;
-	}
-	//}}}
-
 
 	//{{{
-	pub fn add_anchor(&mut self, anchor: anchors::Anchor)
+	pub fn create_anchor(&mut self, name: &str) -> &mut anchors::Anchor
 	{
-		self.anchors.insert(String::from(&anchor.name), anchor);
+		let anchor = crate::object_3d::anchors::Anchor::new(name);
+		self.anchors.insert(String::from(name), anchor);
+		&mut self[name]
 	}
 	//}}}
 	//{{{
-	pub fn anchor<'a>(&'a mut self, index: &'a str) -> ObjectIndexHelper<'a>
+	pub fn anchor<'a>(&'a mut self, index: &'a str) -> Object3DIndexHelper<'a>
 	{
-		//ObjectIndexHelper{ anchor: &self.anchors[index], object: self }
-		ObjectIndexHelper{ anchor_name: index, object: self }
+		//Object3DIndexHelper{ anchor: &self.anchors[index], object: self }
+		Object3DIndexHelper{ anchor_name: index, object: self }
 	}
 	//}}}
-	////{{{
-	//pub fn snap_to_anchor(&mut self, own_anchor: &str, other: &Self, other_anchor: &crate::anchors::Anchor)
-	//{
-
-	//	//{{{ Generate inverse own anchor
-
-	//	//}}}
-	//	//{{{ Generate other anchor
-
-	//	//}}}
-
-	//	self.ref_sys = !self[own_anchor].ref_sys * other_anchor.ref_sys * other.ref_sys;
-	//}
-	////}}}
 }
 //}}}
 
 //{{{
-impl fmt::Display for Object
+impl HasRefSys3D for Object3D
+{
+    fn ref_sys_mut(&mut self) -> &mut Matrix3D
+	{
+		&mut self.ref_sys
+    }
+    fn ref_sys(&self) -> &Matrix3D
+	{
+		&self.ref_sys
+    }
+	fn set_ref_sys(&mut self, ref_sys: crate::Matrix3D)
+	{
+		self.ref_sys = ref_sys;
+	}
+}
+//}}}
+
+//{{{
+impl fmt::Display for Object3D
 {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 	{
@@ -606,11 +446,11 @@ impl fmt::Display for Object
 			{
 				custom_mods += &format!("{:>indent$}\n", anchor, indent=indentation+1);
 			}
-			custom_mods += &format!("{:>indent$}\n", object_origin(&(String::from("Object Origin for ")+&self.name)), indent=indentation+1);
+			custom_mods += &format!("{:>indent$}\n", object_origin(&(String::from("Object3D Origin for ")+&self.name)), indent=indentation+1);
 		}
 		if let crate::CustomModifier::ShowOrigin = self.custom_modifier
 		{
-			custom_mods += &format!("{:>indent$}\n", object_origin(&(String::from("Object Origin for ")+&self.name)), indent=indentation+1);
+			custom_mods += &format!("{:>indent$}\n", object_origin(&(String::from("Object3D Origin for ")+&self.name)), indent=indentation+1);
 		}
 		//}}}
 
@@ -625,18 +465,43 @@ impl fmt::Display for Object
 }
 //}}}
 
+//{{{
+impl Index<&str> for Object3D
+{
+    type Output = crate::object_3d::anchors::Anchor;
+
+    fn index(&self, index: &str) -> &Self::Output
+	{
+        //eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
+		&self.anchors[index]
+    }
+}
+//}}}
+//{{{
+impl IndexMut<&str> for Object3D
+{
+    //type Output = crate::anchors::Anchor;
+
+    fn index_mut(&mut self, index: &str) -> &mut Self::Output
+	{
+        //eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
+		self.anchors.entry(index.to_string()).or_default()
+    }
+}
+//}}}
+
 
 
 //{{{ Snapping
 
-pub struct ObjectIndexHelper<'a>
+pub struct Object3DIndexHelper<'a>
 {
 	//pub anchor: &'a crate::anchors::Anchor,
 	pub anchor_name: &'a str,
-	pub object:      &'a mut Object,
+	pub object:      &'a mut Object3D,
 }
 
-impl ObjectIndexHelper<'_>
+impl Object3DIndexHelper<'_>
 {
 	//{{{
 	pub fn snap_to(&mut self, other: &mut Self)
@@ -649,7 +514,7 @@ impl ObjectIndexHelper<'_>
 		let parent_object  = &other.object;
 
 		//let child_anchor : &mut anchors::Anchor = &mut other.anchor;
-		//let child_object : &mut Object = &mut other.object;
+		//let child_object : &mut Object3D = &mut other.object;
 
 		//let constrain_rotation     = parent_anchor.constrain_rotation     & child_anchor.constrain_rotation;
 		//let constrain_translation  = parent_anchor.constrain_translation  & child_anchor.constrain_translation;
@@ -692,72 +557,10 @@ impl ObjectIndexHelper<'_>
 
 
 //}}}
-
-
-
-
-
-
-
-
-//{{{ Index Operator for Object
-
-
-
-//{{{ Index -> (Object, Anchor) Does not work // <<=== This is the problematic part
-//impl Index<&str> for Object
-//{
-//    type Output = ObjectIndexHelper;
-//
-//    fn index(&self, index: &str) -> &ObjectIndexHelper
-//	{
-//        eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
-//
-//		ObjectIndexHelper{ anchor: Box::new(self.anchors[index]), object: Box::new(self) }
-//    }
-//}
-
-//}}}
-
-// This would allow calling functions that need an objects and an anchors like
-// do_something_with_object_and_anchor(my_object["my_anchor_name"]);
-
-
-//{{{ Normal Index operator: Works but is insufficient for my use case.
-impl Index<&str> for Object
-{
-    type Output = crate::anchors::Anchor;
-
-    fn index(&self, index: &str) -> &Self::Output
-	{
-        eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
-
-		&self.anchors[index]
-    }
-}
-//}}}
-
-//{{{ IndexMut
-// Does not work because HashMap dows not support mutable indexing
-//impl IndexMut<&str> for Object
-//{
-//    //type Output = crate::anchors::Anchor;
-//
-//    fn index_mut(&mut self, index: &str) -> &mut Self::Output
-//	{
-//        eprintln!("Accessing {}-anchor of {}-object immutably", index, self.name);
-//
-//		&mut self.anchors[index]
-//    }
-//}
 //}}}
 //}}}
 
-
-//}}}
-//}}}
-
-//{{{ Create Objects
+//{{{ Create Object3Ds
 
 //// TODO: Polyhedron
 //// TODO: text
@@ -765,13 +568,13 @@ impl Index<&str> for Object
 //// TODO: Measure::Angle
 //// TODO: Measure::Triangle
 //{{{
-pub fn cube(name: &str, x: f64, y: f64, z: f64) -> Object
+pub fn cube(name: &str, x: f64, y: f64, z: f64) -> Object3D
 {
-	Object::new(name, Shape::Cube{ x: x,y: y,z: z })
+	Object3D::new(name, Shape::Cube{ x: x,y: y,z: z })
 }
 //}}}
 //{{{
-pub fn cube_coords(name: &str, x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> Object
+pub fn cube_coords(name: &str, x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> Object3D
 {
 	let x = (x1 - x2).abs();
 	let y = (y1 - y2).abs();
@@ -781,63 +584,63 @@ pub fn cube_coords(name: &str, x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: 
 	let y_shift = if y1<y2 { y1 } else { y2 };
 	let z_shift = if z1<z2 { z1 } else { z2 };
 
-	let mut cube = Object::new(name, Shape::Cube{ x: x,y: y,z: z });
+	let mut cube = Object3D::new(name, Shape::Cube{ x: x,y: y,z: z });
 	cube.translate(x/2.0+x_shift, y/2.0+y_shift,z/2.0+z_shift);
 	cube
 }
 //}}}
 //{{{
-pub fn sphere(name: &str, r: f64) -> Object
+pub fn sphere(name: &str, r: f64) -> Object3D
 {
-	Object::new(name, Shape::Sphere{ r: r, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
+	Object3D::new(name, Shape::Sphere{ r: r, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
 //}}}
 //{{{
-pub fn cylinder(name: &str, h: f64, r1: f64, r2: f64) -> Object // Stands along the z-axis, r1 is at the orgigin, r2 is h away from the origin
+pub fn cylinder(name: &str, h: f64, r1: f64, r2: f64) -> Object3D // Stands along the z-axis, r1 is at the orgigin, r2 is h away from the origin
 {
-	Object::new(name, Shape::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
+	Object3D::new(name, Shape::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
 //}}}
 //{{{
-pub fn text(name: &str, text: &str, font: &str, size: i32, spacing: f64) -> Object
+pub fn text(name: &str, text: &str, font: &str, size: i32, spacing: f64) -> Object3D
 {
-	Object::new(name, Shape::Text{ text: String::from(text), font: String::from(font), size: size, spacing: spacing })
-}
-//}}}
-
-//{{{
-pub fn union<T: AsRef<[Object]>>(name: &str, children: T) -> Object
-{
-	Object::new(name, Shape::Composite{ op: BooleanOp::union, children: children.as_ref().to_vec() })
-}
-//}}}
-//{{{
-pub fn difference<T: AsRef<[Object]>>(name: &str, children: T) -> Object
-{
-	Object::new(name, Shape::Composite{ op: BooleanOp::difference, children: children.as_ref().to_vec() })
-}
-//}}}
-//{{{
-pub fn intersection<T: AsRef<[Object]>>(name: &str, children: T) -> Object
-{
-	Object::new(name, Shape::Composite{ op: BooleanOp::intersection, children: children.as_ref().to_vec() })
-}
-//}}}
-//{{{
-pub fn hull<T: AsRef<[Object]>>(name: &str, children: T) -> Object
-{
-	Object::new(name, Shape::Composite{ op: BooleanOp::hull, children: children.as_ref().to_vec() })
-}
-//}}}
-//{{{
-pub fn minkowski<T: AsRef<[Object]>>(name: &str, children: T) -> Object
-{
-	Object::new(name, Shape::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() })
+	Object3D::new(name, Shape::Text{ text: String::from(text), font: String::from(font), size: size, spacing: spacing })
 }
 //}}}
 
 //{{{
-pub fn pipe(name: &str, l: f64, r_outer: f64, r_inner: f64) -> Object // Pipe of length l with inner radius r_inner and outer radius r_outer
+pub fn union<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
+{
+	Object3D::new(name, Shape::Composite{ op: BooleanOp::union, children: children.as_ref().to_vec() })
+}
+//}}}
+//{{{
+pub fn difference<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
+{
+	Object3D::new(name, Shape::Composite{ op: BooleanOp::difference, children: children.as_ref().to_vec() })
+}
+//}}}
+//{{{
+pub fn intersection<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
+{
+	Object3D::new(name, Shape::Composite{ op: BooleanOp::intersection, children: children.as_ref().to_vec() })
+}
+//}}}
+//{{{
+pub fn hull<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
+{
+	Object3D::new(name, Shape::Composite{ op: BooleanOp::hull, children: children.as_ref().to_vec() })
+}
+//}}}
+//{{{
+pub fn minkowski<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
+{
+	Object3D::new(name, Shape::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() })
+}
+//}}}
+
+//{{{
+pub fn pipe(name: &str, l: f64, r_outer: f64, r_inner: f64) -> Object3D // Pipe of length l with inner radius r_inner and outer radius r_outer
 {
 	let     outer = cylinder(&(String::from("base cylinder for ")+name), l, r_outer, r_outer);
 	let mut inner = cylinder(&(String::from("base cylinder for ")+name), l+2.0, r_inner, r_inner);
@@ -846,7 +649,7 @@ pub fn pipe(name: &str, l: f64, r_outer: f64, r_inner: f64) -> Object // Pipe of
 }
 //}}}
 //{{{
-pub fn wedge(name: &str, x: f64, y: f64, angle: f64) -> Object
+pub fn wedge(name: &str, x: f64, y: f64, angle: f64) -> Object3D
 {
 	let     lower = cube_coords(&(String::from("base cylinder for ")+name), 0.0, 0.0, 0.0, x, y, 0.000000000000001);
 	let mut upper = cube_coords(&(String::from("base cylinder for ")+name), 0.0, 0.0, 0.0, x, y, 0.000000000000001);
@@ -855,7 +658,7 @@ pub fn wedge(name: &str, x: f64, y: f64, angle: f64) -> Object
 }
 //}}}
 //{{{
-pub fn pipe_cut(name: &str, l: f64, r_outer: f64, r_inner: f64, angle: f64) -> Object
+pub fn pipe_cut(name: &str, l: f64, r_outer: f64, r_inner: f64, angle: f64) -> Object3D
 {
 	let     pipe    = pipe(&(String::from("base pipe for ")+name), l, r_outer, r_inner);
 	let mut stencil = wedge(&(String::from("wedge for ")+name), 10.0*r_outer+2.0, -l, angle);
@@ -867,7 +670,7 @@ pub fn pipe_cut(name: &str, l: f64, r_outer: f64, r_inner: f64, angle: f64) -> O
 
 
 //{{{
-pub fn arrow(name: &str, length: f64, width: f64) -> Object
+pub fn arrow(name: &str, length: f64, width: f64) -> Object3D
 {
 	let mut shaft = cylinder(&(String::from(name)+"::arrow::shaft"), 0.9*length,     width, width);
 	let mut tip   = cylinder(&(String::from(name)+"::arrow::tip"),   0.1*length, 2.0*width,   0.0);
@@ -877,7 +680,7 @@ pub fn arrow(name: &str, length: f64, width: f64) -> Object
 //}}}
 
 //{{{
-pub fn coordinate_system(name: &str) -> Object
+pub fn coordinate_system(name: &str) -> Object3D
 {
 	use crate::colour_named;
 	//{{{
@@ -906,7 +709,7 @@ pub fn coordinate_system(name: &str) -> Object
 }
 //}}}
 //{{{
-pub fn object_origin(name: &str) -> Object
+pub fn object_origin(name: &str) -> Object3D
 {
 	use crate::colour_named;
 	//{{{
@@ -939,7 +742,7 @@ pub fn object_origin(name: &str) -> Object
 }
 //}}}
 //{{{
-pub fn object_anchor(name: &str) -> Object
+pub fn object_anchor(name: &str) -> Object3D
 {
 	use crate::colour_named;
 	//{{{

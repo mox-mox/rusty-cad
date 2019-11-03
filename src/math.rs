@@ -3,26 +3,12 @@ pub use std::convert::{AsRef, AsMut};
 pub use std::ops::{Deref, DerefMut, Not, Add, Sub, Mul, BitXor};
 use std::fmt;
 
-//{{{
-pub trait HasRefSys2D
-{
-	fn ref_sys_mut(&mut self) -> &mut Matrix2D;
-	fn ref_sys(&self) -> &Matrix2D;
-}
-//}}}
-//{{{
-pub trait HasRefSys3D
-{
-	fn ref_sys_mut(&mut self) -> &mut Matrix3D;
-	fn ref_sys(&self) -> &Matrix3D;
-}
-//}}}
 
 //{{{ 2D Stuff
 
 //{{{ pub struct Matrix2D
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Default, Debug,  Clone, Copy)]
 pub struct Matrix2D(M2D);
 pub type M2D = vecmath::Matrix3<f64>;
 //{{{
@@ -84,6 +70,7 @@ impl AsMut<M2D> for Matrix2D {
     }
 }
 //}}}
+
 //{{{
 impl fmt::Display for Matrix2D
 {
@@ -432,6 +419,7 @@ impl Matrix2D
 
 #[derive(Clone, Copy, Debug)]
 pub struct Vector2D(V2D);
+pub type Point2D=Vector2D; 
 pub type V2D = vecmath::Vector3<f64>;
 //{{{
 impl Deref for Vector2D
@@ -482,13 +470,19 @@ impl AsMut<V2D> for Vector2D {
     }
 }
 //}}}
+
 //{{{
 impl fmt::Display for Vector2D
 {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 	{
 		let indentation = if let Some(width) = f.width() { width } else { 0 as usize };
-		write!(f, "{0}[{1:16.10?},\n{0} {2:16.10?},\n{0} {3:16.10?}]", "\t".repeat(indentation as usize), self[0], self[1], self[2])
+		if !f.alternate() {
+			write!(f, "{0}[{1:16.10?}, {2:16.10?}, {3:16.10?}]", "\t".repeat(indentation as usize), self[0], self[1], self[2])
+		} else {
+			write!(f, "{0}[{1:16.10?}, {2:16.10?}]",             "\t".repeat(indentation as usize), self[0], self[1])
+		}
+
 	}
 }
 //}}}
@@ -549,6 +543,31 @@ impl Vector2D
 	//}}}
 }
 //}}}
+//{{{
+//pub fn point2D(x: f64, y: f64) -> Point2D
+#[allow(non_snake_case)]
+pub fn point2D(x: f64, y: f64) -> Point2D
+{
+	Vector2D([x, y, 1.0])
+}
+//}}}
+//{{{
+//pub fn vector2D(x: f64, y: f64) -> Point2D
+#[allow(non_snake_case)]
+pub fn vector2D(x: f64, y: f64) -> Point2D
+{
+	Vector2D([x, y, 0.0])
+}
+//}}}
+//}}}
+
+//{{{
+pub trait HasRefSys2D
+{
+	fn ref_sys_mut(&mut self) -> &mut Matrix2D;
+	fn ref_sys(&self) -> &Matrix2D;
+	fn set_ref_sys(&mut self, ref_sys: Matrix2D);
+}
 //}}}
 
 //{{{
@@ -739,11 +758,12 @@ impl<T> Is2DObject for T where T: HasRefSys2D
 //}}}
 
 
+
 //{{{ 3D Stuff
 
 //{{{ pub struct Matrix3D
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct Matrix3D(M3D);
 pub type M3D = vecmath::Matrix4<f64>;
 //{{{
@@ -805,6 +825,7 @@ impl AsMut<M3D> for Matrix3D {
     }
 }
 //}}}
+
 //{{{
 impl fmt::Display for Matrix3D
 {
@@ -1307,6 +1328,7 @@ impl Matrix3D
 
 #[derive(Clone, Copy, Debug)]
 pub struct Vector3D(V3D);
+pub type Point3D=Vector3D; 
 pub type V3D = vecmath::Vector4<f64>;
 //{{{
 impl Deref for Vector3D
@@ -1357,13 +1379,19 @@ impl AsMut<V3D> for Vector3D {
     }
 }
 //}}}
+
 //{{{
 impl fmt::Display for Vector3D
 {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 	{
 		let indentation = if let Some(width) = f.width() { width } else { 0 as usize };
-		write!(f, "{0}[{1:16.10?},\n{0} {2:16.10?},\n{0} {3:16.10?},\n{0} {4:16.10?}]", "\t".repeat(indentation as usize), self[0], self[1], self[2], self[3])
+		//write!(f, "{0}[{1:16.10?},\n{0} {2:16.10?},\n{0} {3:16.10?},\n{0} {4:16.10?}]", "\t".repeat(indentation as usize), self[0], self[1], self[2], self[3])
+		if !f.alternate() {
+			write!(f, "{0}[{1:16.10?}, {2:16.10?}, {3:16.10?},\n{0} {4:16.10?}]", "\t".repeat(indentation as usize), self[0], self[1], self[2], self[3])
+		} else {
+			write!(f, "{0}[{1:16.10?}, {2:16.10?}, {3:16.10?}]",                  "\t".repeat(indentation as usize), self[0], self[1], self[2])
+		}
 	}
 }
 //}}}
@@ -1424,8 +1452,32 @@ impl Vector3D
 	//}}}
 }
 //}}}
+//{{{
+//pub fn point3D(x: f64, y: f64, z: f64) -> Point3D
+#[allow(non_snake_case)]
+pub fn point3D(x: f64, y: f64, z: f64) -> Point3D
+{
+	Vector3D([x, y, z, 1.0])
+}
+//}}}
+//{{{
+//pub fn vector3D(x: f64, y: f64, z: f64) -> Point3D
+#[allow(non_snake_case)]
+pub fn vector3D(x: f64, y: f64, z: f64) -> Point3D
+{
+	Vector3D([x, y, z, 0.0])
+}
+//}}}
 //}}}
 
+//{{{
+pub trait HasRefSys3D
+{
+	fn ref_sys_mut(&mut self) -> &mut Matrix3D;
+	fn ref_sys(&self) -> &Matrix3D;
+	fn set_ref_sys(&mut self, ref_sys: Matrix3D);
+}
+//}}}
 
 //{{{
 pub trait Is3DObject

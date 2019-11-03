@@ -57,7 +57,7 @@ const DRILL_BOTTOM            : f64 = -(DRILL_DEPTH - 0.5*FRAME_HEIGHT);
 
 
 //{{{
-pub fn dovetails(name: &str, bottom_stage: f64) -> Vec<Object>
+pub fn dovetails(name: &str, bottom_stage: f64) -> Vec<Object3D>
 {
 	let mut parts = vec![];
 
@@ -87,7 +87,7 @@ pub fn dovetails(name: &str, bottom_stage: f64) -> Vec<Object>
 // TODO: Maybe remove these.
 // Rationale: It should be easy to remove the covers. So they should simply be screwed in place
 //{{{
-pub fn cover_cutouts_front(name: &str, y: f64) -> Vec<Object>
+pub fn cover_cutouts_front(name: &str, y: f64) -> Vec<Object3D>
 {
 	let mut parts = vec![];
 
@@ -141,7 +141,7 @@ pub fn cover_cutouts_front(name: &str, y: f64) -> Vec<Object>
 //}}}
 
 //{{{
-pub fn cover_cutouts_side(name: &str, x: f64) -> Vec<Object>
+pub fn cover_cutouts_side(name: &str, x: f64) -> Vec<Object3D>
 {
 	let mut parts = vec![];
 
@@ -174,7 +174,7 @@ pub fn cover_cutouts_side(name: &str, x: f64) -> Vec<Object>
 //}}}
 
 //{{{
-pub fn drill_minor(name: &str) -> Vec<Object>
+pub fn drill_minor(name: &str) -> Vec<Object3D>
 {
 	let mut parts = vec![];
 
@@ -190,7 +190,7 @@ pub fn drill_minor(name: &str) -> Vec<Object>
 
 
 //{{{
-pub fn sideboard(name: &str) -> Object
+pub fn sideboard(name: &str) -> Object3D
 {
 	//{{{
 	let board = cube_coords(&(String::from("base board for ")+name),
@@ -248,12 +248,9 @@ pub fn sideboard(name: &str) -> Object
 
 	//{{{ Add some anchors TODO
 
-	let mut a = rusty_scad::anchors::Anchor::new("left");
+	let mut a = board.create_anchor("left");
 	a.translate_z(11.0);
 	a.rel_rotate_y(90.0);
-	board.add_anchor(a);
-	//board.set_debug();
-
 	//}}}
 
 	board
@@ -261,7 +258,7 @@ pub fn sideboard(name: &str) -> Object
 //}}}
 
 //{{{
-pub fn frontboard(name: &str) -> Object
+pub fn frontboard(name: &str) -> Object3D
 {
 	let board = cube(&(String::from("base board for ")+name), BED_WIDTH-2.0*FRAME_THICKNESS, FRAME_THICKNESS, FRAME_HEIGHT);
 
@@ -285,7 +282,7 @@ pub fn frontboard(name: &str) -> Object
 //}}}
 
 //{{{
-pub fn headboard(name: &str) -> Object
+pub fn headboard(name: &str) -> Object3D
 {
 	let mut board = frontboard(name);
 	let mut parts = vec![board];
@@ -327,7 +324,7 @@ pub fn headboard(name: &str) -> Object
 //}}}
 
 //{{{
-pub fn bulkhead(name: &str) -> Object
+pub fn bulkhead(name: &str) -> Object3D
 {
 	let board = cube(&(String::from("base board for ")+name), MATTRESS_WIDTH, FRAME_THICKNESS, FRAME_HEIGHT);
 
@@ -373,7 +370,7 @@ pub fn bulkhead(name: &str) -> Object
 //}}}
 
 //{{{
-pub fn bulkhead_spacer(name: &str) -> Object
+pub fn bulkhead_spacer(name: &str) -> Object3D
 {
 	//{{{
 	let board = cube_coords(&(String::from("base board for ")+name),
@@ -423,14 +420,14 @@ pub fn bulkhead_spacer(name: &str) -> Object
 //}}}
 
 //{{{
-pub fn footboard(name: &str) -> Object
+pub fn footboard(name: &str) -> Object3D
 {
 	frontboard(name)
 }
 //}}}
 
 //{{{
-pub fn frame_slat(name: &str) -> Object
+pub fn frame_slat(name: &str) -> Object3D
 {
 	//{{{
 	let board = cube_coords(&(String::from("base board for ")+name),
@@ -449,7 +446,7 @@ pub fn frame_slat(name: &str) -> Object
 
 
 //{{{
-pub fn small_roll(name: &str) -> Object
+pub fn small_roll(name: &str) -> Object3D
 {
 	let mut roll1 = cylinder(&(String::from("Lower half roll for ") + name), 0.5*ROLL_WIDTH, 0.4*ROLL_DIAMETER, 0.5*ROLL_DIAMETER);
 	roll1.scale_z(-1.0);
@@ -460,14 +457,11 @@ pub fn small_roll(name: &str) -> Object
 	//{{{ Add some anchors TODO
 
 	{
-		let mut a = rusty_scad::anchors::Anchor::new("Origin");
-		//a.translate_z(11.0);
-		roll.add_anchor(a);
+		roll.create_anchor("Origin");
 	}
 	{
-		let mut a = rusty_scad::anchors::Anchor::new("Contact");
+		let mut a = roll.create_anchor("Contact");
 		a.translate(-0.5*ROLL_DIAMETER, -0.5*ROLL_DIAMETER, 0.0);
-		roll.add_anchor(a);
 	}
 
 	//}}}
@@ -477,7 +471,7 @@ pub fn small_roll(name: &str) -> Object
 //}}}
 
 //{{{
-pub fn sprenger_block_3511100355(name: &str) -> Object
+pub fn sprenger_block_3511100355(name: &str) -> Object3D
 {
 	const ROLL_DIAMETER           : f64 =  2.5;
 	const ROLL_WIDTH              : f64 =  0.7;
