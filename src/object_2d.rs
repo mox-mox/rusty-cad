@@ -2,10 +2,10 @@ use std::fmt;
 use std::collections::HashMap;
 
 use crate::math::{Is2DObject, HasRefSys2D, Matrix2D, Point2D};
-use crate::IsSerialisableScope;
+use crate::{IsSerialisableScope, IsObject, Colour, BooleanOp};
 
 use std::ops::{Index, IndexMut};
-use crate::Colour;
+//use crate::Colour;
 
 //{{{
 impl IsSerialisableScope for crate::math::Matrix2D
@@ -145,27 +145,27 @@ pub mod anchors
 //}}}
 
 //{{{ Define Object2D
-
-//{{{ pub enum BooleanOp
+//
+////{{{ pub enum BooleanOp
+//
+//#[derive(Debug)]
+//#[derive(Clone)]
+//#[allow(non_camel_case_types)] // We use the debug output to create the OpenSCad code. And that code requires the names to be lower-case.
+//pub enum BooleanOp
+//{
+//	union,
+//	difference,
+//	intersection,
+//	hull,
+//	minkowski,
+//}
+////}}}
+//
+//{{{ pub enum Shape2D
 
 #[derive(Debug)]
 #[derive(Clone)]
-#[allow(non_camel_case_types)] // We use the debug output to create the OpenSCad code. And that code requires the names to be lower-case.
-pub enum BooleanOp
-{
-	union,
-	difference,
-	intersection,
-	hull,
-	minkowski,
-}
-//}}}
-
-//{{{ pub enum Shape
-
-#[derive(Debug)]
-#[derive(Clone)]
-pub enum Shape
+pub enum Shape2D
 {
 	Square    { x: f64, y: f64},
 	Circle    { r: f64, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64> },
@@ -176,7 +176,7 @@ pub enum Shape
 }
 
 //{{{
-impl Shape
+impl Shape2D
 {
 	//{{{
 	fn serialise(&self, indentation : usize) -> String
@@ -186,13 +186,13 @@ impl Shape
 		match &self
 		{
 			//{{{
-			Shape::Square{x,y}                                        =>
+			Shape2D::Square{x,y}                                        =>
 			{
 				tabs + "square([" + &x.to_string() + ", " + &y.to_string() + "], center=true);"
 			}
 			//}}}
 			//{{{
-			Shape::Circle{r,face_number,face_angle,face_size}         =>
+			Shape2D::Circle{r,face_number,face_angle,face_size}         =>
 			{
 				let fan = if let Some(x) = face_number { String::from(", $fn=") + &x.to_string() } else { String::from("") };
 				let faa = if let Some(x) = face_angle  { String::from(", $fa=") + &x.to_string() } else { String::from("") };
@@ -202,7 +202,7 @@ impl Shape
 			}
 			//}}}
 			//{{{
-			Shape::Polygon{points, paths, convexity} =>
+			Shape2D::Polygon{points, paths, convexity} =>
 			{
 				// TODO
 				tabs
@@ -210,13 +210,13 @@ impl Shape
 			}
 			//}}}
 			//{{{
-			Shape::Text{ref text, ref font, size, spacing} =>
+			Shape2D::Text{ref text, ref font, size, spacing} =>
 			{
 				format!("{0}text(\"{1}\", font=\"{2}\", spacing={3}, size={4});", tabs, &text, &font, spacing, size)
 			}
 			//}}}
 			//{{{
-			Shape::Composite{op, children} =>
+			Shape2D::Composite{op, children} =>
 			{
 				//retval = format!("{0}{1:?}()\n{0}{{\n{2:>indent$}\n{3:>indent$}\n{0} }};", tabs, &op, c1, c2, indent=indent);
 				let mut retval = format!("{0}{1:?}()\n{0}{{\n", tabs, &op);
@@ -243,7 +243,7 @@ impl Shape
 pub struct Object2D
 {
 	pub name        : String,
-	pub shape       : Shape,
+	pub shape       : Shape2D,
 	pub ref_sys     : crate::Matrix2D,
 	pub colour      : Colour,
 	pub anchors     : HashMap<String, anchors::Anchor>,
@@ -282,7 +282,7 @@ impl Object2D
 	//}}}
 
 	//{{{
-	fn new(name: &str, shape : Shape) -> Self
+	fn new(name: &str, shape : Shape2D) -> Self
 	{
 		Self{
 			name            : String::from(name),
@@ -311,21 +311,21 @@ impl Object2D
 	{
 		//{{{ Commeted
 		//
-		//if let Shape::Sphere{r,ref mut face_number,face_angle,face_size} = self.shape {
+		//if let Shape2D::Sphere{r,ref mut face_number,face_angle,face_size} = self.shape {
 		//	*face_number = Some(num);
 		//}
-		//if let Shape::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size} = self.shape {
+		//if let Shape2D::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size} = self.shape {
 		//	*face_number = Some(num);
 		//}
 		//}}}
 
 		match self.shape
 		{
-			Shape::Square{x,y}                                                => {},
-			Shape::Circle{r,ref mut face_number,face_angle,face_size}         => *face_number = Some(num),
-			Shape::Polygon{ref points, ref paths, convexity}                  => {},
-			Shape::Text{ref text, ref font, size, spacing}                    => {},
-			Shape::Composite{ref op,ref mut children}                         => { for child in children { child.set_fn(num) } },
+			Shape2D::Square{x,y}                                                => {},
+			Shape2D::Circle{r,ref mut face_number,face_angle,face_size}         => *face_number = Some(num),
+			Shape2D::Polygon{ref points, ref paths, convexity}                  => {},
+			Shape2D::Text{ref text, ref font, size, spacing}                    => {},
+			Shape2D::Composite{ref op,ref mut children}                         => { for child in children { child.set_fn(num) } },
 		}
 	}
 	//}}}
@@ -334,11 +334,11 @@ impl Object2D
 	{
 		match self.shape
 		{
-			Shape::Square{x,y}                                                => {},
-			Shape::Circle{r,face_number,ref mut face_angle,face_size}         => *face_angle = Some(num),
-			Shape::Polygon{ref points, ref paths, convexity}                  => {},
-			Shape::Text{ref text, ref font, size, spacing}                    => {},
-			Shape::Composite{ref op,ref mut children}                         => { for child in children { child.set_fa(num) } },
+			Shape2D::Square{x,y}                                                => {},
+			Shape2D::Circle{r,face_number,ref mut face_angle,face_size}         => *face_angle = Some(num),
+			Shape2D::Polygon{ref points, ref paths, convexity}                  => {},
+			Shape2D::Text{ref text, ref font, size, spacing}                    => {},
+			Shape2D::Composite{ref op,ref mut children}                         => { for child in children { child.set_fa(num) } },
 		}
 	}
 	//}}}
@@ -347,11 +347,11 @@ impl Object2D
 	{
 		match self.shape
 		{
-			Shape::Square{x,y}                                                => {},
-			Shape::Circle{r,face_number,face_angle,ref mut face_size}         => *face_size = Some(num),
-			Shape::Polygon{ref points, ref paths, convexity}                  => {},
-			Shape::Text{ref text, ref font, size, spacing}                    => {},
-			Shape::Composite{ref op,ref mut children}                         => { for child in children { child.set_fs(num) } },
+			Shape2D::Square{x,y}                                                => {},
+			Shape2D::Circle{r,face_number,face_angle,ref mut face_size}         => *face_size = Some(num),
+			Shape2D::Polygon{ref points, ref paths, convexity}                  => {},
+			Shape2D::Text{ref text, ref font, size, spacing}                    => {},
+			Shape2D::Composite{ref op,ref mut children}                         => { for child in children { child.set_fs(num) } },
 		}
 	}
 	//}}}
@@ -360,7 +360,7 @@ impl Object2D
 	{
 		self.colour = colour.clone();
 
-		if let Shape::Composite{ref op,ref mut children} = self.shape { for child in children { child.set_colour(colour.clone()) } };
+		if let Shape2D::Composite{ref op,ref mut children} = self.shape { for child in children { child.set_colour(colour.clone()) } };
 	}
 	//}}}
 	
@@ -421,6 +421,28 @@ impl Object2D
 	{
 		//ObjectIndexHelper{ anchor: &self.anchors[index], object: self }
 		ObjectIndexHelper{ anchor_name: index, object: self }
+	}
+	//}}}
+}
+//}}}
+//{{{
+impl IsObject for Object2D
+{
+	type Shape  = Shape2D;
+	type Matrix = crate::Matrix2D;
+	//{{{
+	fn new(name: &str, shape : Self::Shape) -> Self
+	{
+		Self{
+			name            : String::from(name),
+			shape           : shape,
+			ref_sys         : Self::Matrix::identity(),
+			colour          : Colour::Unset, 
+			anchors         : HashMap::new(),
+			scad_modifier   : crate::ScadModifier::Unset, 
+			custom_modifier : crate::CustomModifier::Unset, 
+			snap_parent     : false,
+		}
 	}
 	//}}}
 }
@@ -557,92 +579,86 @@ impl ObjectIndexHelper<'_>
 //}}}
 //}}}
 
+//{{{ Create Objects
 
+//// TODO: Measure::Length
+//// TODO: Measure::Angle
+//// TODO: Measure::Triangle
+//{{{
+pub fn square(name: &str, x: f64, y: f64) -> Object2D
+{
+	Object2D::new(name, Shape2D::Square{ x: x,y: y })
+}
+//}}}
+//{{{
+pub fn square_coords(name: &str, x1: f64, y1: f64, x2: f64, y2: f64) -> Object2D
+{
+	let x = (x1 - x2).abs();
+	let y = (y1 - y2).abs();
 
+	let x_shift = if x1<x2 { x1 } else { x2 };
+	let y_shift = if y1<y2 { y1 } else { y2 };
 
+	let mut cube = Object2D::new(name, Shape2D::Square{ x: x,y: y });
+	cube.translate(x/2.0+x_shift, y/2.0+y_shift);
+	cube
+}
+//}}}
+//{{{
+pub fn circle(name: &str, r: f64) -> Object2D
+{
+	Object2D::new(name, Shape2D::Circle{ r: r, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
+}
+//}}}
+//{{{
+//pub fn cylinder(name: &str, h: f64, r1: f64, r2: f64) -> Object2D // Stands along the z-axis, r1 is at the orgigin, r2 is h away from the origin
+//{
+//	Object2D::new(name, Shape2D::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
+//}
+//}}}
+//{{{
+pub fn text(name: &str, text: &str, font: &str, size: i32, spacing: f64) -> Object2D
+{
+	Object2D::new(name, Shape2D::Text{ text: String::from(text), font: String::from(font), size: size, spacing: spacing })
+}
+//}}}
 
 //
-////{{{ Create Objects
-//
-////// TODO: Polyhedron
-////// TODO: text
-////// TODO: Measure::Length
-////// TODO: Measure::Angle
-////// TODO: Measure::Triangle
 ////{{{
-//pub fn cube(name: &str, x: f64, y: f64, z: f64) -> Object
+//pub fn union<T: AsRef<[Object2D]>>(name: &str, children: T) -> Object2D
 //{
-//	Object::new(name, Shape::Cube{ x: x,y: y,z: z })
+//	Object2D::new(name, Shape2D::Composite{ op: BooleanOp::union, children: children.as_ref().to_vec() })
 //}
 ////}}}
 ////{{{
-//pub fn cube_coords(name: &str, x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> Object
+//pub fn difference<T: AsRef<[Object2D]>>(name: &str, children: T) -> Object2D
 //{
-//	let x = (x1 - x2).abs();
-//	let y = (y1 - y2).abs();
-//	let z = (z1 - z2).abs();
-//
-//	let x_shift = if x1<x2 { x1 } else { x2 };
-//	let y_shift = if y1<y2 { y1 } else { y2 };
-//	let z_shift = if z1<z2 { z1 } else { z2 };
-//
-//	let mut cube = Object::new(name, Shape::Cube{ x: x,y: y,z: z });
-//	cube.translate(x/2.0+x_shift, y/2.0+y_shift,z/2.0+z_shift);
-//	cube
+//	Object2D::new(name, Shape2D::Composite{ op: BooleanOp::difference, children: children.as_ref().to_vec() })
 //}
 ////}}}
 ////{{{
-//pub fn sphere(name: &str, r: f64) -> Object
+//pub fn intersection<T: AsRef<[Object2D]>>(name: &str, children: T) -> Object2D
 //{
-//	Object::new(name, Shape::Sphere{ r: r, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
+//	Object2D::new(name, Shape2D::Composite{ op: BooleanOp::intersection, children: children.as_ref().to_vec() })
 //}
 ////}}}
 ////{{{
-//pub fn cylinder(name: &str, h: f64, r1: f64, r2: f64) -> Object // Stands along the z-axis, r1 is at the orgigin, r2 is h away from the origin
+//pub fn hull<T: AsRef<[Object2D]>>(name: &str, children: T) -> Object2D
 //{
-//	Object::new(name, Shape::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
+//	Object2D::new(name, Shape2D::Composite{ op: BooleanOp::hull, children: children.as_ref().to_vec() })
 //}
 ////}}}
 ////{{{
-//pub fn text(name: &str, text: &str, font: &str, size: i32, spacing: f64) -> Object
+//pub fn minkowski<T: AsRef<[Object2D]>>(name: &str, children: T) -> Object2D
 //{
-//	Object::new(name, Shape::Text{ text: String::from(text), font: String::from(font), size: size, spacing: spacing })
+//	Object2D::new(name, Shape2D::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() })
 //}
 ////}}}
 //
-////{{{
-//pub fn union<T: AsRef<[Object]>>(name: &str, children: T) -> Object
-//{
-//	Object::new(name, Shape::Composite{ op: BooleanOp::union, children: children.as_ref().to_vec() })
-//}
-////}}}
-////{{{
-//pub fn difference<T: AsRef<[Object]>>(name: &str, children: T) -> Object
-//{
-//	Object::new(name, Shape::Composite{ op: BooleanOp::difference, children: children.as_ref().to_vec() })
-//}
-////}}}
-////{{{
-//pub fn intersection<T: AsRef<[Object]>>(name: &str, children: T) -> Object
-//{
-//	Object::new(name, Shape::Composite{ op: BooleanOp::intersection, children: children.as_ref().to_vec() })
-//}
-////}}}
-////{{{
-//pub fn hull<T: AsRef<[Object]>>(name: &str, children: T) -> Object
-//{
-//	Object::new(name, Shape::Composite{ op: BooleanOp::hull, children: children.as_ref().to_vec() })
-//}
-////}}}
-////{{{
-//pub fn minkowski<T: AsRef<[Object]>>(name: &str, children: T) -> Object
-//{
-//	Object::new(name, Shape::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() })
-//}
-////}}}
+
 //
 ////{{{
-//pub fn pipe(name: &str, l: f64, r_outer: f64, r_inner: f64) -> Object // Pipe of length l with inner radius r_inner and outer radius r_outer
+//pub fn pipe(name: &str, l: f64, r_outer: f64, r_inner: f64) -> Object2D // Pipe of length l with inner radius r_inner and outer radius r_outer
 //{
 //	let     outer = cylinder(&(String::from("base cylinder for ")+name), l, r_outer, r_outer);
 //	let mut inner = cylinder(&(String::from("base cylinder for ")+name), l+2.0, r_inner, r_inner);
@@ -651,7 +667,7 @@ impl ObjectIndexHelper<'_>
 //}
 ////}}}
 ////{{{
-//pub fn wedge(name: &str, x: f64, y: f64, angle: f64) -> Object
+//pub fn wedge(name: &str, x: f64, y: f64, angle: f64) -> Object2D
 //{
 //	let     lower = cube_coords(&(String::from("base cylinder for ")+name), 0.0, 0.0, 0.0, x, y, 0.000000000000001);
 //	let mut upper = cube_coords(&(String::from("base cylinder for ")+name), 0.0, 0.0, 0.0, x, y, 0.000000000000001);
@@ -660,7 +676,7 @@ impl ObjectIndexHelper<'_>
 //}
 ////}}}
 ////{{{
-//pub fn pipe_cut(name: &str, l: f64, r_outer: f64, r_inner: f64, angle: f64) -> Object
+//pub fn pipe_cut(name: &str, l: f64, r_outer: f64, r_inner: f64, angle: f64) -> Object2D
 //{
 //	let     pipe    = pipe(&(String::from("base pipe for ")+name), l, r_outer, r_inner);
 //	let mut stencil = wedge(&(String::from("wedge for ")+name), 10.0*r_outer+2.0, -l, angle);
@@ -672,7 +688,7 @@ impl ObjectIndexHelper<'_>
 //
 //
 ////{{{
-//pub fn arrow(name: &str, length: f64, width: f64) -> Object
+//pub fn arrow(name: &str, length: f64, width: f64) -> Object2D
 //{
 //	let mut shaft = cylinder(&(String::from(name)+"::arrow::shaft"), 0.9*length,     width, width);
 //	let mut tip   = cylinder(&(String::from(name)+"::arrow::tip"),   0.1*length, 2.0*width,   0.0);
@@ -682,7 +698,7 @@ impl ObjectIndexHelper<'_>
 ////}}}
 //
 ////{{{
-//pub fn coordinate_system(name: &str) -> Object
+//pub fn coordinate_system(name: &str) -> Object2D
 //{
 //	use crate::colour_named;
 //	//{{{
@@ -711,7 +727,7 @@ impl ObjectIndexHelper<'_>
 //}
 ////}}}
 ////{{{
-//pub fn object_origin(name: &str) -> Object
+//pub fn object_origin(name: &str) -> Object2D
 //{
 //	use crate::colour_named;
 //	//{{{
@@ -744,7 +760,7 @@ impl ObjectIndexHelper<'_>
 //}
 ////}}}
 ////{{{
-//pub fn object_anchor(name: &str) -> Object
+//pub fn object_anchor(name: &str) -> Object2D
 //{
 //	use crate::colour_named;
 //	//{{{
@@ -775,8 +791,8 @@ impl ObjectIndexHelper<'_>
 //}
 ////}}}
 //
-//
-//
-////}}}
-//
+
+
+//}}}
+
 

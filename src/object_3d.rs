@@ -1,11 +1,11 @@
 use std::fmt;
 use std::collections::HashMap;
 
-use crate::math::{Is3DObject, HasRefSys3D, Matrix3D};
-use crate::IsSerialisableScope;
+use crate::math::{Is3DObject, HasRefSys3D, Matrix3D, Point2D};
+use crate::{IsSerialisableScope, IsObject, Colour, BooleanOp};
 
 use std::ops::{Index, IndexMut};
-use crate::Colour;
+//use crate::Colour;
 
 //{{{
 impl IsSerialisableScope for crate::math::Matrix3D
@@ -144,39 +144,46 @@ pub mod anchors
 //}}}
 
 //{{{ Define Object3D
-
-//{{{ pub enum BooleanOp
+//
+////{{{ pub enum BooleanOp
+//
+//#[derive(Debug)]
+//#[derive(Clone)]
+//#[allow(non_camel_case_types)] // We use the debug output to create the OpenSCad code. And that code requires the names to be lower-case.
+//pub enum BooleanOp
+//{
+//	union,
+//	difference,
+//	intersection,
+//	hull,
+//	minkowski,
+//}
+////}}}
+//
+//{{{ pub enum Shape3D
 
 #[derive(Debug)]
 #[derive(Clone)]
-#[allow(non_camel_case_types)] // We use the debug output to create the OpenSCad code. And that code requires the names to be lower-case.
-pub enum BooleanOp
+pub enum Shape3D
 {
-	union,
-	difference,
-	intersection,
-	hull,
-	minkowski,
-}
-//}}}
+	// 2D
+	Square    { x: f64, y: f64},
+	Circle    { r: f64, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64> },
+	Polygon   { points: Vec<Point2D>, paths: Vec<Vec<i32>>, convexity: i32, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64> },
+	Text      { text: String, font: String, size: i32, spacing: f64 },
 
-//{{{ pub enum Shape
 
-#[derive(Debug)]
-#[derive(Clone)]
-pub enum Shape
-{
+	// 3D
 	Cube      { x: f64, y: f64, z: f64},
 	Sphere    { r: f64, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64> },
 	Cylinder  { h: f64, r1 : f64, r2 : f64, face_angle  : Option<f64>, face_size   : Option<f64>, face_number : Option<i32> },
 	// TODO: Polyhedron
-	Text      { text: String, font: String, size: i32, spacing: f64 },
 
 	Composite { op: BooleanOp, children: Vec<Object3D> },
 }
 
 //{{{
-impl Shape
+impl Shape3D
 {
 	//{{{
 	fn serialise(&self, indentation : usize) -> String
@@ -186,13 +193,60 @@ impl Shape
 		match &self
 		{
 			//{{{
-			Shape::Cube{x,y,z}                                        =>
+			Shape3D::Square{x,y}                                        =>
+			{
+				tabs + "square([" + &x.to_string() + ", " + &y.to_string() + "], center=true);"
+			}
+			//}}}
+			//{{{
+			Shape3D::Circle{r,face_number,face_angle,face_size}         =>
+			{
+				let fan = if let Some(x) = face_number { String::from(", $fn=") + &x.to_string() } else { String::from("") };
+				let faa = if let Some(x) = face_angle  { String::from(", $fa=") + &x.to_string() } else { String::from("") };
+				let fas = if let Some(x) = face_size   { String::from(", $fs=") + &x.to_string() } else { String::from("") };
+
+				tabs + "circle( r=" + &r.to_string() + &fan + &faa + &fas + ");"
+			}
+			//}}}
+			//{{{
+			Shape3D::Polygon{points, paths, convexity,face_number,face_angle,face_size} =>
+			{
+				let mut retval = tabs + "polygon( points=[";
+				for point in points
+				{
+					retval += &point.to_string();
+					retval += ", ";
+				}
+				retval += "], paths=[";
+				for path in paths
+				{
+					//retval += path.to_string();
+					//retval += ", ";
+
+					retval+=&(String::from("[") + &path[0].to_string() + ", " + &path[1].to_string() + ", " + &path[2].to_string() + "],");
+				}
+				retval += "], convexity=";
+				retval += &convexity.to_string();
+				retval += ");\n";
+
+				retval
+			}
+			//}}}
+			//{{{
+			Shape3D::Text{ref text, ref font, size, spacing} =>
+			{
+				format!("{0}text(\"{1}\", font=\"{2}\", spacing={3}, size={4});", tabs, &text, &font, spacing, size)
+			}
+			//}}}
+
+			//{{{
+			Shape3D::Cube{x,y,z}                                        =>
 			{
 				tabs + "cube([" + &x.to_string() + ", " + &y.to_string() + ", " + &z.to_string() + "], center=true);"
 			}
 			//}}}
 			//{{{
-			Shape::Sphere{r,face_number,face_angle,face_size}         =>
+			Shape3D::Sphere{r,face_number,face_angle,face_size}         =>
 			{
 				let fan = if let Some(x) = face_number { String::from(", $fn=") + &x.to_string() } else { String::from("") };
 				let faa = if let Some(x) = face_angle  { String::from(", $fa=") + &x.to_string() } else { String::from("") };
@@ -202,7 +256,7 @@ impl Shape
 			}
 			//}}}
 			//{{{
-			Shape::Cylinder{h,r1,r2,face_number,face_angle,face_size} =>
+			Shape3D::Cylinder{h,r1,r2,face_number,face_angle,face_size} =>
 			{
 				let fan = if let Some(x) = face_number { String::from(", $fn=") + &x.to_string() } else { String::from("") };
 				let faa = if let Some(x) = face_angle  { String::from(", $fa=") + &x.to_string() } else { String::from("") };
@@ -212,13 +266,7 @@ impl Shape
 			}
 			//}}}
 			//{{{
-			Shape::Text{ref text, ref font, size, spacing} =>
-			{
-				format!("{0}text(\"{1}\", font=\"{2}\", spacing={3}, size={4});", tabs, &text, &font, spacing, size)
-			}
-			//}}}
-			//{{{
-			Shape::Composite{op, children} =>
+			Shape3D::Composite{op, children} =>
 			{
 				//retval = format!("{0}{1:?}()\n{0}{{\n{2:>indent$}\n{3:>indent$}\n{0} }};", tabs, &op, c1, c2, indent=indent);
 				let mut retval = format!("{0}{1:?}()\n{0}{{\n", tabs, &op);
@@ -245,7 +293,7 @@ impl Shape
 pub struct Object3D
 {
 	pub name        : String,
-	pub shape       : Shape,
+	pub shape       : Shape3D,
 	pub ref_sys     : crate::Matrix3D,
 	pub colour      : Colour,
 	pub anchors     : HashMap<String, anchors::Anchor>,
@@ -266,7 +314,7 @@ impl Object3D
 	//}}}
 
 	//{{{
-	fn new(name: &str, shape : Shape) -> Self
+	fn new(name: &str, shape : Shape3D) -> Self
 	{
 		Self{
 			name            : String::from(name),
@@ -280,6 +328,28 @@ impl Object3D
 		}
 	}
 	//}}}
+	
+	////{{{
+	//fn new_composite_shape(shape : Shape3D) -> Self
+	//{
+	//	Shape::Composite{ op: BooleanOp::union, children: children.as_ref().to_vec() }
+
+
+
+
+
+	//	//Self{
+	//	//	name            : String::from(name),
+	//	//	shape           : shape,
+	//	//	ref_sys         : crate::Matrix3D::identity(),
+	//	//	colour          : Colour::Unset, 
+	//	//	anchors         : HashMap::new(),
+	//	//	scad_modifier   : crate::ScadModifier::Unset, 
+	//	//	custom_modifier : crate::CustomModifier::Unset, 
+	//	//	snap_parent     : false,
+	//	//}
+	//}
+	////}}}
 
 
 	//{{{ Helpers
@@ -295,47 +365,59 @@ impl Object3D
 	{
 		//{{{ Commeted
 		//
-		//if let Shape::Sphere{r,ref mut face_number,face_angle,face_size} = self.shape {
+		//if let Shape3D::Sphere{r,ref mut face_number,face_angle,face_size} = self.shape {
 		//	*face_number = Some(num);
 		//}
-		//if let Shape::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size} = self.shape {
+		//if let Shape3D::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size} = self.shape {
 		//	*face_number = Some(num);
 		//}
 		//}}}
 
-		match self.shape
+		match &mut self.shape
 		{
-			Shape::Cube{x,y,z}                                                => {},
-			Shape::Sphere{r,ref mut face_number,face_angle,face_size}         => *face_number = Some(num),
-			Shape::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size} => *face_number = Some(num),
-			Shape::Text{ref text, ref font, size, spacing}                    => {},
-			Shape::Composite{ref op,ref mut children}                         => { for child in children { child.set_fn(num) } },
+			Shape3D::Square{x,y}                                                                => {},
+			Shape3D::Circle{r,ref mut face_number,face_angle,face_size}                         => *face_number = Some(num),
+			Shape3D::Polygon{points, paths, convexity,ref mut face_number,face_angle,face_size} => *face_number = Some(num),
+			Shape3D::Text{ref text, ref font, size, spacing}                                    => {},
+
+			Shape3D::Cube{x,y,z}                                                                => {},
+			Shape3D::Sphere{r,ref mut face_number,face_angle,face_size}                         => *face_number = Some(num),
+			Shape3D::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size}                 => *face_number = Some(num),
+			Shape3D::Composite{ref op,ref mut children}                                         => { for child in children { child.set_fn(num) } },
 		}
 	}
 	//}}}
 	//{{{
 	pub fn set_fa(&mut self, num : f64)
 	{
-		match self.shape
+		match &mut self.shape
 		{
-			Shape::Cube{x,y,z}                                                => {},
-			Shape::Sphere{r,face_number,ref mut face_angle,face_size}         => *face_angle = Some(num),
-			Shape::Cylinder{h,r1,r2,face_number,ref mut face_angle,face_size} => *face_angle = Some(num),
-			Shape::Text{ref text, ref font, size, spacing}                    => {},
-			Shape::Composite{ref op,ref mut children}                         => { for child in children { child.set_fa(num) } },
+			Shape3D::Square{x,y}                                                                => {},
+			Shape3D::Circle{r,face_number,ref mut face_angle,face_size}                         => *face_angle = Some(num),
+			Shape3D::Polygon{points, paths, convexity,face_number,ref mut face_angle,face_size} => *face_angle = Some(num),
+			Shape3D::Text{ref text, ref font, size, spacing}                                    => {},
+
+			Shape3D::Cube{x,y,z}                                                                => {},
+			Shape3D::Sphere{r,face_number,ref mut face_angle,face_size}                         => *face_angle = Some(num),
+			Shape3D::Cylinder{h,r1,r2,face_number,ref mut face_angle,face_size}                 => *face_angle = Some(num),
+			Shape3D::Composite{ref op,ref mut children}                                         => { for child in children { child.set_fa(num) } },
 		}
 	}
 	//}}}
 	//{{{
 	pub fn set_fs(&mut self, num : f64)
 	{
-		match self.shape
+		match &mut self.shape
 		{
-			Shape::Cube{x,y,z}                                                => {},
-			Shape::Sphere{r,face_number,face_angle,ref mut face_size}         => *face_size = Some(num),
-			Shape::Cylinder{h,r1,r2,face_number,face_angle,ref mut face_size} => *face_size = Some(num),
-			Shape::Text{ref text, ref font, size, spacing}                    => {},
-			Shape::Composite{ref op,ref mut children}                         => { for child in children { child.set_fs(num) } },
+			Shape3D::Square{x,y}                                                                => {},
+			Shape3D::Circle{r,face_number,face_angle,ref mut face_size}                         => *face_size = Some(num),
+			Shape3D::Polygon{points, paths, convexity,face_number,face_angle,ref mut face_size} => *face_size = Some(num),
+			Shape3D::Text{ref text, ref font, size, spacing}									=> {},
+
+			Shape3D::Cube{x,y,z}                                                        		=> {},
+			Shape3D::Sphere{r,face_number,face_angle,ref mut face_size}                 		=> *face_size = Some(num),
+			Shape3D::Cylinder{h,r1,r2,face_number,face_angle,ref mut face_size}         		=> *face_size = Some(num),
+			Shape3D::Composite{ref op,ref mut children}                                 		=> { for child in children { child.set_fs(num) } },
 		}
 	}
 	//}}}
@@ -344,7 +426,7 @@ impl Object3D
 	{
 		self.colour = colour.clone();
 
-		if let Shape::Composite{ref op,ref mut children} = self.shape { for child in children { child.set_colour(colour.clone()) } };
+		if let Shape3D::Composite{ref op,ref mut children} = self.shape { for child in children { child.set_colour(colour.clone()) } };
 	}
 	//}}}
 	
@@ -404,6 +486,28 @@ impl Object3D
 	{
 		//Object3DIndexHelper{ anchor: &self.anchors[index], object: self }
 		Object3DIndexHelper{ anchor_name: index, object: self }
+	}
+	//}}}
+}
+//}}}
+//{{{
+impl IsObject for Object3D
+{
+	type Shape  = Shape3D;
+	type Matrix = crate::Matrix3D;
+	//{{{
+	fn new(name: &str, shape : Self::Shape) -> Self
+	{
+		Self{
+			name            : String::from(name),
+			shape           : shape,
+			ref_sys         : Self::Matrix::identity(),
+			colour          : Colour::Unset, 
+			anchors         : HashMap::new(),
+			scad_modifier   : crate::ScadModifier::Unset, 
+			custom_modifier : crate::CustomModifier::Unset, 
+			snap_parent     : false,
+		}
 	}
 	//}}}
 }
@@ -562,15 +666,75 @@ impl Object3DIndexHelper<'_>
 
 //{{{ Create Object3Ds
 
-//// TODO: Polyhedron
 //// TODO: text
 //// TODO: Measure::Length
 //// TODO: Measure::Angle
 //// TODO: Measure::Triangle
+
+
+
+//{{{
+pub fn square(name: &str, x: f64, y: f64) -> Object3D
+{
+	Object3D::new(name, Shape3D::Square{ x: x,y: y })
+}
+//}}}
+//{{{
+pub fn square_coords(name: &str, x1: f64, y1: f64, x2: f64, y2: f64) -> Object3D
+{
+	let x = (x1 - x2).abs();
+	let y = (y1 - y2).abs();
+
+	let x_shift = if x1<x2 { x1 } else { x2 };
+	let y_shift = if y1<y2 { y1 } else { y2 };
+
+	let mut cube = Object3D::new(name, Shape3D::Square{ x: x,y: y });
+	cube.translate(x/2.0+x_shift, y/2.0+y_shift, 0.0);
+	cube
+}
+//}}}
+//{{{
+pub fn circle(name: &str, r: f64) -> Object3D
+{
+	Object3D::new(name, Shape3D::Circle{ r: r, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
+}
+//}}}
+//{{{
+//pub fn polygon<P: AsRef<[Point2D]>>(name: &str, points: P, paths) -> Object3D
+
+//pub fn polygon<Points: AsRef<[Point2D]>, Paths: AsRef<[Row]>, Row: AsRef<[i32]>>(name: &str, points: Points, paths: Paths) -> Object3D
+pub fn polygon<Points: AsRef<[Coords]>, Coords: AsRef<[f64]>, Paths: AsRef<[Path]>, Path: AsRef<[i32]>>(name: &str, points: Points, paths: Paths) -> Object3D
+{
+	let mut points_vec = vec![];
+
+	for point in points.as_ref()
+	{
+		let point : Point2D = crate::math::Vector2D([point.as_ref()[0], point.as_ref()[1], 1.0]);
+		points_vec.push(point);
+	}
+
+	let mut paths_vec = vec![];
+
+	for path in paths.as_ref()
+	{
+		paths_vec.push(path.as_ref().to_vec());
+	}
+
+	Object3D::new(name, Shape3D::Polygon{points: points_vec, paths: paths_vec, convexity: 10, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
+}
+//}}}
+//{{{
+pub fn text(name: &str, text: &str, font: &str, size: i32, spacing: f64) -> Object3D
+{
+	Object3D::new(name, Shape3D::Text{ text: String::from(text), font: String::from(font), size: size, spacing: spacing })
+}
+//}}}
+
+
 //{{{
 pub fn cube(name: &str, x: f64, y: f64, z: f64) -> Object3D
 {
-	Object3D::new(name, Shape::Cube{ x: x,y: y,z: z })
+	Object3D::new(name, Shape3D::Cube{ x: x,y: y,z: z })
 }
 //}}}
 //{{{
@@ -584,58 +748,53 @@ pub fn cube_coords(name: &str, x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: 
 	let y_shift = if y1<y2 { y1 } else { y2 };
 	let z_shift = if z1<z2 { z1 } else { z2 };
 
-	let mut cube = Object3D::new(name, Shape::Cube{ x: x,y: y,z: z });
-	cube.translate(x/2.0+x_shift, y/2.0+y_shift,z/2.0+z_shift);
+	let mut cube = Object3D::new(name, Shape3D::Cube{ x: x,y: y,z: z });
+	cube.translate(x/2.0+x_shift, y/2.0+y_shift, z/2.0+z_shift);
 	cube
 }
 //}}}
 //{{{
 pub fn sphere(name: &str, r: f64) -> Object3D
 {
-	Object3D::new(name, Shape::Sphere{ r: r, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
+	Object3D::new(name, Shape3D::Sphere{ r: r, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
 //}}}
 //{{{
 pub fn cylinder(name: &str, h: f64, r1: f64, r2: f64) -> Object3D // Stands along the z-axis, r1 is at the orgigin, r2 is h away from the origin
 {
-	Object3D::new(name, Shape::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
+	Object3D::new(name, Shape3D::Cylinder{ h: h, r1: r1, r2: r2, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
 //}}}
-//{{{
-pub fn text(name: &str, text: &str, font: &str, size: i32, spacing: f64) -> Object3D
-{
-	Object3D::new(name, Shape::Text{ text: String::from(text), font: String::from(font), size: size, spacing: spacing })
-}
-//}}}
+//// TODO: Polyhedron
 
 //{{{
 pub fn union<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 {
-	Object3D::new(name, Shape::Composite{ op: BooleanOp::union, children: children.as_ref().to_vec() })
+	Object3D::new(name, Shape3D::Composite{ op: BooleanOp::union, children: children.as_ref().to_vec() })
 }
 //}}}
 //{{{
 pub fn difference<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 {
-	Object3D::new(name, Shape::Composite{ op: BooleanOp::difference, children: children.as_ref().to_vec() })
+	Object3D::new(name, Shape3D::Composite{ op: BooleanOp::difference, children: children.as_ref().to_vec() })
 }
 //}}}
 //{{{
 pub fn intersection<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 {
-	Object3D::new(name, Shape::Composite{ op: BooleanOp::intersection, children: children.as_ref().to_vec() })
+	Object3D::new(name, Shape3D::Composite{ op: BooleanOp::intersection, children: children.as_ref().to_vec() })
 }
 //}}}
 //{{{
 pub fn hull<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 {
-	Object3D::new(name, Shape::Composite{ op: BooleanOp::hull, children: children.as_ref().to_vec() })
+	Object3D::new(name, Shape3D::Composite{ op: BooleanOp::hull, children: children.as_ref().to_vec() })
 }
 //}}}
 //{{{
 pub fn minkowski<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 {
-	Object3D::new(name, Shape::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() })
+	Object3D::new(name, Shape3D::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() })
 }
 //}}}
 

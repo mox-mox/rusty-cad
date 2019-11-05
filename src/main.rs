@@ -528,148 +528,171 @@ pub fn sprenger_block_3511100355(name: &str) -> Object3D
 fn main()
 {
 
-
-
-	////{{{ Print all the constants
-
-	//eprintln!("MATTRESS_LENGTH = {}", MATTRESS_LENGTH);
-	//eprintln!("STORAGE_LENGTH  = {}", STORAGE_LENGTH );
-	//eprintln!("MATTRESw_WIDTH  = {}", MATTRESS_WIDTH );
-	//eprintln!("BED_LENGTH      = {}", BED_LENGTH     );
-	//eprintln!("BED_WIDTH       = {}", BED_WIDTH      );
-	//eprintln!("FRAME_HEIGHT    = {}", FRAME_HEIGHT   );
-	//eprintln!("FRAME_THICKNESS     = {}", FRAME_THICKNESS    );
-	////}}}
-
 	//{{{
-	let mut sideboard_l = sideboard("Sideboard_L");
-	sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
-	sideboard_l.set_colour(colour_named("red"));
-	sideboard_l.set_show_anchors();
-	println!("{}", sideboard_l);
-	//}}}
-
-	//{{{
-	let mut sideboard_r = sideboard_l.clone();
-	sideboard_r.name = String::from("Sideboard_R");
-	sideboard_r.scale_x(-1.0);
-	println!("{}", sideboard_r);
-	//}}}
-
-	//{{{
-	let mut headboard = headboard("Headboard");
-	headboard.translate_y(BED_LENGTH-100.0-1.5*FRAME_THICKNESS);
-	headboard.set_colour(colour_named("green"));
-	println!("{}", headboard);
-	//}}}
-
-	//{{{
-	let mut footboard = footboard("Footboard");
-	footboard.translate_y(-(200.0+FRAME_THICKNESS)/2.0);
-	footboard.set_colour(colour_named("green"));
-	println!("{}", footboard);
-	//}}}
-
-	//{{{
-	let mut bulkhead = bulkhead("Bulkhead");
-	bulkhead.translate_y((MATTRESS_LENGTH+FRAME_THICKNESS)/2.0);
-	bulkhead.set_colour(colour_named("yellow"));
-	println!("{}", bulkhead);
-	//}}}
-
-	//{{{
-	let mut bottom_cover = cube_coords("Bottom cover",
-		-(0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH),
-		HEAD_END+COVER_GROOVE_DEPTH,
-		BOTTOM_COVER_BOTTOM,
-
-		0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH,
-		0.5*MATTRESS_LENGTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
-		BOTTOM_COVER_BOTTOM+COVER_THICKNESS,
-		);
-	bottom_cover.set_colour(colour_named("blue"));
-	println!("{}", bottom_cover);
-	//}}}
-
-	//{{{
-	let mut middle_cover_l = cube_coords("Bottom cover",
-		-(0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH),
-		HEAD_END+COVER_GROOVE_DEPTH,
-		MIDDLE_COVER_BOTTOM,
-
-		-0.5*MOTOR_WIDTH-FRAME_THICKNESS+COVER_GROOVE_DEPTH,
-		0.5*MATTRESS_LENGTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
-		MIDDLE_COVER_BOTTOM+COVER_THICKNESS,
-		);
-	middle_cover_l.set_colour(colour_named("blue"));
-	println!("{}", middle_cover_l);
-	//}}}
-
-	//{{{
-	let mut middle_cover_r = cube_coords("Bottom cover",
-		0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH,
-		HEAD_END+COVER_GROOVE_DEPTH,
-		MIDDLE_COVER_BOTTOM,
-
-		0.5*MOTOR_WIDTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
-		0.5*MATTRESS_LENGTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
-		MIDDLE_COVER_BOTTOM+COVER_THICKNESS,
-		);
-	middle_cover_r.set_colour(colour_named("blue"));
-	println!("{}", middle_cover_r);
-	//}}}
-
-	//{{{
-	let mut bulkhead_spacer_l = bulkhead_spacer("Bulkhead spacer L");
-	bulkhead_spacer_l.translate_x(-0.5*(MOTOR_WIDTH+FRAME_THICKNESS));
-	println!("{}", bulkhead_spacer_l);
-	//}}}
-
-	//{{{
-	let mut bulkhead_spacer_r = bulkhead_spacer_l.clone();
-	bulkhead_spacer_r.name = String::from("Bulkhead spacer R");
-	bulkhead_spacer_r.scale_x(-1.0);
-	println!("{}", bulkhead_spacer_r);
-	//}}}
-
-	//{{{ Slat Frame
-
-	for i in 0..FRAME_SLAT_COUNT
-	{
-		let mut slat = frame_slat(&format!("Frame slat {}", i));
-		slat.translate(0.0, -0.5*(MATTRESS_LENGTH-FRAME_SLAT_WIDTH)+((2*i) as f64)*FRAME_SLAT_SPACING, -0.5*(FRAME_HEIGHT-FRAME_SLAT_THICKNESS));
-		println!("{}", slat);
-	}
-
-
-
-
-	//}}}
-
-	//{{{
-	let mut roll = small_roll("tester");
-	roll.anchor("Contact").snap_to(&mut sideboard_l.anchor("left"));
-	println!("{}", roll);
+	let mut poly = polygon("tester", [[0.0, 0.0], [0.0, 20.0], [20.0, 0.0], [5.0, 5.0], [15.0, 5.0], [5.0, 15.0]], [[0, 1, 2], [3, 4, 5]]);
+	println!("{}", poly);
 	//}}}
 
 
-	//{{{
-	let mut block = sprenger_block_3511100355("tester");
-	//println!("{}", block);
-	//}}}
-	////{{{
-	//let mut pipe = pipe("tester", 3.0, 2.0, 1.0);
-	//pipe.set_fn(20);
-	//println!("{}", pipe);
-	////}}}
-	////{{{
-	//let mut wedge = wedge("tester", 3.0, 2.0, 45.0);
-	//println!("{}", wedge);
-	////}}}
 
-	//{{{
-	let mut pipe = pipe_cut("tester", 3.0, 2.0, 1.0, 185.0);
-	pipe.set_fn(50);
-	println!("{}", pipe);
-	//}}}
+
+
+//
+//	//{{{
+//	let mut square = square("tester", 5.0, 2.0);
+//	let mut circle = circle("tester", 1.0);
+//	circle.set_fn(20);
+//	let mut test   = difference("diff", [square, circle]);
+//	test.set_debug();
+//	let mut cube   = cube_coords("cube", 0.0, 0.0, 0.0,  2.0, 2.0, 2.0);
+//	let mut test2  = difference("erence", [cube, test]);
+//	//roll.anchor("Contact").snap_to(&mut sideboard_l.anchor("left"));
+//	println!("{}", test2);
+//	//}}}
+//
+
+//
+//	////{{{ Print all the constants
+//
+//	//eprintln!("MATTRESS_LENGTH = {}", MATTRESS_LENGTH);
+//	//eprintln!("STORAGE_LENGTH  = {}", STORAGE_LENGTH );
+//	//eprintln!("MATTRESw_WIDTH  = {}", MATTRESS_WIDTH );
+//	//eprintln!("BED_LENGTH      = {}", BED_LENGTH     );
+//	//eprintln!("BED_WIDTH       = {}", BED_WIDTH      );
+//	//eprintln!("FRAME_HEIGHT    = {}", FRAME_HEIGHT   );
+//	//eprintln!("FRAME_THICKNESS     = {}", FRAME_THICKNESS    );
+//	////}}}
+//
+//	//{{{
+//	let mut sideboard_l = sideboard("Sideboard_L");
+//	sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
+//	sideboard_l.set_colour(colour_named("red"));
+//	sideboard_l.set_show_anchors();
+//	println!("{}", sideboard_l);
+//	//}}}
+//
+//	//{{{
+//	let mut sideboard_r = sideboard_l.clone();
+//	sideboard_r.name = String::from("Sideboard_R");
+//	sideboard_r.scale_x(-1.0);
+//	println!("{}", sideboard_r);
+//	//}}}
+//
+//	//{{{
+//	let mut headboard = headboard("Headboard");
+//	headboard.translate_y(BED_LENGTH-100.0-1.5*FRAME_THICKNESS);
+//	headboard.set_colour(colour_named("green"));
+//	println!("{}", headboard);
+//	//}}}
+//
+//	//{{{
+//	let mut footboard = footboard("Footboard");
+//	footboard.translate_y(-(200.0+FRAME_THICKNESS)/2.0);
+//	footboard.set_colour(colour_named("green"));
+//	println!("{}", footboard);
+//	//}}}
+//
+//	//{{{
+//	let mut bulkhead = bulkhead("Bulkhead");
+//	bulkhead.translate_y((MATTRESS_LENGTH+FRAME_THICKNESS)/2.0);
+//	bulkhead.set_colour(colour_named("yellow"));
+//	println!("{}", bulkhead);
+//	//}}}
+//
+//	//{{{
+//	let mut bottom_cover = cube_coords("Bottom cover",
+//		-(0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH),
+//		HEAD_END+COVER_GROOVE_DEPTH,
+//		BOTTOM_COVER_BOTTOM,
+//
+//		0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH,
+//		0.5*MATTRESS_LENGTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
+//		BOTTOM_COVER_BOTTOM+COVER_THICKNESS,
+//		);
+//	bottom_cover.set_colour(colour_named("blue"));
+//	println!("{}", bottom_cover);
+//	//}}}
+//
+//	//{{{
+//	let mut middle_cover_l = cube_coords("Bottom cover",
+//		-(0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH),
+//		HEAD_END+COVER_GROOVE_DEPTH,
+//		MIDDLE_COVER_BOTTOM,
+//
+//		-0.5*MOTOR_WIDTH-FRAME_THICKNESS+COVER_GROOVE_DEPTH,
+//		0.5*MATTRESS_LENGTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
+//		MIDDLE_COVER_BOTTOM+COVER_THICKNESS,
+//		);
+//	middle_cover_l.set_colour(colour_named("blue"));
+//	println!("{}", middle_cover_l);
+//	//}}}
+//
+//	//{{{
+//	let mut middle_cover_r = cube_coords("Bottom cover",
+//		0.5*MATTRESS_WIDTH+COVER_GROOVE_DEPTH,
+//		HEAD_END+COVER_GROOVE_DEPTH,
+//		MIDDLE_COVER_BOTTOM,
+//
+//		0.5*MOTOR_WIDTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
+//		0.5*MATTRESS_LENGTH+FRAME_THICKNESS-COVER_GROOVE_DEPTH,
+//		MIDDLE_COVER_BOTTOM+COVER_THICKNESS,
+//		);
+//	middle_cover_r.set_colour(colour_named("blue"));
+//	println!("{}", middle_cover_r);
+//	//}}}
+//
+//	//{{{
+//	let mut bulkhead_spacer_l = bulkhead_spacer("Bulkhead spacer L");
+//	bulkhead_spacer_l.translate_x(-0.5*(MOTOR_WIDTH+FRAME_THICKNESS));
+//	println!("{}", bulkhead_spacer_l);
+//	//}}}
+//
+//	//{{{
+//	let mut bulkhead_spacer_r = bulkhead_spacer_l.clone();
+//	bulkhead_spacer_r.name = String::from("Bulkhead spacer R");
+//	bulkhead_spacer_r.scale_x(-1.0);
+//	println!("{}", bulkhead_spacer_r);
+//	//}}}
+//
+//	//{{{ Slat Frame
+//
+//	for i in 0..FRAME_SLAT_COUNT
+//	{
+//		let mut slat = frame_slat(&format!("Frame slat {}", i));
+//		slat.translate(0.0, -0.5*(MATTRESS_LENGTH-FRAME_SLAT_WIDTH)+((2*i) as f64)*FRAME_SLAT_SPACING, -0.5*(FRAME_HEIGHT-FRAME_SLAT_THICKNESS));
+//		println!("{}", slat);
+//	}
+//
+//
+//
+//
+//	//}}}
+//
+//	//{{{
+//	let mut roll = small_roll("tester");
+//	roll.anchor("Contact").snap_to(&mut sideboard_l.anchor("left"));
+//	println!("{}", roll);
+//	//}}}
+//
+//
+//	//{{{
+//	let mut block = sprenger_block_3511100355("tester");
+//	//println!("{}", block);
+//	//}}}
+//	////{{{
+//	//let mut pipe = pipe("tester", 3.0, 2.0, 1.0);
+//	//pipe.set_fn(20);
+//	//println!("{}", pipe);
+//	////}}}
+//	////{{{
+//	//let mut wedge = wedge("tester", 3.0, 2.0, 45.0);
+//	//println!("{}", wedge);
+//	////}}}
+//
+//	//{{{
+//	let mut pipe = pipe_cut("tester", 3.0, 2.0, 1.0, 185.0);
+//	pipe.set_fn(50);
+//	println!("{}", pipe);
+//	//}}}
+//
 }

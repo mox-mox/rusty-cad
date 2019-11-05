@@ -64,7 +64,8 @@ impl AsRef<M2D> for Matrix2D
 }
 //}}}
 //{{{
-impl AsMut<M2D> for Matrix2D {
+impl AsMut<M2D> for Matrix2D
+{
     fn as_mut(&mut self) -> &mut M2D {
         &mut self.0
     }
@@ -418,7 +419,7 @@ impl Matrix2D
 //{{{ pub struct Vector2D
 
 #[derive(Clone, Copy, Debug)]
-pub struct Vector2D(V2D);
+pub struct Vector2D(pub V2D);
 pub type Point2D=Vector2D; 
 pub type V2D = vecmath::Vector3<f64>;
 //{{{
@@ -464,7 +465,8 @@ impl AsRef<V2D> for Vector2D
 }
 //}}}
 //{{{
-impl AsMut<V2D> for Vector2D {
+impl AsMut<V2D> for Vector2D
+{
     fn as_mut(&mut self) -> &mut V2D {
         &mut self.0
     }
@@ -477,7 +479,8 @@ impl fmt::Display for Vector2D
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
 	{
 		let indentation = if let Some(width) = f.width() { width } else { 0 as usize };
-		if !f.alternate() {
+		if f.alternate()
+		{
 			write!(f, "{0}[{1:16.10?}, {2:16.10?}, {3:16.10?}]", "\t".repeat(indentation as usize), self[0], self[1], self[2])
 		} else {
 			write!(f, "{0}[{1:16.10?}, {2:16.10?}]",             "\t".repeat(indentation as usize), self[0], self[1])
