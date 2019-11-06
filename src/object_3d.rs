@@ -172,6 +172,9 @@ pub enum Shape3D
 	Polygon   { points: Vec<Point2D>, paths: Vec<Vec<i32>>, convexity: i32, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64> },
 	Text      { text: String, font: String, size: i32, spacing: f64 },
 
+	// TODO: Make slices optional
+	Lextrude  { height: f64, center: bool, convexity: i32, twist: f64, slices: i32, scale: Vec<f64>, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64>, child: Box<Object3D> },
+	//Rextrude  { angle: f64, convexity: i32, face_number: Option<i32>, face_angle: Option<f64>, face_size: Option<f64>, child: Object3D },
 
 	// 3D
 	Cube      { x: f64, y: f64, z: f64},
@@ -237,6 +240,23 @@ impl Shape3D
 			{
 				format!("{0}text(\"{1}\", font=\"{2}\", spacing={3}, size={4});", tabs, &text, &font, spacing, size)
 			}
+			//}}}
+			Shape3D::Lextrude{ height, center, convexity, twist, slices, scale, face_number, face_angle, face_size, child } =>
+			{
+				let fan = if let Some(x) = face_number { String::from(", $fn=") + &x.to_string() } else { String::from("") };
+				let scale_string = match scale.len()
+				{
+					0 => String::from("1.0"),
+					1 => scale[0].to_string(),
+					3 => String::from("[") + &scale[0].to_string() + ", " + &scale[1].to_string() + ", " + &scale[2].to_string() + "]",
+					_ => String::from("1")
+				};
+
+				format!("{0}linear_extrude(height = {1}, center = {2}, convexity = {3}, twist = {4}, slices = {5}, scale = {6} {7}) {8}",
+					tabs, height, center, convexity, twist, slices, scale_string, fan, child)
+			}
+			//{{{
+
 			//}}}
 
 			//{{{
@@ -380,6 +400,8 @@ impl Object3D
 			Shape3D::Polygon{points, paths, convexity,ref mut face_number,face_angle,face_size} => *face_number = Some(num),
 			Shape3D::Text{ref text, ref font, size, spacing}                                    => {},
 
+			Shape3D::Lextrude{ height, center, convexity, twist, slices, scale, face_number, face_angle, face_size, child } => child.set_fn(num),
+
 			Shape3D::Cube{x,y,z}                                                                => {},
 			Shape3D::Sphere{r,ref mut face_number,face_angle,face_size}                         => *face_number = Some(num),
 			Shape3D::Cylinder{h,r1,r2,ref mut face_number,face_angle,face_size}                 => *face_number = Some(num),
@@ -397,6 +419,8 @@ impl Object3D
 			Shape3D::Polygon{points, paths, convexity,face_number,ref mut face_angle,face_size} => *face_angle = Some(num),
 			Shape3D::Text{ref text, ref font, size, spacing}                                    => {},
 
+			Shape3D::Lextrude{ height, center, convexity, twist, slices, scale, face_number, face_angle, face_size, child } => child.set_fa(num),
+
 			Shape3D::Cube{x,y,z}                                                                => {},
 			Shape3D::Sphere{r,face_number,ref mut face_angle,face_size}                         => *face_angle = Some(num),
 			Shape3D::Cylinder{h,r1,r2,face_number,ref mut face_angle,face_size}                 => *face_angle = Some(num),
@@ -413,6 +437,8 @@ impl Object3D
 			Shape3D::Circle{r,face_number,face_angle,ref mut face_size}                         => *face_size = Some(num),
 			Shape3D::Polygon{points, paths, convexity,face_number,face_angle,ref mut face_size} => *face_size = Some(num),
 			Shape3D::Text{ref text, ref font, size, spacing}									=> {},
+
+			Shape3D::Lextrude{ height, center, convexity, twist, slices, scale, face_number, face_angle, face_size, child } => child.set_fs(num),
 
 			Shape3D::Cube{x,y,z}                                                        		=> {},
 			Shape3D::Sphere{r,face_number,face_angle,ref mut face_size}                 		=> *face_size = Some(num),
@@ -488,6 +514,19 @@ impl Object3D
 		Object3DIndexHelper{ anchor_name: index, object: self }
 	}
 	//}}}
+
+	// TODO: Make sure this is only called on 2D objects
+	pub fn linear_extrude(&mut self, height: f64)
+	{
+		let mut child = self.clone();
+		child.name = String::from("Base for ")+&self.name;
+
+		self.anchors.clear();
+		self.shape = Shape3D::Lextrude{height: height, center: false, convexity: 10, twist: 0.0, slices: 0, scale: [].to_vec(), face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64>, child: Box::new(self.clone())};
+	}
+
+
+
 }
 //}}}
 //{{{
