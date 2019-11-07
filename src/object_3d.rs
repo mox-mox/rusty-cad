@@ -2,7 +2,8 @@ use std::fmt;
 use std::collections::HashMap;
 
 use crate::math::{Is3DObject, HasRefSys3D, Matrix3D, Point2D};
-use crate::{IsSerialisableScope, IsObject, Colour, BooleanOp};
+//use crate::{IsSerialisableScope, IsObject, Colour, BooleanOp};
+use crate::{IsSerialisableScope, IsObject, Colour};
 
 use std::ops::{Index, IndexMut};
 //use crate::Colour;
@@ -144,22 +145,22 @@ pub mod anchors
 //}}}
 
 //{{{ Define Object3D
-//
-////{{{ pub enum BooleanOp
-//
-//#[derive(Debug)]
-//#[derive(Clone)]
-//#[allow(non_camel_case_types)] // We use the debug output to create the OpenSCad code. And that code requires the names to be lower-case.
-//pub enum BooleanOp
-//{
-//	union,
-//	difference,
-//	intersection,
-//	hull,
-//	minkowski,
-//}
-////}}}
-//
+
+//{{{ pub enum BooleanOp
+
+#[derive(Debug)]
+#[derive(Clone)]
+#[allow(non_camel_case_types)] // We use the debug output to create the OpenSCad code. And that code requires the names to be lower-case.
+pub enum BooleanOp
+{
+	union,
+	difference,
+	intersection,
+	hull,
+	minkowski,
+}
+//}}}
+
 //{{{ pub enum Shape3D
 
 #[derive(Debug)]
@@ -739,29 +740,49 @@ pub fn circle(name: &str, r: f64) -> Object3D
 }
 //}}}
 //{{{
-//pub fn polygon<P: AsRef<[Point2D]>>(name: &str, points: P, paths) -> Object3D
-
-//pub fn polygon<Points: AsRef<[Point2D]>, Paths: AsRef<[Row]>, Row: AsRef<[i32]>>(name: &str, points: Points, paths: Paths) -> Object3D
-pub fn polygon<Points: AsRef<[Coords]>, Coords: AsRef<[f64]>, Paths: AsRef<[Path]>, Path: AsRef<[i32]>>(name: &str, points: Points, paths: Paths) -> Object3D
+//pub fn polygon<Paths: AsRef<[Path]>, Path: AsRef<[i32]>>(name: &str, points_vec: Vec<Point2D>, paths: Paths) -> Object3D
+pub fn polygon(name: &str, points_vec: Vec<Point2D>) -> Object3D
 {
-	let mut points_vec = vec![];
+	//let mut points_vec = vec![];
 
-	for point in points.as_ref()
-	{
-		let point : Point2D = crate::math::Vector2D([point.as_ref()[0], point.as_ref()[1], 1.0]);
-		points_vec.push(point);
-	}
+	//for point in points.as_ref()
+	//{
+	//	let point : Point2D = crate::math::Vector2D([point.as_ref()[0], point.as_ref()[1], 1.0]);
+	//	points_vec.push(point);
+	//}
 
-	let mut paths_vec = vec![];
+	let paths_vec : Vec<Vec<i32>> = vec![];
+	//let mut paths_vec = vec![];
 
-	for path in paths.as_ref()
-	{
-		paths_vec.push(path.as_ref().to_vec());
-	}
+	//for path in paths.as_ref()
+	//{
+	//	paths_vec.push(path.as_ref().to_vec());
+	//}
 
 	Object3D::new(name, Shape3D::Polygon{points: points_vec, paths: paths_vec, convexity: 10, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
 //}}}
+////{{{
+//pub fn polygon<Points: AsRef<[Coords]>, Coords: AsRef<[f64]>, Paths: AsRef<[Path]>, Path: AsRef<[i32]>>(name: &str, points: Points, paths: Paths) -> Object3D
+//{
+//	let mut points_vec = vec![];
+//
+//	for point in points.as_ref()
+//	{
+//		let point : Point2D = crate::math::Vector2D([point.as_ref()[0], point.as_ref()[1], 1.0]);
+//		points_vec.push(point);
+//	}
+//
+//	let mut paths_vec = vec![];
+//
+//	for path in paths.as_ref()
+//	{
+//		paths_vec.push(path.as_ref().to_vec());
+//	}
+//
+//	Object3D::new(name, Shape3D::Polygon{points: points_vec, paths: paths_vec, convexity: 10, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
+//}
+////}}}
 //{{{
 pub fn text(name: &str, text: &str, font: &str, size: i32, spacing: f64) -> Object3D
 {

@@ -396,13 +396,13 @@ impl Matrix2D
 	//{{{
 	pub fn get_scale_x(&self) -> f64
 	{
-		self.column(0).l2_norm().sqrt()
+		self.column(0).l2_norm()
 	}
 	//}}}
 	//{{{
 	pub fn get_scale_y(&self) -> f64
 	{
-		self.column(1).l2_norm().sqrt()
+		self.column(1).l2_norm()
 	}
 	//}}}
 	//{{{
@@ -413,6 +413,19 @@ impl Matrix2D
 	//}}}
 	//}}}
 }
+//}}}
+
+//{{{
+//fn matrix2D<Matrix: AsRef<[Row]>, Row: AsRef<[f64]>>(matrix: Matrix) -> Matrix2D
+#[allow(non_snake_case)]
+fn matrix2D<Matrix: AsRef<[Row]>, Row: AsRef<[f64]>>(matrix: Matrix) -> Matrix2D
+{
+	Matrix2D(
+		[[ matrix.as_ref()[0].as_ref()[0], matrix.as_ref()[0].as_ref()[1],          0.0],
+		 [ matrix.as_ref()[1].as_ref()[0], matrix.as_ref()[1].as_ref()[1],          0.0],
+		 [          0.0,          0.0,          1.0]])
+}
+
 //}}}
 //}}}
 
@@ -541,7 +554,7 @@ impl Vector2D
 	//{{{
 	pub fn l2_norm(&self) -> f64
 	{
-		vecmath::vec3_dot(**self, **self)
+		vecmath::vec3_dot(**self, **self).sqrt()
 	}
 	//}}}
 }
@@ -561,6 +574,15 @@ pub fn vector2D(x: f64, y: f64) -> Point2D
 {
 	Vector2D([x, y, 0.0])
 }
+
+////{{{
+////fn vector2D<Vector: AsRef<[f64]>>(vector: Vector) -> Vector2D
+//#[allow(non_snake_case)]
+//fn vector2D<Vector: AsRef<[f64]>>(vector: Vector) -> Vector2D
+//{
+//	Vector2D([ vector.as_ref()[0], vector.as_ref()[1], 0.0])
+//}
+////}}}
 //}}}
 //}}}
 
@@ -1301,19 +1323,19 @@ impl Matrix3D
 	//{{{
 	pub fn get_scale_x(&self) -> f64
 	{
-		self.column(0).l2_norm().sqrt()
+		self.column(0).l2_norm()
 	}
 	//}}}
 	//{{{
 	pub fn get_scale_y(&self) -> f64
 	{
-		self.column(1).l2_norm().sqrt()
+		self.column(1).l2_norm()
 	}
 	//}}}
 	//{{{
 	pub fn get_scale_z(&self) -> f64
 	{
-		self.column(2).l2_norm().sqrt()
+		self.column(2).l2_norm()
 	}
 	//}}}
 	//{{{
@@ -1323,6 +1345,20 @@ impl Matrix3D
 	}
 	//}}}
 	//}}}
+}
+//}}}
+
+
+//{{{
+//fn matrix3D<Matrix: AsRef<[Row]>, Row: AsRef<[f64]>>(matrix: Matrix) -> Matrix3D
+#[allow(non_snake_case)]
+fn matrix3D<Matrix: AsRef<[Row]>, Row: AsRef<[f64]>>(matrix: Matrix) -> Matrix3D
+{
+	Matrix3D(
+		[[ matrix.as_ref()[0].as_ref()[0], matrix.as_ref()[0].as_ref()[1], matrix.as_ref()[0].as_ref()[2], 0.0],
+		 [ matrix.as_ref()[1].as_ref()[0], matrix.as_ref()[1].as_ref()[1], matrix.as_ref()[1].as_ref()[2], 0.0],
+		 [ matrix.as_ref()[2].as_ref()[0], matrix.as_ref()[2].as_ref()[1], matrix.as_ref()[2].as_ref()[2], 0.0],
+		 [          0.0,          0.0,          0.0, 1.0]])
 }
 //}}}
 //}}}
@@ -1450,7 +1486,7 @@ impl Vector3D
 	//{{{
 	pub fn l2_norm(&self) -> f64
 	{
-		vecmath::vec4_dot(**self, **self)
+		vecmath::vec4_dot(**self, **self).sqrt()
 	}
 	//}}}
 }

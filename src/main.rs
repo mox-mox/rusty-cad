@@ -5,6 +5,7 @@
 
 //extern crate rusty_scad;
 use rusty_scad::*;
+use std::f64::consts::PI;
 
 //{{{ Design Constants
 
@@ -471,6 +472,71 @@ pub fn small_roll(name: &str) -> Object3D
 //}}}
 
 //{{{
+//pub fn arc(pivot: Point2D, radius: f64, start_angle: f64, end_angle: f64, steps: i32) -> Vec<Point2D>
+pub fn arc(mut start_point: Point2D, mut end_point: Point2D, pivot: Point2D, steps: i32) -> Vec<Point2D>
+{
+	//if steps.signum() < 0
+	//{
+	//	let temp = start_point;
+	//	start_point = end_point;
+	//	end_point   = temp;
+	//}
+
+
+	let start_vector       = pivot - &start_point;
+	let   end_vector       = pivot -   &end_point;
+
+	let start_radius : f64 = start_vector.l2_norm();
+	let   end_radius : f64 =   end_vector.l2_norm();
+	let  step_radius : f64 = (end_radius-start_radius)/(steps.abs() as f64);
+
+	let start_angle  : f64 = start_vector[0].atan2(start_vector[1]);
+	let end_angle    : f64 =   end_vector[0].atan2(  end_vector[1]);
+
+	let mut angle_range  : f64 = end_angle - start_angle;
+	if steps.signum() <= 0
+	{
+		eprintln!("arc: steps is negative");
+		if angle_range < 0.0
+		{
+			eprintln!("arc: angle too small");
+			angle_range = (angle_range + 2.0*PI);
+		};
+		if angle_range > PI
+		{
+			eprintln!("arc: angle too big");
+			angle_range = (angle_range - 2.0*PI);
+		};
+	}
+	let step_angle   : f64 = angle_range/(steps.abs() as f64);
+
+
+	let steps = steps.abs();
+
+	eprintln!("arc:\n\tstart_vector = {}\n\tend_vector = {}\n\tstart_angle = {}\n\tend_angle = {}\n\tangle_range = {}\n\tstart_radius = {}\n\tend_radius = {}\n\tsteps = {}", start_vector, end_vector, start_angle.to_degrees(), end_angle.to_degrees(), angle_range.to_degrees(), start_radius, end_radius, steps);
+
+	let mut points = vec![start_point];
+
+	//for i in 1..steps
+	for i in 0..steps.abs()
+	{
+		let phi = start_angle  + (i as f64)*step_angle;
+		let r   = start_radius + (i as f64)*step_radius;
+		let v   = vector2D(phi.sin(), phi.cos());
+
+		eprintln!("		step = {}, phi = {}, r = {}, v = {}", i, phi.to_degrees(), r, v);
+
+
+		points.push(pivot + &(v*r));
+		//points.push(pivot + &(vector2D(phi.cos(), phi.sin())*r));
+	}
+
+	points
+}
+//}}}
+
+
+//{{{
 pub fn sprenger_block_3511100355(name: &str) -> Object3D
 {
 	const ROLL_DIAMETER           : f64 =  2.5;
@@ -483,57 +549,70 @@ pub fn sprenger_block_3511100355(name: &str) -> Object3D
 	const BLOCK_HEIGHT            : f64 =  3.38;
 	const BLOCK_HEIGHT_SLANT      : f64 =  2.2;
 	const BASE_WIDTH              : f64 =  3.5;
+	const SHEET_THICKNESS         : f64 =  0.13;
+	const LOWER_BEND_RADIUS       : f64 =  0.17;
 
-	let block = cube_coords(&(String::from("base board for ")+name),
-		-0.5*BASE_WIDTH,
-		-0.5*BLOCK_DIAMETER,
-		0.0,
-		 0.5*BASE_WIDTH,
-		 0.5*BLOCK_DIAMETER,
-		BLOCK_HEIGHT);
-
-	let mut parts = vec![block];
-	{
-		let mut c1=cylinder(&(String::from("base board for ")+name), BLOCK_DIAMETER+2.0, 0.175, 0.175);
-		c1.rotate_x(90.0);
-		c1.translate(-0.51-0.175, 1.0+0.5*BLOCK_DIAMETER, 0.175+0.13);
-		c1.set_debug();
-		parts.push(c1);
-	}
-	{
-		let mut c1=cylinder(&(String::from("base board for ")+name), BLOCK_DIAMETER+2.0, 0.175, 0.175);
-		c1.rotate_x(90.0);
-		c1.translate(0.51+0.175, 1.0+0.5*BLOCK_DIAMETER, 0.175+0.13);
-		c1.set_debug();
-		parts.push(c1);
-	}
-	{
-		let mut c1=cylinder(&(String::from("base board for ")+name), BLOCK_DIAMETER+2.0, 0.175, 0.175);
-		c1.rotate_x(90.0);
-		c1.translate(0.51+0.175, 1.0+0.5*BLOCK_DIAMETER, 0.175+0.13);
-		c1.set_debug();
-		parts.push(c1);
-	}
+	let mut points : Vec<Point2D> = vec![
+		point2D(-0.5*BASE_WIDTH, 0.0),
+		point2D(-0.5*BASE_WIDTH, SHEET_THICKNESS),
+		//point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS)
+	];
 
 
+	points.append(&mut arc(point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS),                    // Start
+				           point2D(-0.5*BLOCK_WIDTH                  , SHEET_THICKNESS+LOWER_BEND_RADIUS),  // End
+				           point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
+				            20));                                                                           // Steps
 
+	//points.push(point2D(-0.5*BLOCK_WIDTH, BLOCK_HEIGHT-0.5*BLOCK_WIDTH));
 
-	let mut board = difference(name, parts);
-	board.set_fn(20);
+	points.append(&mut arc(point2D(-0.5*BLOCK_WIDTH,                   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Start
+				           point2D( 0.5*BLOCK_WIDTH,                   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // End
+				           point2D(0.0,                                BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Pivot
+				            40));                                                                           // Steps
 
-	board
+	points.append(&mut arc(point2D( 0.5*BLOCK_WIDTH,                   SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Start
+				           point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, SHEET_THICKNESS),                    // End
+				           point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
+				           -20));                                                                           // Steps
+
+	points.push(point2D( 0.5*BASE_WIDTH, SHEET_THICKNESS));
+	points.push(point2D( 0.5*BASE_WIDTH, 0.0));
+
+	points.append(&mut arc(point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, 0.0),                                // Start
+				           point2D( 0.5*BLOCK_WIDTH-SHEET_THICKNESS,   SHEET_THICKNESS+LOWER_BEND_RADIUS),  // End
+				           point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
+				           -20));                                                                           // Steps
+
+	points.append(&mut arc(point2D( 0.5*BLOCK_WIDTH-SHEET_THICKNESS,   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Start
+				           point2D(-0.5*BLOCK_WIDTH+SHEET_THICKNESS,   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // End
+				           point2D(0.0,                                BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Pivot
+				            40));                                                                           // Steps
+
+	points.append(&mut arc(
+				           point2D(-0.5*BLOCK_WIDTH+SHEET_THICKNESS,   SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Start
+	                       point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, 0.0),                                // End
+				           point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
+				           -20));                                                                           // Steps
+
+	let poly = polygon(name, points);
+
+	poly
 }
 //}}}
 
+
+
+
 fn main()
 {
-
-	//{{{
-	let mut poly = polygon("tester", [[0.0, 0.0], [0.0, 25.0], [25.0, 0.0], [5.0, 5.0], [15.0, 5.0], [5.0, 15.0]], [[0, 1, 2], [3, 4, 5]]);
-	poly.linear_extrude(14.0);
-	println!("{}", poly);
-	//}}}
-
+//
+//	//{{{
+//	let mut poly = polygon("tester", [[0.0, 0.0], [0.0, 25.0], [25.0, 0.0], [5.0, 5.0], [15.0, 5.0], [5.0, 15.0]], [[0, 1, 2], [3, 4, 5]]);
+//	poly.linear_extrude(14.0);
+//	println!("{}", poly);
+//	//}}}
+//
 
 
 
@@ -551,7 +630,7 @@ fn main()
 //	println!("{}", test2);
 //	//}}}
 //
-
+//
 //
 //	////{{{ Print all the constants
 //
@@ -675,11 +754,19 @@ fn main()
 //	println!("{}", roll);
 //	//}}}
 //
+
+
+
+
+	//{{{
+	let mut block = sprenger_block_3511100355("tester");
+	println!("{}", block);
+	//}}}
+
+
+
+
 //
-//	//{{{
-//	let mut block = sprenger_block_3511100355("tester");
-//	//println!("{}", block);
-//	//}}}
 //	////{{{
 //	//let mut pipe = pipe("tester", 3.0, 2.0, 1.0);
 //	//pipe.set_fn(20);
