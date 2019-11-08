@@ -500,12 +500,12 @@ pub fn arc(mut start_point: Point2D, mut end_point: Point2D, pivot: Point2D, ste
 		if angle_range < 0.0
 		{
 			eprintln!("arc: angle too small");
-			angle_range = (angle_range + 2.0*PI);
+			angle_range += 2.0*PI;
 		};
 		if angle_range > PI
 		{
 			eprintln!("arc: angle too big");
-			angle_range = (angle_range - 2.0*PI);
+			angle_range -= 2.0*PI;
 		};
 	}
 	let step_angle   : f64 = angle_range/(steps.abs() as f64);
@@ -547,15 +547,20 @@ pub fn sprenger_block_3511100355(name: &str) -> Object3D
 	const BLOCK_WIDTH             : f64 = 1.02;
 	const BLOCK_DIAMETER          : f64 =  2.5;
 	const BLOCK_HEIGHT            : f64 =  3.38;
-	const BLOCK_HEIGHT_SLANT      : f64 =  2.2;
 	const BASE_WIDTH              : f64 =  3.5;
 	const SHEET_THICKNESS         : f64 =  0.13;
 	const LOWER_BEND_RADIUS       : f64 =  0.17;
 
+	const BLOCK_HEIGHT_SLANT      : f64 =  2.2;
+	const SLANT_INSET             : f64 =  0.475;
+	const SLANT_HEIGHT            : f64 = BLOCK_HEIGHT-BLOCK_HEIGHT_SLANT;
+	#[allow(non_snake_case)]
+	let   SLANT_ANGLE             : f64 = (SLANT_INSET/SLANT_HEIGHT).atan().to_degrees();
+
+	//{{{
 	let mut points : Vec<Point2D> = vec![
 		point2D(-0.5*BASE_WIDTH, 0.0),
 		point2D(-0.5*BASE_WIDTH, SHEET_THICKNESS),
-		//point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS)
 	];
 
 
@@ -564,7 +569,6 @@ pub fn sprenger_block_3511100355(name: &str) -> Object3D
 				           point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
 				            20));                                                                           // Steps
 
-	//points.push(point2D(-0.5*BLOCK_WIDTH, BLOCK_HEIGHT-0.5*BLOCK_WIDTH));
 
 	points.append(&mut arc(point2D(-0.5*BLOCK_WIDTH,                   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Start
 				           point2D( 0.5*BLOCK_WIDTH,                   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // End
@@ -594,10 +598,29 @@ pub fn sprenger_block_3511100355(name: &str) -> Object3D
 	                       point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, 0.0),                                // End
 				           point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
 				           -20));                                                                           // Steps
+	//}}}
 
-	let poly = polygon(name, points);
+	let mut poly = polygon(name, points);
 
-	poly
+	poly.linear_extrude(BLOCK_DIAMETER);
+	poly.rotate_x(90.0);
+	poly.translate_y(0.5*BLOCK_DIAMETER);
+
+	let mut slant1 = cube_coords("slant for sprenger_block_3511100355", -BASE_WIDTH, 0.0, -1.0, BASE_WIDTH, 1.0, 2.0);
+	slant1.rotate_x(SLANT_ANGLE);
+	slant1.translate(0.0, 0.5*BLOCK_DIAMETER, BLOCK_HEIGHT_SLANT);
+
+	let mut slant2 = slant1.clone();
+	slant2.scale_y(-1.0);
+
+
+	difference(name, [poly, slant1, slant2])
+
+
+
+
+
+	//poly
 }
 //}}}
 
@@ -613,10 +636,6 @@ fn main()
 //	println!("{}", poly);
 //	//}}}
 //
-
-
-
-
 //
 //	//{{{
 //	let mut square = square("tester", 5.0, 2.0);
@@ -630,8 +649,7 @@ fn main()
 //	println!("{}", test2);
 //	//}}}
 //
-//
-//
+
 //	////{{{ Print all the constants
 //
 //	//eprintln!("MATTRESS_LENGTH = {}", MATTRESS_LENGTH);
@@ -642,6 +660,9 @@ fn main()
 //	//eprintln!("FRAME_HEIGHT    = {}", FRAME_HEIGHT   );
 //	//eprintln!("FRAME_THICKNESS     = {}", FRAME_THICKNESS    );
 //	////}}}
+
+
+
 //
 //	//{{{
 //	let mut sideboard_l = sideboard("Sideboard_L");
@@ -766,21 +787,4 @@ fn main()
 
 
 
-//
-//	////{{{
-//	//let mut pipe = pipe("tester", 3.0, 2.0, 1.0);
-//	//pipe.set_fn(20);
-//	//println!("{}", pipe);
-//	////}}}
-//	////{{{
-//	//let mut wedge = wedge("tester", 3.0, 2.0, 45.0);
-//	//println!("{}", wedge);
-//	////}}}
-//
-//	//{{{
-//	let mut pipe = pipe_cut("tester", 3.0, 2.0, 1.0, 185.0);
-//	pipe.set_fn(50);
-//	println!("{}", pipe);
-//	//}}}
-//
 }
