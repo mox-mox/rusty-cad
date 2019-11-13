@@ -26,13 +26,16 @@ const COVER_THICKNESS         : f64 =   0.5;
 const COVER_GROOVE_DEPTH      : f64 =   0.5;
 const CABLE_HOUSING_HEIGHT    : f64 =   3.0;
 
-const FRAME_SLAT_COUNT        : i32 =    10;
-const FRAME_SLAT_WIDTH        : f64 =  10.0;
-const FRAME_SLAT_THICKNESS    : f64 =   4.0;
+const FRAME_SLAT_COUNT        : i32 =    20;
+const FRAME_SLAT_WIDTH        : f64 =   5.0;
+const FRAME_SLAT_THICKNESS    : f64 =   3.0;
 const FRAME_SLAT_SPACING      : f64 = (MATTRESS_LENGTH-(FRAME_SLAT_COUNT as f64)*FRAME_SLAT_WIDTH)/((FRAME_SLAT_COUNT as f64)-0.5);
+const FRAME_SLAT_START        : f64 = 0.5*(MATTRESS_LENGTH-FRAME_SLAT_WIDTH);
+
+const CABLE_HEIGHT            : f64 = -0.5*FRAME_HEIGHT + 0.5*FRAME_SLAT_WIDTH;
 
 const BOTTOM_COVER_BOTTOM     : f64 = -0.5*FRAME_HEIGHT;
-const MIDDLE_COVER_BOTTOM     : f64 = -0.5*FRAME_HEIGHT+COVER_THICKNESS+CABLE_HOUSING_HEIGHT;
+const MIDDLE_COVER_BOTTOM     : f64 = BOTTOM_COVER_BOTTOM+COVER_THICKNESS+CABLE_HOUSING_HEIGHT;
 
 const BED_LENGTH              : f64 = MATTRESS_LENGTH+STORAGE_LENGTH+3.0*FRAME_THICKNESS;
 const BED_WIDTH               : f64 = MATTRESS_WIDTH+2.0*FRAME_THICKNESS;
@@ -245,6 +248,16 @@ pub fn sideboard(name: &str) -> Object3D
 		parts.append(&mut drill);
 	}
 	//}}}
+	//{{{ Add the cutouts for the primary rolls
+	{
+		let mut block = sprenger_block_3511100355_cutout("tester");
+		block.set_debug();
+		block.rotate(90.0, 0.0, 315.0);
+		//block.rotate(0.0, 90.0, 225.0);
+		block.translate(0.0, -0.5*MATTRESS_LENGTH, CABLE_HEIGHT+1.25); // TODO
+		parts.push(block);
+	}
+	//}}}
 	let mut board = difference(name, parts);
 
 	//{{{ Add some anchors TODO
@@ -254,6 +267,8 @@ pub fn sideboard(name: &str) -> Object3D
 	a.rel_rotate_y(90.0);
 	//}}}
 
+	board.set_debug();
+	board.set_show_anchors();
 	board
 }
 //}}}
@@ -537,9 +552,122 @@ pub fn arc(mut start_point: Point2D, mut end_point: Point2D, pivot: Point2D, ste
 
 
 //{{{
+pub fn sprenger_block_3511100355_cutout(name: &str) -> Object3D
+{
+	const ROLL_DIAMETER           : f64 =  2.5;
+	const ROLL_DIAMETER_INNER     : f64 =  1.875;
+	const SCREW_HEAD_DIAMETER     : f64 =  0.75;
+	const SCREW_HEAD_HEIGHT       : f64 =  0.125;
+	const WIRE_DIAMETER           : f64 =  0.3;
+	const ROLL_WIDTH              : f64 =  0.7;
+	const ROLL_HEIGHT             : f64 =  1.7;
+
+
+	const BLOCK_WIDTH             : f64 = 1.02;
+	const BLOCK_DIAMETER          : f64 =  2.5;
+	const BLOCK_HEIGHT            : f64 =  3.38;
+	const BASE_WIDTH              : f64 =  3.5;
+	const SHEET_THICKNESS         : f64 =  0.13;
+	const LOWER_BEND_RADIUS       : f64 =  0.17;
+
+	const BLOCK_HEIGHT_SLANT      : f64 =  2.2;
+	const SLANT_INSET             : f64 =  0.475;
+	const SLANT_HEIGHT            : f64 = BLOCK_HEIGHT-BLOCK_HEIGHT_SLANT;
+	#[allow(non_snake_case)]
+	let   SLANT_ANGLE             : f64 = (SLANT_INSET/SLANT_HEIGHT).atan().to_degrees();
+
+	//{{{
+	let mut points : Vec<Point2D> = vec![
+		point2D(-0.5*BASE_WIDTH, 0.0),
+		point2D(-0.5*BASE_WIDTH, SHEET_THICKNESS),
+	];
+
+
+	points.append(&mut arc(point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS),                    // Start
+				           point2D(-0.5*BLOCK_WIDTH                  , SHEET_THICKNESS+LOWER_BEND_RADIUS),  // End
+				           point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
+				            20));                                                                           // Steps
+
+
+	points.append(&mut arc(point2D(-0.5*BLOCK_WIDTH,                   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Start
+				           point2D( 0.5*BLOCK_WIDTH,                   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // End
+				           point2D(0.0,                                BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Pivot
+				            40));                                                                           // Steps
+
+	points.append(&mut arc(point2D( 0.5*BLOCK_WIDTH,                   SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Start
+				           point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, SHEET_THICKNESS),                    // End
+				           point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
+				           -20));                                                                           // Steps
+
+	points.push(point2D( 0.5*BASE_WIDTH, SHEET_THICKNESS));
+	points.push(point2D( 0.5*BASE_WIDTH, 0.0));
+
+	//points.append(&mut arc(point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, 0.0),                                // Start
+	//			           point2D( 0.5*BLOCK_WIDTH-SHEET_THICKNESS,   SHEET_THICKNESS+LOWER_BEND_RADIUS),  // End
+	//			           point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
+	//			           -20));                                                                           // Steps
+
+	//points.append(&mut arc(point2D( 0.5*BLOCK_WIDTH-SHEET_THICKNESS,   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Start
+	//			           point2D(-0.5*BLOCK_WIDTH+SHEET_THICKNESS,   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // End
+	//			           point2D(0.0,                                BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Pivot
+	//			            40));                                                                           // Steps
+
+	//points.append(&mut arc(
+	//			           point2D(-0.5*BLOCK_WIDTH+SHEET_THICKNESS,   SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Start
+	//                       point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, 0.0),                                // End
+	//			           point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
+	//			           -20));                                                                           // Steps
+	//}}}
+
+	let mut poly = polygon(name, points);
+
+	poly.linear_extrude(BLOCK_DIAMETER);
+	poly.rotate_x(90.0);
+	poly.translate_y(0.5*BLOCK_DIAMETER);
+
+	let mut slant1 = cube_coords("slant for sprenger_block_3511100355", -BASE_WIDTH, 0.0, -1.0, BASE_WIDTH, 1.0, 2.0);
+	slant1.rotate_x(SLANT_ANGLE);
+	slant1.translate(0.0, 0.5*BLOCK_DIAMETER, BLOCK_HEIGHT_SLANT);
+
+	let mut slant2 = slant1.clone();
+	slant2.scale_y(-1.0);
+
+
+	let mut housing = difference(name, [poly, slant1, slant2]);
+
+	//{{{ Add the screw heads
+
+	let mut screw_head1 = cylinder(&(String::from("Lower half roll for ") + name), SCREW_HEAD_HEIGHT, 0.5*SCREW_HEAD_DIAMETER, 0.0);
+	screw_head1.set_fn(40);
+	screw_head1.rotate_y(90.0);
+	screw_head1.translate(0.5*BLOCK_WIDTH, 0.0, ROLL_HEIGHT);
+	let mut screw_head2 = cylinder(&(String::from("Lower half roll for ") + name), SCREW_HEAD_HEIGHT, 0.5*SCREW_HEAD_DIAMETER, 0.0);
+	screw_head2.set_fn(40);
+	screw_head2.rotate_y(-90.0);
+	screw_head2.translate(-0.5*BLOCK_WIDTH, 0.0, ROLL_HEIGHT);
+	//}}}
+
+	let mut block = union(name, [housing, screw_head1, screw_head2]);
+
+	//{{{ Anchors::Contact: y and z align to the cable
+	{
+		let mut a = block.create_anchor("Contact");
+		a.translate(0.0, -0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER, ROLL_HEIGHT-0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER);
+	}
+	//}}}
+
+	block
+}
+//}}}
+
+//{{{
 pub fn sprenger_block_3511100355(name: &str) -> Object3D
 {
 	const ROLL_DIAMETER           : f64 =  2.5;
+	const ROLL_DIAMETER_INNER     : f64 =  1.875;
+	const SCREW_HEAD_DIAMETER     : f64 =  0.75;
+	const SCREW_HEAD_HEIGHT       : f64 =  0.125;
+	const WIRE_DIAMETER           : f64 =  0.3;
 	const ROLL_WIDTH              : f64 =  0.7;
 	const ROLL_HEIGHT             : f64 =  1.7;
 
@@ -606,49 +734,57 @@ pub fn sprenger_block_3511100355(name: &str) -> Object3D
 	poly.rotate_x(90.0);
 	poly.translate_y(0.5*BLOCK_DIAMETER);
 
+	//{{{ Cut of the slanted sides
+
 	let mut slant1 = cube_coords("slant for sprenger_block_3511100355", -BASE_WIDTH, 0.0, -1.0, BASE_WIDTH, 1.0, 2.0);
 	slant1.rotate_x(SLANT_ANGLE);
 	slant1.translate(0.0, 0.5*BLOCK_DIAMETER, BLOCK_HEIGHT_SLANT);
 
 	let mut slant2 = slant1.clone();
 	slant2.scale_y(-1.0);
+	//}}}
 
 
-	difference(name, [poly, slant1, slant2])
+	let housing = difference(name, [poly, slant1, slant2]);
 
+	//{{{ Add the roll and screw heads
 
+	let mut roll1 = cylinder(&(String::from("Lower half roll for ") + name), 0.5*ROLL_WIDTH, 0.5*ROLL_DIAMETER_INNER, 0.5*ROLL_DIAMETER);
+	roll1.set_fn(40);
+	roll1.rotate_y(90.0);
+	roll1.translate_z(ROLL_HEIGHT);
+	let mut roll2 = cylinder(&(String::from("Lower half roll for ") + name), 0.5*ROLL_WIDTH, 0.5*ROLL_DIAMETER_INNER, 0.5*ROLL_DIAMETER);
+	roll2.set_fn(40);
+	roll2.rotate_y(-90.0);
+	roll2.translate_z(ROLL_HEIGHT);
 
+	let mut screw_head1 = cylinder(&(String::from("Lower half roll for ") + name), SCREW_HEAD_HEIGHT, 0.5*SCREW_HEAD_DIAMETER, 0.0);
+	screw_head1.set_fn(40);
+	screw_head1.rotate_y(90.0);
+	screw_head1.translate(0.5*BLOCK_WIDTH, 0.0, ROLL_HEIGHT);
+	let mut screw_head2 = cylinder(&(String::from("Lower half roll for ") + name), SCREW_HEAD_HEIGHT, 0.5*SCREW_HEAD_DIAMETER, 0.0);
+	screw_head2.set_fn(40);
+	screw_head2.rotate_y(-90.0);
+	screw_head2.translate(-0.5*BLOCK_WIDTH, 0.0, ROLL_HEIGHT);
+	//}}}
 
+	let mut block = union(name, [housing, roll1, roll2, screw_head1, screw_head2]);
 
-	//poly
+	//{{{ Anchors::Contact: y and z align to the cable
+	{
+		let mut a = block.create_anchor("Contact");
+		a.translate(0.0, -0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER, ROLL_HEIGHT-0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER);
+	}
+	//}}}
+
+	block
 }
 //}}}
 
 
 
-
 fn main()
 {
-//
-//	//{{{
-//	let mut poly = polygon("tester", [[0.0, 0.0], [0.0, 25.0], [25.0, 0.0], [5.0, 5.0], [15.0, 5.0], [5.0, 15.0]], [[0, 1, 2], [3, 4, 5]]);
-//	poly.linear_extrude(14.0);
-//	println!("{}", poly);
-//	//}}}
-//
-//
-//	//{{{
-//	let mut square = square("tester", 5.0, 2.0);
-//	let mut circle = circle("tester", 1.0);
-//	circle.set_fn(20);
-//	let mut test   = difference("diff", [square, circle]);
-//	test.set_debug();
-//	let mut cube   = cube_coords("cube", 0.0, 0.0, 0.0,  2.0, 2.0, 2.0);
-//	let mut test2  = difference("erence", [cube, test]);
-//	//roll.anchor("Contact").snap_to(&mut sideboard_l.anchor("left"));
-//	println!("{}", test2);
-//	//}}}
-//
 
 //	////{{{ Print all the constants
 //
@@ -663,14 +799,15 @@ fn main()
 
 
 
-//
-//	//{{{
-//	let mut sideboard_l = sideboard("Sideboard_L");
-//	sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
-//	sideboard_l.set_colour(colour_named("red"));
-//	sideboard_l.set_show_anchors();
-//	println!("{}", sideboard_l);
-//	//}}}
+
+	//{{{
+	let mut sideboard_l = sideboard("Sideboard_L");
+	sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
+	sideboard_l.set_colour(colour_named("red"));
+	sideboard_l.set_show_anchors();
+	println!("{}", sideboard_l);
+	//}}}
+
 //
 //	//{{{
 //	let mut sideboard_r = sideboard_l.clone();
@@ -759,8 +896,9 @@ fn main()
 //
 //	for i in 0..FRAME_SLAT_COUNT
 //	{
+//		let i = i as f64;
 //		let mut slat = frame_slat(&format!("Frame slat {}", i));
-//		slat.translate(0.0, -0.5*(MATTRESS_LENGTH-FRAME_SLAT_WIDTH)+((2*i) as f64)*FRAME_SLAT_SPACING, -0.5*(FRAME_HEIGHT-FRAME_SLAT_THICKNESS));
+//		slat.translate(0.0, FRAME_SLAT_START - i*(FRAME_SLAT_SPACING+FRAME_SLAT_WIDTH), -0.5*(FRAME_HEIGHT-FRAME_SLAT_THICKNESS));
 //		println!("{}", slat);
 //	}
 //
@@ -778,13 +916,35 @@ fn main()
 
 
 
-
-	//{{{
-	let mut block = sprenger_block_3511100355("tester");
-	println!("{}", block);
-	//}}}
-
-
+//
+//	//{{{
+//	let mut block = sprenger_block_3511100355_cutout("tester");
+//	//let mut block = sprenger_block_3511100355("tester");
+//	block.set_debug();
+//	block.set_show_anchors();
+//	println!("{}", block);
+//	//}}}
+//
+//
+//	//{{{
+//	let mut poly = polygon("tester", [[0.0, 0.0], [0.0, 25.0], [25.0, 0.0], [5.0, 5.0], [15.0, 5.0], [5.0, 15.0]], [[0, 1, 2], [3, 4, 5]]);
+//	poly.linear_extrude(14.0);
+//	println!("{}", poly);
+//	//}}}
+//
+//
+//	//{{{
+//	let mut square = square("tester", 5.0, 2.0);
+//	let mut circle = circle("tester", 1.0);
+//	circle.set_fn(20);
+//	let mut test   = difference("diff", [square, circle]);
+//	test.set_debug();
+//	let mut cube   = cube_coords("cube", 0.0, 0.0, 0.0,  2.0, 2.0, 2.0);
+//	let mut test2  = difference("erence", [cube, test]);
+//	//roll.anchor("Contact").snap_to(&mut sideboard_l.anchor("left"));
+//	println!("{}", test2);
+//	//}}}
+//
 
 
 }

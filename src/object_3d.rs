@@ -762,27 +762,6 @@ pub fn polygon(name: &str, points_vec: Vec<Point2D>) -> Object3D
 	Object3D::new(name, Shape3D::Polygon{points: points_vec, paths: paths_vec, convexity: 10, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
 }
 //}}}
-////{{{
-//pub fn polygon<Points: AsRef<[Coords]>, Coords: AsRef<[f64]>, Paths: AsRef<[Path]>, Path: AsRef<[i32]>>(name: &str, points: Points, paths: Paths) -> Object3D
-//{
-//	let mut points_vec = vec![];
-//
-//	for point in points.as_ref()
-//	{
-//		let point : Point2D = crate::math::Vector2D([point.as_ref()[0], point.as_ref()[1], 1.0]);
-//		points_vec.push(point);
-//	}
-//
-//	let mut paths_vec = vec![];
-//
-//	for path in paths.as_ref()
-//	{
-//		paths_vec.push(path.as_ref().to_vec());
-//	}
-//
-//	Object3D::new(name, Shape3D::Polygon{points: points_vec, paths: paths_vec, convexity: 10, face_number: None::<i32>, face_angle: None::<f64>, face_size: None::<f64> })
-//}
-////}}}
 //{{{
 pub fn text(name: &str, text: &str, font: &str, size: i32, spacing: f64) -> Object3D
 {
@@ -830,31 +809,91 @@ pub fn cylinder(name: &str, h: f64, r1: f64, r2: f64) -> Object3D // Stands alon
 //{{{
 pub fn union<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 {
-	Object3D::new(name, Shape3D::Composite{ op: BooleanOp::union, children: children.as_ref().to_vec() })
+	let mut anchors = HashMap::new();
+	for mut child in children.as_ref().to_vec()
+	{
+		let child_name = child.name.clone();
+		for (anchor_name, anchor) in child.anchors.clone()
+		{
+			anchors.insert(child_name.clone() + "::" + &anchor_name, anchor);
+		}
+		child.anchors.clear();
+	}
+	let mut composite = Object3D::new(name, Shape3D::Composite{ op: BooleanOp::union, children: children.as_ref().to_vec() });
+	composite.anchors = anchors;
+	composite
 }
 //}}}
 //{{{
 pub fn difference<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 {
-	Object3D::new(name, Shape3D::Composite{ op: BooleanOp::difference, children: children.as_ref().to_vec() })
+	let mut anchors = HashMap::new();
+	for mut child in children.as_ref().to_vec()
+	{
+		let child_name = child.name.clone();
+		for (anchor_name, anchor) in child.anchors.clone()
+		{
+			anchors.insert(child_name.clone() + "::" + &anchor_name, anchor);
+		}
+		child.anchors.clear();
+	}
+	let mut composite = Object3D::new(name, Shape3D::Composite{ op: BooleanOp::difference, children: children.as_ref().to_vec() });
+	composite.anchors = anchors;
+	composite
 }
 //}}}
 //{{{
 pub fn intersection<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 {
-	Object3D::new(name, Shape3D::Composite{ op: BooleanOp::intersection, children: children.as_ref().to_vec() })
+	let mut anchors = HashMap::new();
+	for mut child in children.as_ref().to_vec()
+	{
+		let child_name = child.name.clone();
+		for (anchor_name, anchor) in child.anchors.clone()
+		{
+			anchors.insert(child_name.clone() + "::" + &anchor_name, anchor);
+		}
+		child.anchors.clear();
+	}
+	let mut composite = Object3D::new(name, Shape3D::Composite{ op: BooleanOp::intersection, children: children.as_ref().to_vec() });
+	composite.anchors = anchors;
+	composite
 }
 //}}}
 //{{{
 pub fn hull<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 {
-	Object3D::new(name, Shape3D::Composite{ op: BooleanOp::hull, children: children.as_ref().to_vec() })
+	let mut anchors = HashMap::new();
+	for mut child in children.as_ref().to_vec()
+	{
+		let child_name = child.name.clone();
+		for (anchor_name, anchor) in child.anchors.clone()
+		{
+			anchors.insert(child_name.clone() + "::" + &anchor_name, anchor);
+		}
+		child.anchors.clear();
+	}
+	let mut composite = Object3D::new(name, Shape3D::Composite{ op: BooleanOp::hull, children: children.as_ref().to_vec() });
+	composite.anchors = anchors;
+	composite
 }
 //}}}
 //{{{
 pub fn minkowski<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 {
-	Object3D::new(name, Shape3D::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() })
+	let mut anchors = HashMap::new();
+	for mut child in children.as_ref().to_vec()
+	{
+		let child_name = child.name.clone();
+		for (anchor_name, anchor) in child.anchors.clone()
+		{
+			anchors.insert(child_name.clone() + "::" + &anchor_name, anchor);
+		}
+		child.anchors.clear();
+	}
+	let mut composite = Object3D::new(name, Shape3D::Composite{ op: BooleanOp::minkowski, children: children.as_ref().to_vec() });
+	composite.anchors = anchors;
+	composite
 }
 //}}}
 
