@@ -32,7 +32,8 @@ const FRAME_SLAT_THICKNESS    : f64 =   3.0;
 const FRAME_SLAT_SPACING      : f64 = (MATTRESS_LENGTH-(FRAME_SLAT_COUNT as f64)*FRAME_SLAT_WIDTH)/((FRAME_SLAT_COUNT as f64)-0.5);
 const FRAME_SLAT_START        : f64 = 0.5*(MATTRESS_LENGTH-FRAME_SLAT_WIDTH);
 
-const CABLE_HEIGHT            : f64 = -0.5*FRAME_HEIGHT + 0.5*FRAME_SLAT_WIDTH;
+const FOOT_CABLE_HEIGHT       : f64 = -0.5*FRAME_HEIGHT + 0.5*FRAME_SLAT_THICKNESS;
+const HEAD_CABLE_HEIGHT       : f64 = FOOT_CABLE_HEIGHT + 1.0;
 
 const BOTTOM_COVER_BOTTOM     : f64 = -0.5*FRAME_HEIGHT;
 const MIDDLE_COVER_BOTTOM     : f64 = BOTTOM_COVER_BOTTOM+COVER_THICKNESS+CABLE_HOUSING_HEIGHT;
@@ -197,7 +198,7 @@ pub fn drill_minor(name: &str) -> Vec<Object3D>
 pub fn sideboard(name: &str) -> Object3D
 {
 	//{{{
-	let board = cube_coords(&(String::from("base board for ")+name),
+	let mut board = cube_coords(&(String::from("base board for ")+name),
 		-FRAME_THICKNESS/2.0,
 		FOOT_END,
 		-FRAME_HEIGHT/2.0,
@@ -205,6 +206,8 @@ pub fn sideboard(name: &str) -> Object3D
 		HEAD_END,
 		FRAME_HEIGHT/2.0);
 	//}}}
+
+	//board.set_debug();
 
 	//{{{ Add the end dovetails
 
@@ -218,17 +221,39 @@ pub fn sideboard(name: &str) -> Object3D
 		for dovetail in &mut dovetails_foot { dovetail.translate_y(FOOT_END-0.5*FRAME_THICKNESS); }
 		parts.append(&mut dovetails_foot);
 	}
-	let mut board = union(name, parts);
+	//let mut board = union(name, parts);
+	let mut board = union("", parts);
 	//}}}
 
 	//{{{ Add some anchors TODO
 
-	let mut a = board.create_anchor("Foot pulley vertical");
-	a.translate(0.0, -0.5*MATTRESS_LENGTH, CABLE_HEIGHT+1.25); // TODO
-	a.rel_rotate(90.0, 315.0, 0.0);
-	//a.rel_rotate_y(90.0);
-	//a.rel_rotate(90.0, 0.0, 315.0);
-	//a.rel_rotate_y(90.0);
+	{
+		let mut a = board.create_anchor("Foot pulley vertical");
+		a.translate(0.0, FOOT_END-0.5*FRAME_THICKNESS, FOOT_CABLE_HEIGHT); // TODO
+		a.rel_rotate(90.0, 315.0, 0.0);
+	}
+	{
+		let mut a = board.create_anchor("Head pulley vertical");
+		a.translate(0.0, HEAD_END+0.5*FRAME_THICKNESS, HEAD_CABLE_HEIGHT); // TODO
+		a.rel_rotate(90.0, 225.0, 0.0);
+	}
+	{
+		let mut a = board.create_anchor("Foot pulley horizontal");
+		a.translate(0.0, FOOT_END-0.5*FRAME_THICKNESS, FOOT_CABLE_HEIGHT); // TODO
+		a.rel_rotate(90.0, 315.0, -90.0);
+		a.rel_translate_z(-5.0);
+		a.rel_rotate_x(225.0);
+
+
+
+
+
+
+
+
+		//a.translate(2.0, FOOT_END+0.5*FRAME_THICKNESS, FOOT_CABLE_HEIGHT); // TODO
+		//a.rel_rotate(90.0, 315.0, 0.0);
+	}
 	//}}}
 
 	let mut parts = vec![board];
@@ -260,18 +285,36 @@ pub fn sideboard(name: &str) -> Object3D
 	//}}}
 	//{{{ Add the cutouts for the primary rolls
 	{
-		let mut block = sprenger_block_3511100355_cutout("tester");
-		block.set_debug();
-		//block.rotate(90.0, 0.0, 315.0);
-		//block.translate(0.0, -0.5*MATTRESS_LENGTH, CABLE_HEIGHT+1.25); // TODO
-		block.anchor("Contact").snap_to(&mut parts[0].anchor("Foot pulley vertical"));
+		let mut block = sprenger_block_3511100355_cutout("Foot pulley");
+		//block.set_debug();
+		block.anchor("Upper contact").snap_to(&mut parts[0].anchor("Foot pulley vertical"));
+		parts.push(block);
+	}
+	{
+		let mut block = sprenger_block_3511100355_cutout("Head pulley");
+		//block.set_debug();
+		block.anchor("Upper contact").snap_to(&mut parts[0].anchor("Head pulley vertical"));
 		parts.push(block);
 	}
 	//}}}
+	//{{{ Add the cutouts for the secondary rolls
+	{
+		let mut block = sprenger_block_3511100355_cutout("Secondary foot pulley");
+		//block.set_debug();
+		block.anchor("Upper contact").snap_to(&mut parts[0].anchor("Foot pulley horizontal"));
+		parts.push(block);
+	}
+	//{
+	//	let mut block = sprenger_block_3511100355_cutout("Head pulley");
+	//	//block.set_debug();
+	//	block.anchor("Upper contact").snap_to(&mut parts[0].anchor("Head pulley vertical"));
+	//	parts.push(block);
+	//}
+	//}}}
 	let mut board = difference(name, parts);
 
+	//board.set_debug();
 
-	board.set_debug();
 	board.set_show_anchors();
 	board
 }
@@ -464,44 +507,9 @@ pub fn frame_slat(name: &str) -> Object3D
 }
 //}}}
 
-
 //{{{
-pub fn small_roll(name: &str) -> Object3D
-{
-	let mut roll1 = cylinder(&(String::from("Lower half roll for ") + name), 0.5*ROLL_WIDTH, 0.4*ROLL_DIAMETER, 0.5*ROLL_DIAMETER);
-	roll1.scale_z(-1.0);
-	let roll2 = cylinder(&(String::from("Upper half roll for ") + name), 0.5*ROLL_WIDTH, 0.4*ROLL_DIAMETER, 0.5*ROLL_DIAMETER);
-	let mut roll = union(name, [roll1, roll2]);
-	roll.set_fn(20);
-
-	//{{{ Add some anchors TODO
-
-	{
-		roll.create_anchor("Origin");
-	}
-	{
-		let mut a = roll.create_anchor("Upper contact");
-		a.translate(-0.5*ROLL_DIAMETER, -0.5*ROLL_DIAMETER, 0.0);
-	}
-
-	//}}}
-
-	roll
-}
-//}}}
-
-//{{{
-//pub fn arc(pivot: Point2D, radius: f64, start_angle: f64, end_angle: f64, steps: i32) -> Vec<Point2D>
 pub fn arc(mut start_point: Point2D, mut end_point: Point2D, pivot: Point2D, steps: i32) -> Vec<Point2D>
 {
-	//if steps.signum() < 0
-	//{
-	//	let temp = start_point;
-	//	start_point = end_point;
-	//	end_point   = temp;
-	//}
-
-
 	let start_vector       = pivot - &start_point;
 	let   end_vector       = pivot -   &end_point;
 
@@ -536,7 +544,6 @@ pub fn arc(mut start_point: Point2D, mut end_point: Point2D, pivot: Point2D, ste
 
 	let mut points = vec![start_point];
 
-	//for i in 1..steps
 	for i in 0..steps.abs()
 	{
 		let phi = start_angle  + (i as f64)*step_angle;
@@ -817,7 +824,7 @@ fn main()
 	sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
 	sideboard_l.set_colour(colour_named("red"));
 	sideboard_l.set_show_anchors();
-	println!("{}", sideboard_l);
+	//println!("{}", sideboard_l);
 	//}}}
 
 //
@@ -904,27 +911,51 @@ fn main()
 //	println!("{}", bulkhead_spacer_r);
 //	//}}}
 //
-//	//{{{ Slat Frame
-//
-//	for i in 0..FRAME_SLAT_COUNT
-//	{
-//		let i = i as f64;
-//		let mut slat = frame_slat(&format!("Frame slat {}", i));
-//		slat.translate(0.0, FRAME_SLAT_START - i*(FRAME_SLAT_SPACING+FRAME_SLAT_WIDTH), -0.5*(FRAME_HEIGHT-FRAME_SLAT_THICKNESS));
-//		println!("{}", slat);
-//	}
-//
-//
-//
-//
-//	//}}}
-//
-//	//{{{
-//	let mut roll = small_roll("tester");
-//	roll.anchor("Contact").snap_to(&mut sideboard_l.anchor("left"));
-//	println!("{}", roll);
-//	//}}}
-//
+
+
+
+
+
+	//{{{ Primary Foot Roll Left
+
+	{
+		let mut block = sprenger_block_3511100355("Foot pulley");
+		block.set_debug();
+		block.anchor("Upper contact").snap_to(&mut sideboard_l.anchor("Foot pulley vertical"));
+		println!("{}", block);
+	}
+	//}}}
+
+
+	//{{{ Secondary Foot Roll Left
+
+	{
+		let mut block = sprenger_block_3511100355("Secondary foot pulley");
+		block.set_debug();
+		block.anchor("Upper contact").snap_to(&mut sideboard_l.anchor("Foot pulley horizontal"));
+		println!("{}", block);
+	}
+	//}}}
+
+
+	//{{{ Slat Frame
+
+	for i in 0..FRAME_SLAT_COUNT
+	{
+		let i = i as f64;
+		let mut slat = frame_slat(&format!("Frame slat {}", i));
+		slat.translate(0.0, FRAME_SLAT_START - i*(FRAME_SLAT_SPACING+FRAME_SLAT_WIDTH), -0.5*(FRAME_HEIGHT-FRAME_SLAT_THICKNESS));
+		slat.set_colour(colour_rgba(1.0, 1.0, 0.0, 0.2));
+		println!("{}", slat);
+	}
+
+
+
+
+	//}}}
+
+
+
 
 
 
