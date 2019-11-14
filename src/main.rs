@@ -221,6 +221,16 @@ pub fn sideboard(name: &str) -> Object3D
 	let mut board = union(name, parts);
 	//}}}
 
+	//{{{ Add some anchors TODO
+
+	let mut a = board.create_anchor("Foot pulley vertical");
+	a.translate(0.0, -0.5*MATTRESS_LENGTH, CABLE_HEIGHT+1.25); // TODO
+	a.rel_rotate(90.0, 315.0, 0.0);
+	//a.rel_rotate_y(90.0);
+	//a.rel_rotate(90.0, 0.0, 315.0);
+	//a.rel_rotate_y(90.0);
+	//}}}
+
 	let mut parts = vec![board];
 	//{{{ Cut out the notches for the bulkhead
 	{
@@ -252,20 +262,14 @@ pub fn sideboard(name: &str) -> Object3D
 	{
 		let mut block = sprenger_block_3511100355_cutout("tester");
 		block.set_debug();
-		block.rotate(90.0, 0.0, 315.0);
-		//block.rotate(0.0, 90.0, 225.0);
-		block.translate(0.0, -0.5*MATTRESS_LENGTH, CABLE_HEIGHT+1.25); // TODO
+		//block.rotate(90.0, 0.0, 315.0);
+		//block.translate(0.0, -0.5*MATTRESS_LENGTH, CABLE_HEIGHT+1.25); // TODO
+		block.anchor("Contact").snap_to(&mut parts[0].anchor("Foot pulley vertical"));
 		parts.push(block);
 	}
 	//}}}
 	let mut board = difference(name, parts);
 
-	//{{{ Add some anchors TODO
-
-	let mut a = board.create_anchor("left");
-	a.translate_z(11.0);
-	a.rel_rotate_y(90.0);
-	//}}}
 
 	board.set_debug();
 	board.set_show_anchors();
@@ -476,7 +480,7 @@ pub fn small_roll(name: &str) -> Object3D
 		roll.create_anchor("Origin");
 	}
 	{
-		let mut a = roll.create_anchor("Contact");
+		let mut a = roll.create_anchor("Upper contact");
 		a.translate(-0.5*ROLL_DIAMETER, -0.5*ROLL_DIAMETER, 0.0);
 	}
 
@@ -651,7 +655,11 @@ pub fn sprenger_block_3511100355_cutout(name: &str) -> Object3D
 
 	//{{{ Anchors::Contact: y and z align to the cable
 	{
-		let mut a = block.create_anchor("Contact");
+		let mut a = block.create_anchor("Upper contact");
+		a.translate(0.0, -0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER, ROLL_HEIGHT+0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+	}
+	{
+		let mut a = block.create_anchor("Lower contact");
 		a.translate(0.0, -0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER, ROLL_HEIGHT-0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER);
 	}
 	//}}}
@@ -772,7 +780,11 @@ pub fn sprenger_block_3511100355(name: &str) -> Object3D
 
 	//{{{ Anchors::Contact: y and z align to the cable
 	{
-		let mut a = block.create_anchor("Contact");
+		let mut a = block.create_anchor("Upper contact");
+		a.translate(0.0, -0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER, ROLL_HEIGHT+0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+	}
+	{
+		let mut a = block.create_anchor("Lower contact");
 		a.translate(0.0, -0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER, ROLL_HEIGHT-0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER);
 	}
 	//}}}

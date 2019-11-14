@@ -812,10 +812,10 @@ pub fn union<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 	let mut anchors = HashMap::new();
 	for mut child in children.as_ref().to_vec()
 	{
-		let child_name = child.name.clone();
 		for (anchor_name, anchor) in child.anchors.clone()
 		{
-			anchors.insert(child_name.clone() + "::" + &anchor_name, anchor);
+			let aname = if child.name.len() == 0 { anchor_name } else { child.name.clone() + "::" + &anchor_name };
+			anchors.insert(aname, anchor);
 		}
 		child.anchors.clear();
 	}
@@ -830,10 +830,10 @@ pub fn difference<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 	let mut anchors = HashMap::new();
 	for mut child in children.as_ref().to_vec()
 	{
-		let child_name = child.name.clone();
 		for (anchor_name, anchor) in child.anchors.clone()
 		{
-			anchors.insert(child_name.clone() + "::" + &anchor_name, anchor);
+			let aname = if child.name.len() == 0 { anchor_name } else { child.name.clone() + "::" + &anchor_name };
+			anchors.insert(aname, anchor);
 		}
 		child.anchors.clear();
 	}
@@ -848,10 +848,10 @@ pub fn intersection<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 	let mut anchors = HashMap::new();
 	for mut child in children.as_ref().to_vec()
 	{
-		let child_name = child.name.clone();
 		for (anchor_name, anchor) in child.anchors.clone()
 		{
-			anchors.insert(child_name.clone() + "::" + &anchor_name, anchor);
+			let aname = if child.name.len() == 0 { anchor_name } else { child.name.clone() + "::" + &anchor_name };
+			anchors.insert(aname, anchor);
 		}
 		child.anchors.clear();
 	}
@@ -866,10 +866,10 @@ pub fn hull<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 	let mut anchors = HashMap::new();
 	for mut child in children.as_ref().to_vec()
 	{
-		let child_name = child.name.clone();
 		for (anchor_name, anchor) in child.anchors.clone()
 		{
-			anchors.insert(child_name.clone() + "::" + &anchor_name, anchor);
+			let aname = if child.name.len() == 0 { anchor_name } else { child.name.clone() + "::" + &anchor_name };
+			anchors.insert(aname, anchor);
 		}
 		child.anchors.clear();
 	}
@@ -884,10 +884,10 @@ pub fn minkowski<T: AsRef<[Object3D]>>(name: &str, children: T) -> Object3D
 	let mut anchors = HashMap::new();
 	for mut child in children.as_ref().to_vec()
 	{
-		let child_name = child.name.clone();
 		for (anchor_name, anchor) in child.anchors.clone()
 		{
-			anchors.insert(child_name.clone() + "::" + &anchor_name, anchor);
+			let aname = if child.name.len() == 0 { anchor_name } else { child.name.clone() + "::" + &anchor_name };
+			anchors.insert(aname, anchor);
 		}
 		child.anchors.clear();
 	}
