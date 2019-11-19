@@ -55,6 +55,7 @@ const DRILL_BORE_MAJOR        : f64 =  1.0;
 const DRILL_MID_MINOR         : f64 =   DRILL_INSET + 0.5*DRILL_BORE_MINOR;
 const DRILL_MID_MAJOR         : f64 =   DRILL_INSET + 0.5*DRILL_BORE_MAJOR;
 const DRILL_BOTTOM            : f64 = -(DRILL_DEPTH - 0.5*FRAME_HEIGHT);
+const FN                      : i32 = 20;
 //}}}
 
 
@@ -230,29 +231,19 @@ pub fn sideboard(name: &str) -> Object3D
 	{
 		let mut a = board.create_anchor("Foot pulley vertical");
 		a.translate(0.0, FOOT_END-0.5*FRAME_THICKNESS, FOOT_CABLE_HEIGHT); // TODO
+		//a.rel_rotate_z(135.0);
 		a.rel_rotate(90.0, 315.0, 0.0);
 	}
-	{
-		let mut a = board.create_anchor("Head pulley vertical");
-		a.translate(0.0, HEAD_END+0.5*FRAME_THICKNESS, HEAD_CABLE_HEIGHT); // TODO
-		a.rel_rotate(90.0, 225.0, 0.0);
-	}
+	//{
+	//	let mut a = board.create_anchor("Head pulley vertical");
+	//	a.translate(0.0, HEAD_END+0.5*FRAME_THICKNESS, HEAD_CABLE_HEIGHT); // TODO
+	//	a.rel_rotate(90.0, 225.0, 0.0);
+	//}
 	{
 		let mut a = board.create_anchor("Foot pulley horizontal");
 		a.translate(0.0, FOOT_END-0.5*FRAME_THICKNESS, FOOT_CABLE_HEIGHT); // TODO
-		a.rel_rotate(90.0, 315.0, -90.0);
-		a.rel_translate_z(-5.0);
-		a.rel_rotate_x(225.0);
-
-
-
-
-
-
-
-
-		//a.translate(2.0, FOOT_END+0.5*FRAME_THICKNESS, FOOT_CABLE_HEIGHT); // TODO
-		//a.rel_rotate(90.0, 315.0, 0.0);
+		a.rel_rotate(90.0, 135.0, 90.0);
+		a.rel_translate_z( 5.6);
 	}
 	//}}}
 
@@ -286,34 +277,36 @@ pub fn sideboard(name: &str) -> Object3D
 	//{{{ Add the cutouts for the primary rolls
 	{
 		let mut block = sprenger_block_3511100355_cutout("Foot pulley");
-		//block.set_debug();
-		block.anchor("Upper contact").snap_to(&mut parts[0].anchor("Foot pulley vertical"));
-		parts.push(block);
-	}
-	{
-		let mut block = sprenger_block_3511100355_cutout("Head pulley");
-		//block.set_debug();
-		block.anchor("Upper contact").snap_to(&mut parts[0].anchor("Head pulley vertical"));
-		parts.push(block);
-	}
-	//}}}
-	//{{{ Add the cutouts for the secondary rolls
-	{
-		let mut block = sprenger_block_3511100355_cutout("Secondary foot pulley");
-		//block.set_debug();
-		block.anchor("Upper contact").snap_to(&mut parts[0].anchor("Foot pulley horizontal"));
+		block.set_debug();
+		block.set_show_origin();
+		//block.anchor("90").snap_to(&mut parts[0].anchor("Foot pulley vertical"));
+		block.anchor("Upper contact rect").snap_to(&mut parts[0].anchor("Foot pulley vertical"));
 		parts.push(block);
 	}
 	//{
 	//	let mut block = sprenger_block_3511100355_cutout("Head pulley");
 	//	//block.set_debug();
-	//	block.anchor("Upper contact").snap_to(&mut parts[0].anchor("Head pulley vertical"));
+	//	block.anchor("Upper contact 45").snap_to(&mut parts[0].anchor("Head pulley vertical"));
 	//	parts.push(block);
 	//}
 	//}}}
+	//{{{ Add the cutouts for the secondary rolls
+	{
+		let mut block = sprenger_block_3511100355_cutout("Secondary foot pulley");
+		block.set_debug();
+		block.anchor("45").snap_to(&mut parts[0].anchor("Foot pulley horizontal"));
+		parts.push(block);
+	}
+	////{
+	////	let mut block = sprenger_block_3511100355_cutout("Head pulley");
+	////	//block.set_debug();
+	////	block.anchor("Upper contact 45").snap_to(&mut parts[0].anchor("Head pulley vertical"));
+	////	parts.push(block);
+	////}
+	////}}}
 	let mut board = difference(name, parts);
 
-	//board.set_debug();
+	board.set_debug();
 
 	board.set_show_anchors();
 	board
@@ -597,37 +590,21 @@ pub fn sprenger_block_3511100355_cutout(name: &str) -> Object3D
 	points.append(&mut arc(point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS),                    // Start
 				           point2D(-0.5*BLOCK_WIDTH                  , SHEET_THICKNESS+LOWER_BEND_RADIUS),  // End
 				           point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
-				            20));                                                                           // Steps
+				            FN/4));                                                                           // Steps
 
 
 	points.append(&mut arc(point2D(-0.5*BLOCK_WIDTH,                   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Start
 				           point2D( 0.5*BLOCK_WIDTH,                   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // End
 				           point2D(0.0,                                BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Pivot
-				            40));                                                                           // Steps
+				            FN/2));                                                                           // Steps
 
 	points.append(&mut arc(point2D( 0.5*BLOCK_WIDTH,                   SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Start
 				           point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, SHEET_THICKNESS),                    // End
 				           point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
-				           -20));                                                                           // Steps
+				           -FN/2));                                                                           // Steps
 
 	points.push(point2D( 0.5*BASE_WIDTH, SHEET_THICKNESS));
 	points.push(point2D( 0.5*BASE_WIDTH, 0.0));
-
-	//points.append(&mut arc(point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, 0.0),                                // Start
-	//			           point2D( 0.5*BLOCK_WIDTH-SHEET_THICKNESS,   SHEET_THICKNESS+LOWER_BEND_RADIUS),  // End
-	//			           point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
-	//			           -20));                                                                           // Steps
-
-	//points.append(&mut arc(point2D( 0.5*BLOCK_WIDTH-SHEET_THICKNESS,   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Start
-	//			           point2D(-0.5*BLOCK_WIDTH+SHEET_THICKNESS,   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // End
-	//			           point2D(0.0,                                BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Pivot
-	//			            40));                                                                           // Steps
-
-	//points.append(&mut arc(
-	//			           point2D(-0.5*BLOCK_WIDTH+SHEET_THICKNESS,   SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Start
-	//                       point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, 0.0),                                // End
-	//			           point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
-	//			           -20));                                                                           // Steps
 	//}}}
 
 	let mut poly = polygon(name, points);
@@ -649,11 +626,11 @@ pub fn sprenger_block_3511100355_cutout(name: &str) -> Object3D
 	//{{{ Add the screw heads
 
 	let mut screw_head1 = cylinder(&(String::from("Lower half roll for ") + name), SCREW_HEAD_HEIGHT, 0.5*SCREW_HEAD_DIAMETER, 0.0);
-	screw_head1.set_fn(40);
+	screw_head1.set_fn(FN);
 	screw_head1.rotate_y(90.0);
 	screw_head1.translate(0.5*BLOCK_WIDTH, 0.0, ROLL_HEIGHT);
 	let mut screw_head2 = cylinder(&(String::from("Lower half roll for ") + name), SCREW_HEAD_HEIGHT, 0.5*SCREW_HEAD_DIAMETER, 0.0);
-	screw_head2.set_fn(40);
+	screw_head2.set_fn(FN);
 	screw_head2.rotate_y(-90.0);
 	screw_head2.translate(-0.5*BLOCK_WIDTH, 0.0, ROLL_HEIGHT);
 	//}}}
@@ -662,12 +639,117 @@ pub fn sprenger_block_3511100355_cutout(name: &str) -> Object3D
 
 	//{{{ Anchors::Contact: y and z align to the cable
 	{
-		let mut a = block.create_anchor("Upper contact");
+		let mut a = block.create_anchor("Upper contact rect");
 		a.translate(0.0, -0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER, ROLL_HEIGHT+0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
 	}
 	{
-		let mut a = block.create_anchor("Lower contact");
+		let mut a = block.create_anchor("Lower contact rect");
 		a.translate(0.0, -0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER, ROLL_HEIGHT-0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER);
+	}
+	{
+		let mut a = block.create_anchor("0");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		//a.rotate_x(0.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("45");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(45.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("90");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(90.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("135");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(135.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("180");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(180.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("225");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(225.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("270");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(270.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("315");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(315.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+
+	{
+		let mut a = block.create_anchor("-0");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		//a.rotate_x(0.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-45");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-45.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-90");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-90.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-135");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-135.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-180");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-180.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-225");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-225.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-270");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-270.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-315");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-315.0);
+		a.translate_z(ROLL_HEIGHT);
 	}
 	//}}}
 
@@ -710,18 +792,18 @@ pub fn sprenger_block_3511100355(name: &str) -> Object3D
 	points.append(&mut arc(point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS),                    // Start
 				           point2D(-0.5*BLOCK_WIDTH                  , SHEET_THICKNESS+LOWER_BEND_RADIUS),  // End
 				           point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
-				            20));                                                                           // Steps
+				            FN/4));                                                                           // Steps
 
 
 	points.append(&mut arc(point2D(-0.5*BLOCK_WIDTH,                   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Start
 				           point2D( 0.5*BLOCK_WIDTH,                   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // End
 				           point2D(0.0,                                BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Pivot
-				            40));                                                                           // Steps
+				            FN/2));                                                                           // Steps
 
 	points.append(&mut arc(point2D( 0.5*BLOCK_WIDTH,                   SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Start
 				           point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, SHEET_THICKNESS),                    // End
 				           point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
-				           -20));                                                                           // Steps
+				           -FN/4));                                                                           // Steps
 
 	points.push(point2D( 0.5*BASE_WIDTH, SHEET_THICKNESS));
 	points.push(point2D( 0.5*BASE_WIDTH, 0.0));
@@ -729,18 +811,18 @@ pub fn sprenger_block_3511100355(name: &str) -> Object3D
 	points.append(&mut arc(point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, 0.0),                                // Start
 				           point2D( 0.5*BLOCK_WIDTH-SHEET_THICKNESS,   SHEET_THICKNESS+LOWER_BEND_RADIUS),  // End
 				           point2D( 0.5*BLOCK_WIDTH+LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
-				           -20));                                                                           // Steps
+				           -FN/4));                                                                           // Steps
 
 	points.append(&mut arc(point2D( 0.5*BLOCK_WIDTH-SHEET_THICKNESS,   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Start
 				           point2D(-0.5*BLOCK_WIDTH+SHEET_THICKNESS,   BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // End
 				           point2D(0.0,                                BLOCK_HEIGHT-0.5*BLOCK_WIDTH),       // Pivot
-				            40));                                                                           // Steps
+				             FN/4));                                                                           // Steps
 
 	points.append(&mut arc(
 				           point2D(-0.5*BLOCK_WIDTH+SHEET_THICKNESS,   SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Start
 	                       point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, 0.0),                                // End
 				           point2D(-0.5*BLOCK_WIDTH-LOWER_BEND_RADIUS, SHEET_THICKNESS+LOWER_BEND_RADIUS),  // Pivot
-				           -20));                                                                           // Steps
+				           -FN/4));                                                                           // Steps
 	//}}}
 
 	let mut poly = polygon(name, points);
@@ -765,20 +847,20 @@ pub fn sprenger_block_3511100355(name: &str) -> Object3D
 	//{{{ Add the roll and screw heads
 
 	let mut roll1 = cylinder(&(String::from("Lower half roll for ") + name), 0.5*ROLL_WIDTH, 0.5*ROLL_DIAMETER_INNER, 0.5*ROLL_DIAMETER);
-	roll1.set_fn(40);
+	roll1.set_fn(FN);
 	roll1.rotate_y(90.0);
 	roll1.translate_z(ROLL_HEIGHT);
 	let mut roll2 = cylinder(&(String::from("Lower half roll for ") + name), 0.5*ROLL_WIDTH, 0.5*ROLL_DIAMETER_INNER, 0.5*ROLL_DIAMETER);
-	roll2.set_fn(40);
+	roll2.set_fn(FN);
 	roll2.rotate_y(-90.0);
 	roll2.translate_z(ROLL_HEIGHT);
 
 	let mut screw_head1 = cylinder(&(String::from("Lower half roll for ") + name), SCREW_HEAD_HEIGHT, 0.5*SCREW_HEAD_DIAMETER, 0.0);
-	screw_head1.set_fn(40);
+	screw_head1.set_fn(FN);
 	screw_head1.rotate_y(90.0);
 	screw_head1.translate(0.5*BLOCK_WIDTH, 0.0, ROLL_HEIGHT);
 	let mut screw_head2 = cylinder(&(String::from("Lower half roll for ") + name), SCREW_HEAD_HEIGHT, 0.5*SCREW_HEAD_DIAMETER, 0.0);
-	screw_head2.set_fn(40);
+	screw_head2.set_fn(FN);
 	screw_head2.rotate_y(-90.0);
 	screw_head2.translate(-0.5*BLOCK_WIDTH, 0.0, ROLL_HEIGHT);
 	//}}}
@@ -787,12 +869,117 @@ pub fn sprenger_block_3511100355(name: &str) -> Object3D
 
 	//{{{ Anchors::Contact: y and z align to the cable
 	{
-		let mut a = block.create_anchor("Upper contact");
+		let mut a = block.create_anchor("Upper contact rect");
 		a.translate(0.0, -0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER, ROLL_HEIGHT+0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
 	}
 	{
-		let mut a = block.create_anchor("Lower contact");
+		let mut a = block.create_anchor("Lower contact rect");
 		a.translate(0.0, -0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER, ROLL_HEIGHT-0.5*ROLL_DIAMETER_INNER-0.5*WIRE_DIAMETER);
+	}
+	{
+		let mut a = block.create_anchor("0");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		//a.rotate_x(0.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("45");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(45.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("90");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(90.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("135");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(135.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("180");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(180.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("225");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(225.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("270");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(270.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("315");
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(315.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+
+	{
+		let mut a = block.create_anchor("-0");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		//a.rotate_x(0.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-45");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-45.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-90");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-90.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-135");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-135.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-180");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-180.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-225");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-225.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-270");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-270.0);
+		a.translate_z(ROLL_HEIGHT);
+	}
+	{
+		let mut a = block.create_anchor("-315");
+		a.rotate_y(180.0);
+		a.translate_y(0.5*ROLL_DIAMETER_INNER+0.5*WIRE_DIAMETER);
+		a.rotate_x(-315.0);
+		a.translate_z(ROLL_HEIGHT);
 	}
 	//}}}
 
@@ -822,9 +1009,9 @@ fn main()
 	//{{{
 	let mut sideboard_l = sideboard("Sideboard_L");
 	sideboard_l.translate_x(-(BED_WIDTH-FRAME_THICKNESS)/2.0);
-	sideboard_l.set_colour(colour_named("red"));
+	//sideboard_l.set_colour(colour_named("red"));
 	sideboard_l.set_show_anchors();
-	//println!("{}", sideboard_l);
+	println!("{}", sideboard_l);
 	//}}}
 
 //
@@ -915,59 +1102,59 @@ fn main()
 
 
 
-
-	//{{{ Primary Foot Roll Left
-
-	{
-		let mut block = sprenger_block_3511100355("Foot pulley");
-		block.set_debug();
-		block.anchor("Upper contact").snap_to(&mut sideboard_l.anchor("Foot pulley vertical"));
-		println!("{}", block);
-	}
-	//}}}
-
-
-	//{{{ Secondary Foot Roll Left
-
-	{
-		let mut block = sprenger_block_3511100355("Secondary foot pulley");
-		block.set_debug();
-		block.anchor("Upper contact").snap_to(&mut sideboard_l.anchor("Foot pulley horizontal"));
-		println!("{}", block);
-	}
-	//}}}
-
-
-	//{{{ Slat Frame
-
-	for i in 0..FRAME_SLAT_COUNT
-	{
-		let i = i as f64;
-		let mut slat = frame_slat(&format!("Frame slat {}", i));
-		slat.translate(0.0, FRAME_SLAT_START - i*(FRAME_SLAT_SPACING+FRAME_SLAT_WIDTH), -0.5*(FRAME_HEIGHT-FRAME_SLAT_THICKNESS));
-		slat.set_colour(colour_rgba(1.0, 1.0, 0.0, 0.2));
-		println!("{}", slat);
-	}
-
-
-
-
-	//}}}
-
-
-
-
-
-
 //
-//	//{{{
-//	let mut block = sprenger_block_3511100355_cutout("tester");
-//	//let mut block = sprenger_block_3511100355("tester");
-//	block.set_debug();
-//	block.set_show_anchors();
-//	println!("{}", block);
+//	//{{{ Primary Foot Roll Left
+//
+//	{
+//		let mut block = sprenger_block_3511100355("Foot pulley");
+//		block.set_debug();
+//		block.anchor("Upper contact 45").snap_to(&mut sideboard_l.anchor("Foot pulley vertical"));
+//		block.set_show_anchors();
+//		println!("{}", block);
+//	}
+//	//}}}
+//	//{{{ Secondary Foot Roll Left
+//
+//	{
+//		let mut block = sprenger_block_3511100355("Secondary foot pulley");
+//		block.set_debug();
+//		block.anchor("Upper contact 45").snap_to(&mut sideboard_l.anchor("Foot pulley horizontal"));
+//		block.set_show_anchors();
+//		println!("{}", block);
+//	}
 //	//}}}
 //
+//
+//	//{{{ Slat Frame
+//
+//	for i in 0..FRAME_SLAT_COUNT
+//	{
+//		let i = i as f64;
+//		let mut slat = frame_slat(&format!("Frame slat {}", i));
+//		slat.translate(0.0, FRAME_SLAT_START - i*(FRAME_SLAT_SPACING+FRAME_SLAT_WIDTH), -0.5*(FRAME_HEIGHT-FRAME_SLAT_THICKNESS));
+//		slat.set_colour(colour_rgba(1.0, 1.0, 0.0, 0.2));
+//		println!("{}", slat);
+//	}
+//
+//
+//
+//
+//	//}}}
+//
+
+
+
+
+
+
+	//{{{
+	//let mut block = sprenger_block_3511100355_cutout("tester");
+	let mut block = sprenger_block_3511100355("tester");
+	block.set_debug();
+	block.set_show_anchors();
+	println!("{}", block);
+	//}}}
+
 //
 //	//{{{
 //	let mut poly = polygon("tester", [[0.0, 0.0], [0.0, 25.0], [25.0, 0.0], [5.0, 5.0], [15.0, 5.0], [5.0, 15.0]], [[0, 1, 2], [3, 4, 5]]);
